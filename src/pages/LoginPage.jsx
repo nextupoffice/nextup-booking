@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import logo from "../assets/logo.png"; // ✅ WAJIB IMPORT
 
 const users = [
   { username: "Nextup", password: "Nextup123", role: "admin" },
   { username: "Azky", password: "1234", role: "tim" },
   { username: "Resty", password: "1234", role: "tim" },
   { username: "Daffa", password: "1234", role: "tim" },
-  { username: "Tio", password: "1234", role: "tim" }
+  { username: "Tio", password: "1234", role: "tim" },
 ];
 
 export default function LoginPage() {
@@ -17,6 +18,7 @@ export default function LoginPage() {
 
   const handleLogin = (e) => {
     e.preventDefault();
+
     const user = users.find(
       (u) => u.username === username && u.password === password
     );
@@ -34,38 +36,39 @@ export default function LoginPage() {
 
   return (
     <div
-     style={{
-      minHeight: "100vh",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      backgroundColor: "#121212",
-  }}
->
-   <form
-     className="card"
       style={{
-      width: 320,
-      display: "flex",
-      flexDirection: "column",
-      gap: 16,
-      padding: 28,
-    }}
-    onSubmit={handleLogin}
-  >
-
-        {/* LOGO HANYA DIPERKECIL */}
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#121212",
+        padding: 16, // ✅ MOBILE AMAN
+      }}
+    >
+      <form
+        className="card"
+        style={{
+          width: "100%",
+          maxWidth: 360, // ✅ RESPONSIVE
+          display: "flex",
+          flexDirection: "column",
+          gap: 16,
+          padding: 28,
+        }}
+        onSubmit={handleLogin}
+      >
+        {/* LOGO */}
         <img
-          src="/src/assets/logo.png"
-          alt="Logo"
+          src={logo}               // ✅ INI KUNCI FIX VERCEL
+          alt="NextUp Logo"
           style={{
-            width: 80,       // ⬅️ INI SAJA PERUBAHANNYA
-            maxWidth: "100%",
-            margin: "0 auto"
+            width: 90,
+            margin: "0 auto 10px",
+            display: "block",
           }}
         />
 
-        <h2 className="text-center">Login</h2>
+        <h2 style={{ textAlign: "center" }}>Login</h2>
 
         <input
           placeholder="Username"
@@ -85,7 +88,7 @@ export default function LoginPage() {
             style={{
               color: "red",
               fontSize: 12,
-              textAlign: "center"
+              textAlign: "center",
             }}
           >
             {error}
