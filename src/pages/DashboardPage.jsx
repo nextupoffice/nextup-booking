@@ -13,7 +13,6 @@ import { exportBookingToExcel } from "../utils/exportBooking";
 export default function DashboardPage() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user")) || {};
-
   const [bookings, setBookings] = useState([]);
 
   const handleLogout = () => {
@@ -44,66 +43,40 @@ export default function DashboardPage() {
   return (
     <div className="dashboard-wrapper">
       {/* ================= HEADER ================= */}
-      <header
-        className="dashboard-header"
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <img src={logo} alt="NextUp Logo" style={{ width: 90 }} />
+      <header className="dashboard-header">
+        <div className="header-left">
+          <img src={logo} alt="NextUp Logo" />
           <h2>Dashboard</h2>
         </div>
 
-        <button
-          onClick={handleLogout}
-          style={{
-            background: "transparent",
-            color: "#cba58a",
-            border: "1px solid #cba58a",
-            padding: "8px 14px",
-            borderRadius: 8,
-            cursor: "pointer",
-          }}
-        >
+        <button className="logout-btn" onClick={handleLogout}>
           Logout
         </button>
       </header>
 
       {/* ================= ADMIN VIEW ================= */}
       {user?.role === "admin" && (
-        <>
+        <div className="admin-dashboard">
           <BookingForm />
 
-          {/* 🔽 TOMBOL DOWNLOAD EXCEL (POSISI JELAS) */}
-          <div style={{ margin: "12px 0" }}>
-            <button
-              onClick={() => exportBookingToExcel(bookings)}
-              style={{
-                background: "#cba58a",
-                color: "#000",
-                padding: "10px 16px",
-                borderRadius: 8,
-                border: "none",
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
-            >
+          {/* DOWNLOAD EXCEL */}
+          <div className="excel-action">
+            <button onClick={() => exportBookingToExcel(bookings)}>
               Download Data Booking (Excel)
             </button>
           </div>
 
-          {/* TABEL BOOKING */}
           <BookingTable data={bookings} />
-
           <TeamRevenue />
-        </>
+        </div>
       )}
 
       {/* ================= TIM VIEW ================= */}
-      {user?.role === "tim" && <MyJobs />}
+      {user?.role === "tim" && (
+        <div className="tim-dashboard">
+          <MyJobs />
+        </div>
+      )}
     </div>
   );
 }

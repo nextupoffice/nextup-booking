@@ -106,3 +106,85 @@ button:hover {
     text-align: left;
   }
 }
+
+/* =========================
+   DASHBOARD HEADER FIX
+========================= */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard-header img {
+  width: 80px;
+  height: auto;
+}
+
+/* =========================
+   ADMIN DASHBOARD LAYOUT
+========================= */
+.admin-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* TOMBOL EXCEL */
+.excel-action {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.excel-action button {
+  background: #cba58a;
+  color: #000;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+/* =========================
+   TABLE MOBILE SCROLL
+========================= */
+.card table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.card {
+  overflow-x: auto;
+}
+
+/* =========================
+   MOBILE ADMIN FIX
+========================= */
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dashboard-header img {
+    width: 64px;
+  }
+
+  /* FORM GRID JADI 1 KOLOM */
+  .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* TABLE FONT LEBIH KECIL */
+  table {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+}
+
+/* =========================
+   DISABLE ZOOM MOBILE
+========================= */
+html, body {
+  touch-action: manipulation;
+}
