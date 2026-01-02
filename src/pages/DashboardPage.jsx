@@ -44,15 +44,15 @@ export default function DashboardPage() {
     <div className="dashboard-wrapper">
       {/* ================= HEADER ================= */}
       <header className="dashboard-header">
-        <div className="header-left">
-          <img src={logo} alt="NextUp Logo" />
-          <h2>Dashboard</h2>
-        </div>
+  <div className="dashboard-brand">
+    <img src={logo} alt="NextUp Logo" />
+    <h2>Dashboard</h2>
+  </div>
 
-        <button className="logout-btn" onClick={handleLogout}>
-          Logout
-        </button>
-      </header>
+  <button className="logout-btn" onClick={handleLogout}>
+    Logout
+  </button>
+</header>
 
       {/* ================= ADMIN VIEW ================= */}
       {user?.role === "admin" && (

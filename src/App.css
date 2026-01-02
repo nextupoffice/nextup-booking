@@ -1,4 +1,6 @@
-/* RESET DASAR */
+/* =========================
+   RESET & BASE
+========================= */
 * {
   box-sizing: border-box;
 }
@@ -9,24 +11,30 @@ html, body {
   background: #121212;
   color: #eee;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  touch-action: manipulation;
 }
 
-/* ROOT */
 #root {
   width: 100%;
   min-height: 100vh;
 }
 
-/* CARD GLOBAL */
+/* =========================
+   CARD
+========================= */
 .card {
   background: #1a1a1a;
   border-radius: 14px;
-  padding: 24px;
-  margin-bottom: 20px;
+  padding: 20px;
+  margin-bottom: 18px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  width: 100%;
+  overflow-x: auto;
 }
 
-/* INPUT */
+/* =========================
+   INPUT & BUTTON
+========================= */
 input,
 select {
   width: 100%;
@@ -44,7 +52,6 @@ select:focus {
   border-color: #cba58a;
 }
 
-/* BUTTON */
 button {
   padding: 10px 14px;
   border-radius: 10px;
@@ -55,44 +62,99 @@ button {
   cursor: pointer;
 }
 
-button:hover {
-  opacity: 0.9;
-}
-
-/* DASHBOARD WRAPPER */
+/* =========================
+   DASHBOARD WRAPPER
+========================= */
 .dashboard-wrapper {
+  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 16px;
 }
 
-/* HEADER */
+/* =========================
+   HEADER
+========================= */
 .dashboard-header {
-  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
-/* TEAM GRID */
+.dashboard-header img {
+  width: 70px;
+  height: auto;
+}
+
+/* =========================
+   FORM GRID (DESKTOP)
+========================= */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+/* =========================
+   TEAM GRID
+========================= */
 .team-grid {
   display: grid;
-  grid-template-columns: 80px 140px 1fr 90px;
-  gap: 10px;
+  grid-template-columns: 80px 120px 1fr 80px;
+  gap: 8px;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
-/* NOMINAL TEXT */
 .team-rupiah {
   text-align: right;
   color: #cba58a;
   font-size: 13px;
 }
 
-/* RESPONSIVE MOBILE */
-@media (max-width: 640px) {
+/* =========================
+   TABLE
+========================= */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* =========================
+   MOBILE FIX TOTAL
+========================= */
+@media (max-width: 768px) {
+
   .dashboard-wrapper {
-    padding: 14px;
+    padding: 12px;
+    max-width: 100%;
   }
 
+  /* HEADER JADI VERTIKAL */
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dashboard-header img {
+    width: 52px;
+  }
+
+  h2 {
+    font-size: 18px;
+    text-align: left;
+  }
+
+  /* FORM 1 KOLOM */
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* TEAM STACK */
   .team-grid {
     grid-template-columns: 1fr;
     gap: 6px;
@@ -102,89 +164,8 @@ button:hover {
     text-align: left;
   }
 
-  h2, h3, h4 {
-    text-align: left;
-  }
-}
-
-/* =========================
-   DASHBOARD HEADER FIX
-========================= */
-.dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-}
-
-.dashboard-header img {
-  width: 80px;
-  height: auto;
-}
-
-/* =========================
-   ADMIN DASHBOARD LAYOUT
-========================= */
-.admin-dashboard {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* TOMBOL EXCEL */
-.excel-action {
-  display: flex;
-  justify-content: flex-start;
-}
-
-.excel-action button {
-  background: #cba58a;
-  color: #000;
-  padding: 10px 16px;
-  border-radius: 10px;
-  font-weight: 600;
-}
-
-/* =========================
-   TABLE MOBILE SCROLL
-========================= */
-.card table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.card {
-  overflow-x: auto;
-}
-
-/* =========================
-   MOBILE ADMIN FIX
-========================= */
-@media (max-width: 768px) {
-  .dashboard-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .dashboard-header img {
-    width: 64px;
-  }
-
-  /* FORM GRID JADI 1 KOLOM */
-  .form-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* TABLE FONT LEBIH KECIL */
+  /* TABLE LEBIH KECIL */
   table {
     font-size: 13px;
-    white-space: nowrap;
   }
-}
-
-/* =========================
-   DISABLE ZOOM MOBILE
-========================= */
-html, body {
-  touch-action: manipulation;
 }
