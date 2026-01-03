@@ -1,22 +1,32 @@
 /* =====================
-   RESET & BASE
+   RESET & BASE (ANTI LAYOUT MELEBAR)
 ===================== */
 * {
   box-sizing: border-box;
+  max-width: 100%;
 }
 
 html, body {
   margin: 0;
   padding: 0;
+  width: 100%;
+  overflow-x: hidden;              /* ⬅️ KUNCI HORIZONTAL */
   background: #121212;
   color: #eee;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  touch-action: manipulation; /* disable zoom gesture */
+  touch-action: manipulation;
+}
+
+img, svg {
+  max-width: 100%;                 /* ⬅️ IMG TIDAK BOLEH MELEBAR */
+  height: auto;
+  display: block;
 }
 
 #root {
   width: 100%;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 /* =====================
@@ -28,6 +38,7 @@ html, body {
   padding: 16px;
   margin-bottom: 18px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  overflow-x: auto;                /* ⬅️ TABLE AMAN */
 }
 
 /* =====================
@@ -60,17 +71,14 @@ button {
   cursor: pointer;
 }
 
-button:hover {
-  opacity: 0.9;
-}
-
 /* =====================
    DASHBOARD WRAPPER
 ===================== */
 .dashboard-wrapper {
+  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 14px;
 }
 
 /* =====================
@@ -81,6 +89,7 @@ button:hover {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  width: 100%;
 }
 
 .dashboard-brand {
@@ -90,7 +99,7 @@ button:hover {
 }
 
 .dashboard-brand img {
-  width: 56px; /* ✅ LOGO KECIL & IDEAL MOBILE */
+  width: 48px;                     /* ⬅️ LOGO DASHBOARD IDEAL */
   height: auto;
 }
 
@@ -108,11 +117,11 @@ button:hover {
 }
 
 /* =====================
-   FORM GRID (BOOKING)
+   FORM GRID
 ===================== */
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
 
@@ -121,10 +130,9 @@ button:hover {
 ===================== */
 .team-grid {
   display: grid;
-  grid-template-columns: 1fr 1.2fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
   align-items: center;
-  margin-bottom: 10px;
 }
 
 .team-grid span {
@@ -138,16 +146,12 @@ button:hover {
 }
 
 /* =====================
-   TABLE (BOOKING)
+   TABLE
 ===================== */
-.card table {
+table {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
-}
-
-.card {
-  overflow-x: auto;
 }
 
 table th,
@@ -158,37 +162,43 @@ table td {
 }
 
 /* =====================
-   EXCEL BUTTON
+   ⚠️ FIX UTAMA: MATIKAN LOGO BESAR GLOBAL
 ===================== */
-.excel-action {
-  margin-bottom: 14px;
+/* JIKA ADA LOGO NEXTUP BESAR DI APP */
+.app-logo,
+.hero-logo,
+.main-logo,
+img[src*="logo"],
+img[alt*="NEXTUP"] {
+  max-width: 160px;
+}
+
+/* MOBILE: SEMBUNYIKAN LOGO BESAR TOTAL */
+@media (max-width: 768px) {
+  .app-logo,
+  .hero-logo,
+  .main-logo {
+    display: none !important;
+  }
 }
 
 /* =====================
-   MOBILE FIX TOTAL
+   MOBILE TOTAL FIX
 ===================== */
 @media (max-width: 768px) {
 
-  /* HEADER STACK */
   .dashboard-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
   }
 
-  .dashboard-brand img {
-    width: 48px;
-  }
-
-  /* FORM JADI 1 KOLOM */
   .form-grid {
     grid-template-columns: 1fr;
   }
 
-  /* TEAM JOB STACK */
   .team-grid {
     grid-template-columns: 1fr;
-    gap: 6px;
   }
 
   .team-rupiah {

@@ -2,12 +2,33 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+
+    <!-- ⬇️ KUNCI MOBILE RESPONSIVE & NO ZOOM -->
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
     />
+
+    <!-- ⬇️ AMAN UNTUK iOS SAFARI -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <!-- ⬇️ HILANGKAN SPACE PUTIH / SCROLL SAMPING -->
+    <style>
+      html,
+      body {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        touch-action: manipulation;
+        background: #0f0f0f;
+      }
+    </style>
+
     <title>NextUp Booking</title>
   </head>
+
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
