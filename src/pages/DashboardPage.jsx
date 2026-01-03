@@ -42,11 +42,16 @@ export default function DashboardPage() {
 
   return (
     <div className="dashboard-wrapper">
+      
       {/* ================= HEADER ================= */}
-      <header className="dashboard-header">
+<header className="dashboard-header">
   <div className="dashboard-brand">
-    <img src={logo} alt="NextUp Logo" />
-    <h2>Dashboard</h2>
+    <img
+      src={logo}
+      alt="NextUp Logo"
+      className="dashboard-logo"
+    />
+    <h2 className="dashboard-title">Dashboard</h2>
   </div>
 
   <button className="logout-btn" onClick={handleLogout}>
