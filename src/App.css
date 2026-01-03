@@ -1,6 +1,6 @@
-/* =========================
+/* =====================
    RESET & BASE
-========================= */
+===================== */
 * {
   box-sizing: border-box;
 }
@@ -11,7 +11,7 @@ html, body {
   background: #121212;
   color: #eee;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  touch-action: manipulation;
+  touch-action: manipulation; /* disable zoom gesture */
 }
 
 #root {
@@ -19,22 +19,20 @@ html, body {
   min-height: 100vh;
 }
 
-/* =========================
-   CARD
-========================= */
+/* =====================
+   GLOBAL CARD
+===================== */
 .card {
   background: #1a1a1a;
   border-radius: 14px;
-  padding: 20px;
+  padding: 16px;
   margin-bottom: 18px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.35);
-  width: 100%;
-  overflow-x: auto;
 }
 
-/* =========================
+/* =====================
    INPUT & BUTTON
-========================= */
+===================== */
 input,
 select {
   width: 100%;
@@ -62,50 +60,75 @@ button {
   cursor: pointer;
 }
 
-/* =========================
+button:hover {
+  opacity: 0.9;
+}
+
+/* =====================
    DASHBOARD WRAPPER
-========================= */
+===================== */
 .dashboard-wrapper {
-  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   padding: 16px;
 }
 
-/* =========================
-   HEADER
-========================= */
+/* =====================
+   DASHBOARD HEADER
+===================== */
 .dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
   margin-bottom: 20px;
 }
 
-.dashboard-header img {
-  width: 70px;
+.dashboard-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-brand img {
+  width: 56px; /* ✅ LOGO KECIL & IDEAL MOBILE */
   height: auto;
 }
 
-/* =========================
-   FORM GRID (DESKTOP)
-========================= */
+.dashboard-header h2 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.logout-btn {
+  background: transparent;
+  color: #cba58a;
+  border: 1px solid #cba58a;
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+
+/* =====================
+   FORM GRID (BOOKING)
+===================== */
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
 }
 
-/* =========================
-   TEAM GRID
-========================= */
+/* =====================
+   TEAM JOB GRID
+===================== */
 .team-grid {
   display: grid;
-  grid-template-columns: 80px 120px 1fr 80px;
+  grid-template-columns: 1fr 1.2fr 1fr;
   gap: 8px;
   align-items: center;
   margin-bottom: 10px;
+}
+
+.team-grid span {
+  font-size: 13px;
 }
 
 .team-rupiah {
@@ -114,47 +137,55 @@ button {
   font-size: 13px;
 }
 
-/* =========================
-   TABLE
-========================= */
-table {
+/* =====================
+   TABLE (BOOKING)
+===================== */
+.card table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
-  white-space: nowrap;
+  font-size: 13px;
 }
 
-/* =========================
+.card {
+  overflow-x: auto;
+}
+
+table th,
+table td {
+  padding: 8px 10px;
+  white-space: nowrap;
+  text-align: left;
+}
+
+/* =====================
+   EXCEL BUTTON
+===================== */
+.excel-action {
+  margin-bottom: 14px;
+}
+
+/* =====================
    MOBILE FIX TOTAL
-========================= */
+===================== */
 @media (max-width: 768px) {
 
-  .dashboard-wrapper {
-    padding: 12px;
-    max-width: 100%;
-  }
-
-  /* HEADER JADI VERTIKAL */
+  /* HEADER STACK */
   .dashboard-header {
     flex-direction: column;
     align-items: flex-start;
+    gap: 10px;
   }
 
-  .dashboard-header img {
-    width: 52px;
+  .dashboard-brand img {
+    width: 48px;
   }
 
-  h2 {
-    font-size: 18px;
-    text-align: left;
-  }
-
-  /* FORM 1 KOLOM */
+  /* FORM JADI 1 KOLOM */
   .form-grid {
     grid-template-columns: 1fr;
   }
 
-  /* TEAM STACK */
+  /* TEAM JOB STACK */
   .team-grid {
     grid-template-columns: 1fr;
     gap: 6px;
@@ -164,8 +195,7 @@ table {
     text-align: left;
   }
 
-  /* TABLE LEBIH KECIL */
-  table {
-    font-size: 13px;
+  h2, h3, h4 {
+    text-align: left;
   }
 }
