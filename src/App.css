@@ -1,5 +1,5 @@
 /* =====================
-   RESET & BASE (ANTI LAYOUT MELEBAR)
+   RESET TOTAL (ANTI MELEBAR)
 ===================== */
 * {
   box-sizing: border-box;
@@ -10,19 +10,22 @@ html, body {
   margin: 0;
   padding: 0;
   width: 100%;
-  overflow-x: hidden;              /* ⬅️ KUNCI HORIZONTAL */
+  overflow-x: hidden !important;
   background: #121212;
   color: #eee;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   touch-action: manipulation;
 }
 
-img, svg {
-  max-width: 100%;                 /* ⬅️ IMG TIDAK BOLEH MELEBAR */
+img {
+  max-width: 100%;
   height: auto;
   display: block;
 }
 
+/* =====================
+   ROOT
+===================== */
 #root {
   width: 100%;
   min-height: 100vh;
@@ -30,55 +33,27 @@ img, svg {
 }
 
 /* =====================
-   GLOBAL CARD
+   FORCE LOGO FIX (INI KUNCI)
 ===================== */
-.card {
-  background: #1a1a1a;
-  border-radius: 14px;
-  padding: 16px;
-  margin-bottom: 18px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
-  overflow-x: auto;                /* ⬅️ TABLE AMAN */
+/* APAPUN LOGO DI DASHBOARD */
+.dashboard img,
+.dashboard-header img,
+header img,
+img[src*="nextup"],
+img[alt*="NEXT"],
+img[alt*="Next"],
+img[alt*="logo"] {
+  width: 48px !important;
+  max-width: 48px !important;
+  height: auto !important;
 }
 
-/* =====================
-   INPUT & BUTTON
-===================== */
-input,
-select {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid #333;
-  background: #2a2a2a;
-  color: #eee;
-  font-size: 14px;
-}
-
-input:focus,
-select:focus {
-  outline: none;
-  border-color: #cba58a;
-}
-
-button {
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: none;
-  background: #cba58a;
-  color: #000;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-/* =====================
-   DASHBOARD WRAPPER
-===================== */
-.dashboard-wrapper {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 14px;
+/* JIKA ADA LOGO BESAR DI ATAS DASHBOARD */
+.dashboard > img,
+.dashboard-logo,
+.hero-logo,
+.main-logo {
+  display: none !important;
 }
 
 /* =====================
@@ -86,67 +61,77 @@ button {
 ===================== */
 .dashboard-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
   margin-bottom: 20px;
+}
+
+/* =====================
+   CARD
+===================== */
+.card {
+  background: #1a1a1a;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 18px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
   width: 100%;
 }
 
-.dashboard-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.dashboard-brand img {
-  width: 48px;                     /* ⬅️ LOGO DASHBOARD IDEAL */
-  height: auto;
-}
-
-.dashboard-header h2 {
-  font-size: 18px;
-  margin: 0;
-}
-
-.logout-btn {
-  background: transparent;
-  color: #cba58a;
-  border: 1px solid #cba58a;
-  padding: 6px 12px;
-  border-radius: 8px;
-}
-
 /* =====================
-   FORM GRID
+   FORM BOOKING (FIX TOTAL)
 ===================== */
 .form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: grid !important;
+  grid-template-columns: 1fr !important; /* ⬅️ 1 KOLOM DI MOBILE */
   gap: 12px;
 }
 
-/* =====================
-   TEAM JOB GRID
-===================== */
-.team-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  align-items: center;
+.form-grid input,
+.form-grid select {
+  width: 100%;
 }
 
-.team-grid span {
-  font-size: 13px;
+/* =====================
+   TEAM JOB (FIX TOTAL)
+===================== */
+.team-grid {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px;
+  width: 100%;
+}
+
+.team-grid > * {
+  width: 100%;
+}
+
+.team-grid select,
+.team-grid input {
+  width: 100%;
 }
 
 .team-rupiah {
-  text-align: right;
-  color: #cba58a;
+  text-align: left;
   font-size: 13px;
+  color: #cba58a;
 }
 
 /* =====================
-   TABLE
+   BUTTON
+===================== */
+button {
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: #cba58a;
+  color: #000;
+  font-weight: 600;
+}
+
+/* =====================
+   TABLE (SCROLL AMAN)
 ===================== */
 table {
   width: 100%;
@@ -154,58 +139,19 @@ table {
   font-size: 13px;
 }
 
+.card {
+  overflow-x: auto;
+}
+
 table th,
 table td {
   padding: 8px 10px;
   white-space: nowrap;
+}
+
+/* =====================
+   TEXT ALIGN
+===================== */
+h1, h2, h3, h4 {
   text-align: left;
-}
-
-/* =====================
-   ⚠️ FIX UTAMA: MATIKAN LOGO BESAR GLOBAL
-===================== */
-/* JIKA ADA LOGO NEXTUP BESAR DI APP */
-.app-logo,
-.hero-logo,
-.main-logo,
-img[src*="logo"],
-img[alt*="NEXTUP"] {
-  max-width: 160px;
-}
-
-/* MOBILE: SEMBUNYIKAN LOGO BESAR TOTAL */
-@media (max-width: 768px) {
-  .app-logo,
-  .hero-logo,
-  .main-logo {
-    display: none !important;
-  }
-}
-
-/* =====================
-   MOBILE TOTAL FIX
-===================== */
-@media (max-width: 768px) {
-
-  .dashboard-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .team-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .team-rupiah {
-    text-align: left;
-  }
-
-  h2, h3, h4 {
-    text-align: left;
-  }
 }
