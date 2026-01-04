@@ -155,3 +155,43 @@ table td {
 h1, h2, h3, h4 {
   text-align: left;
 }
+
+/* ===== TEAM CARD (MOBILE FIRST) ===== */
+.team-card {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  padding: 12px;
+  background: #202020;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.team-name {
+  font-weight: 600;
+}
+
+.team-card select,
+.team-card input {
+  width: 100%;
+}
+
+.team-rupiah {
+  font-size: 13px;
+  color: #cba58a;
+}
+
+@media (max-width: 768px) {
+  .team-grid {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .team-grid select,
+  .team-grid input {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}

@@ -58,7 +58,6 @@ export default function BookingForm() {
 
     if (error) {
       alert("Gagal menyimpan booking");
-      console.error(error);
       return;
     }
 
@@ -85,6 +84,7 @@ export default function BookingForm() {
       <h3>Booking Client</h3>
 
       <form onSubmit={handleSubmit}>
+        {/* ===== FORM UTAMA ===== */}
         <div className="form-grid">
           <input placeholder="Nama Client" value={clientName} onChange={(e) => setClientName(e.target.value)} />
           <input placeholder="No HP" value={phone} onChange={(e) => setPhone(e.target.value)} />
@@ -92,84 +92,63 @@ export default function BookingForm() {
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           <input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
           <input placeholder="Lokasi" value={location} onChange={(e) => setLocation(e.target.value)} />
-
           <input
             placeholder="DP"
             value={dp}
-            onChange={(e) =>
-              setDp(formatRupiahInput(e.target.value.replace(/\D/g, "")))
-            }
+            onChange={(e) => setDp(formatRupiahInput(e.target.value.replace(/\D/g, "")))}
           />
-
           <input
             placeholder="Pelunasan"
             value={pelunasan}
-            onChange={(e) =>
-              setPelunasan(formatRupiahInput(e.target.value.replace(/\D/g, "")))
-            }
+            onChange={(e) => setPelunasan(formatRupiahInput(e.target.value.replace(/\D/g, "")))}
           />
         </div>
 
-        <h4 style={{ marginTop: 24 }}>Team yang Mengambil Job</h4>
+        {/* ===== TEAM ===== */}
+        <h4 style={{ marginTop: 20 }}>Team yang Mengambil Job</h4>
 
         {TEAM.map((name) => (
-  <div key={name} className="team-grid">
-    {/* NAMA TIM */}
-    <strong style={{ minWidth: 70 }}>{name}</strong>
+          <div key={name} className="team-card">
+            <div className="team-name">{name}</div>
 
-    {/* JOBDESK */}
-    <select
-      value={teamData[name].role}
-      onChange={(e) =>
-        setTeamData({
-          ...teamData,
-          [name]: {
-            ...teamData[name],
-            role: e.target.value,
-          },
-        })
-      }
-      style={{
-        width: 130,
-        padding: "8px 10px",
-        borderRadius: 8,
-        background: "#2a2a2a",
-        color: "#eee",
-        border: "1px solid #333",
-        fontSize: 13,
-      }}
-    >
-      <option value="">Jobdesk</option>
-      {JOBDESK.map((j) => (
-        <option key={j} value={j}>
-          {j}
-        </option>
-      ))}
-    </select>
+            <select
+              value={teamData[name].role}
+              onChange={(e) =>
+                setTeamData({
+                  ...teamData,
+                  [name]: { ...teamData[name], role: e.target.value },
+                })
+              }
+            >
+              <option value="">Pilih Jobdesk</option>
+              {JOBDESK.map((j) => (
+                <option key={j} value={j}>{j}</option>
+              ))}
+            </select>
 
-    {/* NOMINAL */}
-    <input
-      value={formatRupiahInput(teamData[name].income)}
-      onChange={(e) =>
-        setTeamData({
-          ...teamData,
-          [name]: {
-            ...teamData[name],
-            income: Number(e.target.value.replace(/\D/g, "")),
-          },
-        })
-      }
-      style={{ maxWidth: 160 }}
-    />
+            <input
+              placeholder="Nominal"
+              value={formatRupiahInput(teamData[name].income)}
+              onChange={(e) =>
+                setTeamData({
+                  ...teamData,
+                  [name]: {
+                    ...teamData[name],
+                    income: Number(e.target.value.replace(/\D/g, "")),
+                  },
+                })
+              }
+            />
 
-    <span className="team-rupiah">
-      {formatRupiahDisplay(teamData[name].income)}
-    </span>
-  </div>
-))}
+            <div className="team-rupiah">
+              {formatRupiahDisplay(teamData[name].income)}
+            </div>
+          </div>
+        ))}
 
-
-        <button type="submit">Simpan Booking</button>
+        <button type="submit" style={{ width: "100%" }}>
+          Simpan Booking
+        </button>
       </form>
     </div>
   );
