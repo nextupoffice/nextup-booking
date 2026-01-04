@@ -8,7 +8,6 @@
 html, body {
   margin: 0;
   padding: 0;
-  width: 100%;
   background: #121212;
   color: #eee;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -16,53 +15,13 @@ html, body {
 }
 
 img {
+  display: block;
   max-width: 100%;
   height: auto;
-  display: block;
 }
 
 #root {
-  width: 100%;
   min-height: 100vh;
-}
-
-/* =====================
-   CARD
-===================== */
-.card {
-  background: #1a1a1a;
-  border-radius: 14px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
-}
-
-/* =====================
-   INPUT & BUTTON
-===================== */
-input,
-select {
-  width: 100%;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #333;
-  background: #2a2a2a;
-  color: #eee;
-  font-size: 14px;
-}
-
-button {
-  padding: 12px;
-  border-radius: 10px;
-  border: none;
-  background: #cba58a;
-  color: #000;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-button:hover {
-  opacity: 0.9;
 }
 
 /* =====================
@@ -71,17 +30,17 @@ button:hover {
 .dashboard-wrapper {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 24px;
 }
 
 /* =====================
-   DASHBOARD HEADER
+   HEADER
 ===================== */
 .dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
 .dashboard-brand {
@@ -96,7 +55,7 @@ button:hover {
 
 .dashboard-header h2 {
   margin: 0;
-  font-size: 20px;
+  font-size: 22px;
 }
 
 .logout-btn {
@@ -104,44 +63,90 @@ button:hover {
   color: #cba58a;
   border: 1px solid #cba58a;
   padding: 8px 14px;
-  border-radius: 8px;
+  border-radius: 10px;
+  cursor: pointer;
 }
 
 /* =====================
-   BOOKING FORM GRID
+   CARD
+===================== */
+.card {
+  background: #1a1a1a;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 28px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+}
+
+/* =====================
+   INPUT & BUTTON
+===================== */
+input, select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #333;
+  background: #2a2a2a;
+  color: #eee;
+  font-size: 14px;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: #cba58a;
+}
+
+button {
+  background: #cba58a;
+  color: #000;
+  border: none;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* =====================
+   FORM GRID
 ===================== */
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* DESKTOP */
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
 }
 
-/* DATE & TIME SAMA LEBAR */
-input[type="date"],
-input[type="time"] {
-  width: 100%;
-  min-height: 44px;
-}
-
 /* =====================
-   TEAM GRID (DESKTOP)
+   TEAM DESKTOP GRID
 ===================== */
 .team-grid {
   display: grid;
-  grid-template-columns: 90px 140px 1fr auto;
+  grid-template-columns: 120px 1fr 160px 80px;
   gap: 12px;
   align-items: center;
-  margin-bottom: 12px;
-}
-
-.team-grid strong {
-  font-size: 14px;
+  margin-bottom: 14px;
 }
 
 .team-rupiah {
   text-align: right;
   font-size: 13px;
   color: #cba58a;
+}
+
+/* =====================
+   TEAM MOBILE CARD
+===================== */
+.team-card {
+  background: #202020;
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.team-name {
+  font-weight: 600;
+  font-size: 14px;
 }
 
 /* =====================
@@ -157,11 +162,9 @@ input[type="time"] {
   overflow-x: auto;
 }
 
-table th,
-table td {
-  padding: 8px 10px;
+table th, table td {
+  padding: 10px 12px;
   white-space: nowrap;
-  text-align: left;
 }
 
 /* =====================
@@ -169,7 +172,10 @@ table td {
 ===================== */
 @media (max-width: 768px) {
 
-  /* HEADER STACK */
+  .dashboard-wrapper {
+    padding: 16px;
+  }
+
   .dashboard-header {
     flex-direction: column;
     align-items: flex-start;
@@ -177,25 +183,17 @@ table td {
   }
 
   .dashboard-brand img {
-    width: 56px; /* MOBILE PROPORSIONAL */
+    width: 52px; /* MOBILE PROPORSIONAL */
   }
 
-  /* FORM JADI 1 KOLOM */
+  /* FORM 1 KOLOM */
   .form-grid {
     grid-template-columns: 1fr;
   }
 
-  /* TEAM STACK */
+  /* TEAM GRID MATI, PAKAI CARD */
   .team-grid {
-    grid-template-columns: 1fr;
-    gap: 6px;
+    display: none;
   }
 
-  .team-rupiah {
-    text-align: left;
-  }
-
-  h1, h2, h3, h4 {
-    text-align: left;
-  }
 }
