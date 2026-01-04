@@ -86,26 +86,67 @@ export default function BookingForm() {
       <form onSubmit={handleSubmit}>
         {/* ===== FORM UTAMA ===== */}
         <div className="form-grid">
-          <input placeholder="Nama Client" value={clientName} onChange={(e) => setClientName(e.target.value)} />
-          <input placeholder="No HP" value={phone} onChange={(e) => setPhone(e.target.value)} />
-          <input placeholder="Acara" value={acara} onChange={(e) => setAcara(e.target.value)} />
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-          <input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
-          <input placeholder="Lokasi" value={location} onChange={(e) => setLocation(e.target.value)} />
+          <input
+            placeholder="Nama Client"
+            value={clientName}
+            onChange={(e) => setClientName(e.target.value)}
+          />
+
+          <input
+            placeholder="No HP"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+
+          <input
+            placeholder="Acara"
+            value={acara}
+            onChange={(e) => setAcara(e.target.value)}
+          />
+
+          {/* DATE */}
+          <div className="form-field">
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
+          </div>
+
+          {/* TIME */}
+          <div className="form-field">
+            <input
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+            />
+          </div>
+
+          <input
+            placeholder="Lokasi"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+          />
+
           <input
             placeholder="DP"
             value={dp}
-            onChange={(e) => setDp(formatRupiahInput(e.target.value.replace(/\D/g, "")))}
+            onChange={(e) =>
+              setDp(formatRupiahInput(e.target.value.replace(/\D/g, "")))
+            }
           />
+
           <input
             placeholder="Pelunasan"
             value={pelunasan}
-            onChange={(e) => setPelunasan(formatRupiahInput(e.target.value.replace(/\D/g, "")))}
+            onChange={(e) =>
+              setPelunasan(formatRupiahInput(e.target.value.replace(/\D/g, "")))
+            }
           />
         </div>
 
         {/* ===== TEAM ===== */}
-        <h4 style={{ marginTop: 20 }}>Team yang Mengambil Job</h4>
+        <h4 style={{ marginTop: 24 }}>Team yang Mengambil Job</h4>
 
         {TEAM.map((name) => (
           <div key={name} className="team-card">
@@ -116,13 +157,18 @@ export default function BookingForm() {
               onChange={(e) =>
                 setTeamData({
                   ...teamData,
-                  [name]: { ...teamData[name], role: e.target.value },
+                  [name]: {
+                    ...teamData[name],
+                    role: e.target.value,
+                  },
                 })
               }
             >
               <option value="">Pilih Jobdesk</option>
               {JOBDESK.map((j) => (
-                <option key={j} value={j}>{j}</option>
+                <option key={j} value={j}>
+                  {j}
+                </option>
               ))}
             </select>
 
@@ -146,7 +192,7 @@ export default function BookingForm() {
           </div>
         ))}
 
-        <button type="submit" style={{ width: "100%" }}>
+        <button type="submit" style={{ width: "100%", marginTop: 16 }}>
           Simpan Booking
         </button>
       </form>

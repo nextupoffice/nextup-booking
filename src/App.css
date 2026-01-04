@@ -1,20 +1,18 @@
 /* =====================
-   RESET TOTAL (ANTI MELEBAR)
+   RESET & BASE
 ===================== */
 * {
   box-sizing: border-box;
-  max-width: 100%;
 }
 
 html, body {
   margin: 0;
   padding: 0;
   width: 100%;
-  overflow-x: hidden !important;
   background: #121212;
   color: #eee;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  touch-action: manipulation;
+  overflow-x: hidden;
 }
 
 img {
@@ -23,48 +21,9 @@ img {
   display: block;
 }
 
-/* =====================
-   ROOT
-===================== */
 #root {
   width: 100%;
   min-height: 100vh;
-  overflow-x: hidden;
-}
-
-/* =====================
-   FORCE LOGO FIX (INI KUNCI)
-===================== */
-/* APAPUN LOGO DI DASHBOARD */
-.dashboard img,
-.dashboard-header img,
-header img,
-img[src*="nextup"],
-img[alt*="NEXT"],
-img[alt*="Next"],
-img[alt*="logo"] {
-  width: 48px !important;
-  max-width: 48px !important;
-  height: auto !important;
-}
-
-/* JIKA ADA LOGO BESAR DI ATAS DASHBOARD */
-.dashboard > img,
-.dashboard-logo,
-.hero-logo,
-.main-logo {
-  display: none !important;
-}
-
-/* =====================
-   DASHBOARD HEADER
-===================== */
-.dashboard-header {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 20px;
 }
 
 /* =====================
@@ -73,54 +32,25 @@ img[alt*="logo"] {
 .card {
   background: #1a1a1a;
   border-radius: 14px;
-  padding: 16px;
-  margin-bottom: 18px;
+  padding: 20px;
+  margin-bottom: 20px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.35);
-  width: 100%;
 }
 
 /* =====================
-   FORM BOOKING (FIX TOTAL)
+   INPUT & BUTTON
 ===================== */
-.form-grid {
-  display: grid !important;
-  grid-template-columns: 1fr !important; /* ⬅️ 1 KOLOM DI MOBILE */
-  gap: 12px;
-}
-
-.form-grid input,
-.form-grid select {
+input,
+select {
   width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #2a2a2a;
+  color: #eee;
+  font-size: 14px;
 }
 
-/* =====================
-   TEAM JOB (FIX TOTAL)
-===================== */
-.team-grid {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 10px;
-  width: 100%;
-}
-
-.team-grid > * {
-  width: 100%;
-}
-
-.team-grid select,
-.team-grid input {
-  width: 100%;
-}
-
-.team-rupiah {
-  text-align: left;
-  font-size: 13px;
-  color: #cba58a;
-}
-
-/* =====================
-   BUTTON
-===================== */
 button {
   padding: 12px;
   border-radius: 10px;
@@ -128,12 +58,96 @@ button {
   background: #cba58a;
   color: #000;
   font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.9;
 }
 
 /* =====================
-   TABLE (SCROLL AMAN)
+   DASHBOARD WRAPPER
 ===================== */
-table {
+.dashboard-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* =====================
+   DASHBOARD HEADER
+===================== */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.dashboard-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard-brand img {
+  width: 72px; /* DESKTOP IDEAL */
+}
+
+.dashboard-header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.logout-btn {
+  background: transparent;
+  color: #cba58a;
+  border: 1px solid #cba58a;
+  padding: 8px 14px;
+  border-radius: 8px;
+}
+
+/* =====================
+   BOOKING FORM GRID
+===================== */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* DESKTOP */
+  gap: 16px;
+}
+
+/* DATE & TIME SAMA LEBAR */
+input[type="date"],
+input[type="time"] {
+  width: 100%;
+  min-height: 44px;
+}
+
+/* =====================
+   TEAM GRID (DESKTOP)
+===================== */
+.team-grid {
+  display: grid;
+  grid-template-columns: 90px 140px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.team-grid strong {
+  font-size: 14px;
+}
+
+.team-rupiah {
+  text-align: right;
+  font-size: 13px;
+  color: #cba58a;
+}
+
+/* =====================
+   TABLE
+===================== */
+.card table {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
@@ -147,51 +161,41 @@ table th,
 table td {
   padding: 8px 10px;
   white-space: nowrap;
-}
-
-/* =====================
-   TEXT ALIGN
-===================== */
-h1, h2, h3, h4 {
   text-align: left;
 }
 
-/* ===== TEAM CARD (MOBILE FIRST) ===== */
-.team-card {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
-  padding: 12px;
-  background: #202020;
-  border-radius: 10px;
-  margin-bottom: 10px;
-}
-
-.team-name {
-  font-weight: 600;
-}
-
-.team-card select,
-.team-card input {
-  width: 100%;
-}
-
-.team-rupiah {
-  font-size: 13px;
-  color: #cba58a;
-}
-
+/* =====================
+   MOBILE FIX
+===================== */
 @media (max-width: 768px) {
-  .team-grid {
-    display: flex;
+
+  /* HEADER STACK */
+  .dashboard-header {
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .dashboard-brand img {
+    width: 56px; /* MOBILE PROPORSIONAL */
+  }
+
+  /* FORM JADI 1 KOLOM */
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* TEAM STACK */
+  .team-grid {
+    grid-template-columns: 1fr;
     gap: 6px;
   }
 
-  .team-grid select,
-  .team-grid input {
-    width: 100% !important;
-    max-width: 100% !important;
+  .team-rupiah {
+    text-align: left;
+  }
+
+  h1, h2, h3, h4 {
+    text-align: left;
   }
 }
