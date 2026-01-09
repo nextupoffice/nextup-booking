@@ -37,6 +37,7 @@ export default function MyJobs() {
           myJobs.push({
             id: b.id + t.name,
             acara: b.acara,
+            client_name: b.client_name, // ✅ NAMA CLIENT
             date: b.date,
             time: b.time,
             location: b.location,
@@ -88,15 +89,30 @@ export default function MyJobs() {
                 {/* KIRI */}
                 <div>
                   <strong>{job.acara}</strong>
+
+                  {/* ✅ NAMA CLIENT */}
+                  {job.client_name && (
+                    <div
+                      style={{
+                        fontSize: 13,
+                        color: "#cba58a",
+                        marginTop: 2,
+                      }}
+                    >
+                      Client: <strong>{job.client_name}</strong>
+                    </div>
+                  )}
+
                   <div style={{ fontSize: 13, opacity: 0.8 }}>
                     {job.phone}
                   </div>
+
                   <div style={{ fontSize: 13 }}>
                     {job.date} • {job.time}
                   </div>
+
                   <div style={{ fontSize: 13 }}>{job.location}</div>
 
-                  {/* 👉 INI BAGIAN ROLE / JOBDESK */}
                   <div
                     style={{
                       marginTop: 6,

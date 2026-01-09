@@ -46,23 +46,24 @@ img {
 .dashboard-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .dashboard-brand img {
-  width: 72px; /* DESKTOP IDEAL */
+  width: 84px; /* 🔥 LEBIH PROFESIONAL DESKTOP */
 }
 
 .dashboard-header h2 {
   margin: 0;
   font-size: 22px;
+  font-weight: 600;
 }
 
 .logout-btn {
   background: transparent;
   color: #cba58a;
   border: 1px solid #cba58a;
-  padding: 8px 14px;
+  padding: 8px 16px;
   border-radius: 10px;
   cursor: pointer;
 }
@@ -150,6 +151,50 @@ button {
 }
 
 /* =====================
+   MY JOBS (DESKTOP)
+===================== */
+.job-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid #222;
+}
+
+.job-title {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.job-client {
+  font-size: 13px;
+  color: #cba58a;
+  margin-top: 2px;
+}
+
+.job-meta {
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.job-location {
+  font-size: 13px;
+}
+
+.job-role {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #cba58a;
+}
+
+.job-income {
+  align-self: center;
+  font-weight: 600;
+  color: #cba58a;
+  white-space: nowrap;
+}
+
+/* =====================
    TABLE
 ===================== */
 .card table {
@@ -177,13 +222,13 @@ table th, table td {
   }
 
   .dashboard-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
   }
 
   .dashboard-brand img {
-    width: 52px; /* MOBILE PROPORSIONAL */
+    width: 56px; /* ✅ PROPORSIONAL MOBILE */
   }
 
   /* FORM 1 KOLOM */
@@ -196,4 +241,16 @@ table th, table td {
     display: none;
   }
 
+  /* =====================
+     MY JOBS MOBILE
+  ===================== */
+  .job-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .job-income {
+    text-align: left;
+    font-size: 14px;
+  }
 }
