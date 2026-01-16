@@ -2,7 +2,7 @@
    CALENDAR CARD (WRAPPER)
 ================================ */
 .calendar-card {
-  background: #ffffff;
+  background: #cba58a;
   padding: 14px; /* DIPERKECIL */
   border-radius: 12px;
   box-shadow: 0 6px 18px rgba(0,0,0,0.06);
@@ -28,8 +28,8 @@
 }
 
 .calendar-header button {
-  background: #111827;
-  color: #ffffff;
+  background: #cba58a;
+  color: #000000;
   border: none;
   padding: 4px 10px; /* DIPERKECIL */
   border-radius: 8px;
