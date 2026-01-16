@@ -1,0 +1,53 @@
+.calendar-card {
+  background: #fff;
+  padding: 16px;
+  border-radius: 14px;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.calendar-header button {
+  font-size: 18px;
+  padding: 6px 12px;
+}
+
+.calendar-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.calendar-table th,
+.calendar-table td {
+  border: 1px solid #e5e7eb;
+  vertical-align: top;
+  padding: 6px;
+  height: 120px;
+}
+
+.day-number {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.calendar-table td.filled {
+  background: #f0f9ff;
+}
+
+.event {
+  background: #2563eb;
+  color: white;
+  border-radius: 6px;
+  padding: 4px 6px;
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+
+.event .client {
+  font-size: 11px;
+  opacity: 0.9;
+}
