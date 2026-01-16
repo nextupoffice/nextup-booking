@@ -21,24 +21,27 @@ export default function CalendarBooking() {
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
 
+  /* ===============================
+     GROUP BOOKING PER TANGGAL
+  =============================== */
+  const bookingsByDate = bookings.reduce((acc, b) => {
+    acc[b.date] = acc[b.date] || [];
+    acc[b.date].push(b);
+    return acc;
+  }, {});
+
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDay = new Date(year, month, 1).getDay(); // 0 = Minggu
 
   const changeMonth = (offset) => {
-    const newDate = new Date(year, month + offset, 1);
-    setCurrentMonth(newDate);
+    setCurrentMonth(new Date(year, month + offset, 1));
   };
 
   /* ===== BUILD CALENDAR ===== */
   const calendarCells = [];
 
-  for (let i = 0; i < firstDay; i++) {
-    calendarCells.push(null);
-  }
-
-  for (let day = 1; day <= daysInMonth; day++) {
-    calendarCells.push(day);
-  }
+  for (let i = 0; i < firstDay; i++) calendarCells.push(null);
+  for (let day = 1; day <= daysInMonth; day++) calendarCells.push(day);
 
   const weeks = [];
   for (let i = 0; i < calendarCells.length; i += 7) {
@@ -54,20 +57,28 @@ export default function CalendarBooking() {
       day
     ).padStart(2, "0")}`;
 
-    const dayBookings = bookings.filter((b) => b.date === dateStr);
+    const dayBookings = bookingsByDate[dateStr] || [];
 
     return (
-      <td key={day}>
+      <td
+        key={day}
+        className={dayBookings.length ? "filled" : ""}
+      >
         <div className="day-number">{day}</div>
 
-        {/* EVENT LIST (ANTI KACAU) */}
         <div className="events">
-          {dayBookings.map((b) => (
+          {dayBookings.slice(0, 3).map((b) => (
             <div key={b.id} className="event">
               <strong>{b.acara}</strong>
               <div className="client">{b.client_name}</div>
             </div>
           ))}
+
+          {dayBookings.length > 3 && (
+            <div className="more-event">
+              +{dayBookings.length - 3} lagi
+            </div>
+          )}
         </div>
       </td>
     );
@@ -88,7 +99,7 @@ export default function CalendarBooking() {
         <button onClick={() => changeMonth(1)}>›</button>
       </div>
 
-      {/* ===== MOBILE SCROLL WRAPPER (WAJIB) ===== */}
+      {/* ===== MOBILE SCROLL WRAPPER ===== */}
       <div className="calendar-scroll">
         <table className="calendar-table">
           <thead>
