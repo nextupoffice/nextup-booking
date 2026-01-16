@@ -1,114 +1,232 @@
-/* =====================
-   FULLCALENDAR (NEXTUP STYLE)
-===================== */
+/* ===================== 
+   RESET & BASE 
+===================== */ 
+* { 
+  box-sizing: border-box; 
+} 
 
-/* Container kalender */
-.fc {
-  background: #1a1a1a;
-  border-radius: 16px;
-  padding: 16px;
-  color: #eee;
+html, body { 
+  margin: 0; 
+  padding: 0; 
+  background: #121212; 
+  color: #eee; 
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; 
+  overflow-x: hidden; 
+} 
+
+img { 
+  display: block; 
+  max-width: 100%; 
+  height: auto; 
+} 
+
+#root { 
+  min-height: 100vh; 
+} 
+
+/* ===================== DASHBOARD WRAPPER ===================== */ 
+.dashboard-wrapper { 
+  max-width: 1200px; 
+  margin: 0 auto; 
+  padding: 24px; 
+} 
+/* ===================== HEADER ===================== */ 
+.dashboard-header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 28px; 
+} 
+
+.dashboard-brand { 
+  display: flex; 
+  align-items: center; 
+  gap: 14px; 
+} 
+.dashboard-brand img { 
+  width: 84px; /* 🔥 LEBIH PROFESIONAL DESKTOP */ 
+} 
+
+.dashboard-header h2 { 
+  margin: 0; 
+  font-size: 22px; 
+  font-weight: 600; 
+} 
+
+.logout-btn { 
+  background: transparent; 
+  color: #cba58a; 
+  border: 1px solid #cba58a; 
+  padding: 8px 16px; 
+  border-radius: 10px; 
+  cursor: pointer; 
+} 
+
+/* ===================== CARD ===================== */ 
+.card { 
+  background: #1a1a1a; 
+  border-radius: 16px; 
+  padding: 24px; 
+  margin-bottom: 28px; 
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35); 
 }
 
-/* Header kalender */
-.fc-toolbar {
-  margin-bottom: 16px;
-}
+/* ===================== INPUT & BUTTON ===================== */ 
+input, select { 
+  width: 100%; 
+  padding: 12px 14px; 
+  border-radius: 10px; 
+  border: 1px solid #333; 
+  background: #2a2a2a; 
+  color: #eee; 
+  font-size: 14px; 
+} 
 
-.fc-toolbar-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #eee;
-}
+input:focus, select:focus { 
+  outline: none; 
+  border-color: #cba58a; 
+} 
 
-/* Button kalender */
-.fc-button {
-  background: #2a2a2a !important;
-  border: 1px solid #333 !important;
-  color: #eee !important;
-  border-radius: 10px !important;
-  padding: 6px 12px !important;
-  font-size: 13px !important;
-}
+button { 
+  background: #cba58a; 
+  color: #000; 
+  border: none; 
+  padding: 14px; 
+  border-radius: 12px; 
+  font-weight: 600; 
+  cursor: pointer; 
+} 
 
-.fc-button:hover {
-  background: #333 !important;
-}
+/* ===================== FORM GRID ===================== */ 
+.form-grid { 
+  display: grid; 
+  grid-template-columns: repeat(2, 1fr); 
+  gap: 16px; 
+} 
 
-.fc-button-active {
-  background: #cba58a !important;
-  color: #000 !important;
-  border-color: #cba58a !important;
-}
+/* ===================== TEAM DESKTOP GRID ===================== */ 
+.team-grid { 
+  display: grid; 
+  grid-template-columns: 120px 1fr 160px 80px; 
+  gap: 12px; 
+  align-items: center; 
+  margin-bottom: 14px; 
+} 
 
-/* Grid & garis */
-.fc-theme-standard td,
-.fc-theme-standard th {
-  border-color: #222;
-}
+.team-rupiah { 
+  text-align: right; 
+  font-size: 13px; 
+  color: #cba58a; 
+} 
 
-.fc-scrollgrid {
-  border-color: #222;
-}
+/* ===================== TEAM MOBILE CARD ===================== */ 
+.team-card { 
+  background: #202020; 
+  border-radius: 14px; 
+  padding: 14px; 
+  margin-bottom: 14px; 
+  display: grid; 
+  gap: 10px; 
+} 
 
-/* Hari */
-.fc-daygrid-day-number {
-  color: #aaa;
-  font-size: 13px;
-}
+.team-name { 
+  font-weight: 600; 
+  font-size: 14px; 
+} 
 
-/* Event */
-.fc-event {
-  border-radius: 8px;
-  padding: 4px 6px;
-  font-size: 12px;
-  border: none;
-}
+/* ===================== MY JOBS (DESKTOP) ===================== */ 
+.job-row { 
+  display: grid; 
+  grid-template-columns: 1fr auto; 
+  gap: 16px; 
+  padding: 14px 0; 
+  border-bottom: 1px solid #222; 
+} 
 
-/* Event title */
-.fc-event-title {
-  font-weight: 600;
-}
+.job-title { 
+  font-weight: 600; 
+  font-size: 15px; 
+} 
 
-/* Today highlight */
-.fc-day-today {
-  background: rgba(203, 165, 138, 0.08) !important;
-}
+.job-client { 
+  font-size: 13px; 
+  color: #cba58a; 
+  margin-top: 2px; 
+} 
 
-/* =====================
-   CALENDAR SECTION TITLE
-===================== */
-.calendar-title {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 12px;
-}
+.job-meta { 
+  font-size: 13px; 
+  opacity: 0.85; 
+} 
 
-/* =====================
-   MOBILE CALENDAR FIX
-===================== */
-@media (max-width: 768px) {
+.job-location { 
+  font-size: 13px; 
+} 
 
-  .fc {
-    padding: 12px;
-  }
+.job-role { 
+  margin-top: 6px; 
+  font-size: 13px; 
+  color: #cba58a; 
+} 
 
-  .fc-toolbar {
-    flex-direction: column;
-    gap: 8px;
-  }
+.job-income { 
+  align-self: center; 
+  font-weight: 600; 
+  color: #cba58a;
+  white-space: nowrap; 
+} 
 
-  .fc-toolbar-title {
+/* ===================== TABLE ===================== */ 
+.card table { 
+  width: 100%; 
+  border-collapse: collapse; 
+  font-size: 13px; 
+} 
+
+.card { 
+  overflow-x: auto; 
+} 
+
+table th, table td { 
+  padding: 10px 12px; 
+  white-space: nowrap; 
+} 
+
+/* ===================== MOBILE FIX ===================== */ 
+@media (max-width: 768px) { 
+  
+  .dashboard-wrapper { 
+    padding: 16px; 
+  } 
+  
+  .dashboard-header { 
+    flex-direction: row; 
+    justify-content: space-between; 
+    align-items: center; 
+  } 
+  
+  .dashboard-brand img { 
+    width: 56px; /* ✅ PROPORSIONAL MOBILE */ 
+  } 
+  
+  /* FORM 1 KOLOM */ 
+  .form-grid { 
+    grid-template-columns: 1fr; 
+  } 
+  
+  /* TEAM GRID MATI, PAKAI CARD */ 
+  .team-grid { 
+    display: none; 
+  } 
+  
+  /* ===================== MY JOBS MOBILE ===================== */ 
+  .job-row { 
+    grid-template-columns: 1fr; 
+    gap: 8px; 
+  } 
+  
+  .job-income { 
+    text-align: left; 
     font-size: 14px;
-    text-align: center;
-  }
-
-  .fc-button {
-    font-size: 12px !important;
-    padding: 6px 10px !important;
-  }
-
-  .fc-event {
-    font-size: 11px;
-  }
+  } 
 }
