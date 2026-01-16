@@ -66,19 +66,14 @@ export default function CalendarBooking() {
       >
         <div className="day-number">{day}</div>
 
+        {/* ===== SEMUA EVENT TAMPIL (SCROLL, BUKAN DIPOTONG) ===== */}
         <div className="events">
-          {dayBookings.slice(0, 3).map((b) => (
+          {dayBookings.map((b) => (
             <div key={b.id} className="event">
               <strong>{b.acara}</strong>
               <div className="client">{b.client_name}</div>
             </div>
           ))}
-
-          {dayBookings.length > 3 && (
-            <div className="more-event">
-              +{dayBookings.length - 3} lagi
-            </div>
-          )}
         </div>
       </td>
     );
