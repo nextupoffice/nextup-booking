@@ -14,29 +14,43 @@ export default function CalendarBooking() {
       .from("bookings")
       .select("id, client_name, acara, date");
 
-    if (!error) setBookings(data);
+    if (!error) setBookings(data || []);
   };
 
-  const getDaysInMonth = () => {
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
-    return new Date(year, month + 1, 0).getDate();
-  };
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDay = new Date(year, month, 1).getDay(); // 0 = Minggu
 
   const changeMonth = (offset) => {
-    const newDate = new Date(currentMonth);
-    newDate.setMonth(currentMonth.getMonth() + offset);
+    const newDate = new Date(year, month + offset, 1);
     setCurrentMonth(newDate);
   };
 
-  const renderDay = (day) => {
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth() + 1;
-    const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  // bikin array tanggal + empty slot
+  const calendarCells = [];
+  for (let i = 0; i < firstDay; i++) {
+    calendarCells.push(null);
+  }
+  for (let day = 1; day <= daysInMonth; day++) {
+    calendarCells.push(day);
+  }
 
-    const dayBookings = bookings.filter(
-      (b) => b.date === dateStr
-    );
+  // potong per minggu (7 hari)
+  const weeks = [];
+  for (let i = 0; i < calendarCells.length; i += 7) {
+    weeks.push(calendarCells.slice(i, i + 7));
+  }
+
+  const renderDay = (day) => {
+    if (!day) return <td key={Math.random()} className="empty"></td>;
+
+    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(
+      day
+    ).padStart(2, "0")}`;
+
+    const dayBookings = bookings.filter((b) => b.date === dateStr);
 
     return (
       <td key={day} className={dayBookings.length ? "filled" : ""}>
@@ -52,18 +66,18 @@ export default function CalendarBooking() {
     );
   };
 
-  const days = Array.from({ length: getDaysInMonth() }, (_, i) => i + 1);
-
   return (
     <div className="calendar-card">
       <div className="calendar-header">
         <button onClick={() => changeMonth(-1)}>‹</button>
+
         <h3>
           {currentMonth.toLocaleString("id-ID", {
             month: "long",
             year: "numeric",
           })}
         </h3>
+
         <button onClick={() => changeMonth(1)}>›</button>
       </div>
 
@@ -79,10 +93,13 @@ export default function CalendarBooking() {
             <th>Sab</th>
           </tr>
         </thead>
+
         <tbody>
-          <tr>
-            {days.map(renderDay)}
-          </tr>
+          {weeks.map((week, i) => (
+            <tr key={i}>
+              {week.map(renderDay)}
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
