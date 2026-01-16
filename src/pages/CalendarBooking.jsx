@@ -57,10 +57,10 @@ export default function CalendarBooking() {
     const dayBookings = bookings.filter((b) => b.date === dateStr);
 
     return (
-      <td key={day} className={dayBookings.length ? "filled" : ""}>
+      <td key={day}>
         <div className="day-number">{day}</div>
 
-        {/* ===== EVENT CONTAINER (ANTI KACAU) ===== */}
+        {/* EVENT LIST (ANTI KACAU) */}
         <div className="events">
           {dayBookings.map((b) => (
             <div key={b.id} className="event">
@@ -88,27 +88,30 @@ export default function CalendarBooking() {
         <button onClick={() => changeMonth(1)}>›</button>
       </div>
 
-      <table className="calendar-table">
-        <thead>
-          <tr>
-            <th>Min</th>
-            <th>Sen</th>
-            <th>Sel</th>
-            <th>Rab</th>
-            <th>Kam</th>
-            <th>Jum</th>
-            <th>Sab</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {weeks.map((week, i) => (
-            <tr key={i}>
-              {week.map(renderDay)}
+      {/* ===== MOBILE SCROLL WRAPPER (WAJIB) ===== */}
+      <div className="calendar-scroll">
+        <table className="calendar-table">
+          <thead>
+            <tr>
+              <th>Min</th>
+              <th>Sen</th>
+              <th>Sel</th>
+              <th>Rab</th>
+              <th>Kam</th>
+              <th>Jum</th>
+              <th>Sab</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody>
+            {weeks.map((week, i) => (
+              <tr key={i}>
+                {week.map(renderDay)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

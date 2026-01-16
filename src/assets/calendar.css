@@ -146,3 +146,37 @@
     max-height: 45px;
   }
 }
+/* ===============================
+   MOBILE FIX - CALENDAR
+================================ */
+.calendar-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* KUNCI LEBAR MINIMUM KALENDER */
+.calendar-table {
+  min-width: 720px; /* 7 kolom tetap aman */
+}
+
+/* ===============================
+   MOBILE ADJUSTMENT
+================================ */
+@media (max-width: 768px) {
+  .calendar-card {
+    padding: 12px;
+  }
+
+  .calendar-header h3 {
+    font-size: 14px;
+  }
+
+  .calendar-table td {
+    height: 70px;
+  }
+
+  .calendar-table td .events {
+    max-height: 38px;
+  }
+}
