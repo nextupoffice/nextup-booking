@@ -6,6 +6,7 @@ import BookingForm from "../components/BookingForm";
 import TeamRevenue from "../components/TeamRevenue";
 import BookingTable from "../components/BookingTable";
 import MyJobs from "../components/MyJobs";
+import BookingCalendar from "../components/BookingCalendar"; // ⬅️ TAMBAHAN
 
 import { supabase } from "../supabase/client";
 import { exportBookingToExcel } from "../utils/exportBooking";
@@ -44,20 +45,26 @@ export default function DashboardPage() {
     <div className="dashboard-wrapper">
       
       {/* ================= HEADER ================= */}
-<header className="dashboard-header">
-  <div className="dashboard-brand">
-    <img
-      src={logo}
-      alt="NextUp Logo"
-      className="dashboard-logo"
-    />
-    <h2 className="dashboard-title">Dashboard</h2>
-  </div>
+      <header className="dashboard-header">
+        <div className="dashboard-brand">
+          <img
+            src={logo}
+            alt="NextUp Logo"
+            className="dashboard-logo"
+          />
+          <h2 className="dashboard-title">Dashboard</h2>
+        </div>
 
-  <button className="logout-btn" onClick={handleLogout}>
-    Logout
-  </button>
-</header>
+        <button className="logout-btn" onClick={handleLogout}>
+          Logout
+        </button>
+      </header>
+
+      {/* ================= KALENDER (ADMIN & TIM) ================= */}
+      <section style={{ marginBottom: 32 }}>
+        <h3 style={{ marginBottom: 12 }}>Kalender Booking</h3>
+        <BookingCalendar user={user} />
+      </section>
 
       {/* ================= ADMIN VIEW ================= */}
       {user?.role === "admin" && (
