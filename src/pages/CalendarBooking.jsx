@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../supabase/client";
+import "../assets/calendar.css";
 
 export default function CalendarBooking() {
   const [bookings, setBookings] = useState([]);
@@ -28,23 +29,26 @@ export default function CalendarBooking() {
     setCurrentMonth(newDate);
   };
 
-  // bikin array tanggal + empty slot
+  /* ===== BUILD CALENDAR ===== */
   const calendarCells = [];
+
   for (let i = 0; i < firstDay; i++) {
     calendarCells.push(null);
   }
+
   for (let day = 1; day <= daysInMonth; day++) {
     calendarCells.push(day);
   }
 
-  // potong per minggu (7 hari)
   const weeks = [];
   for (let i = 0; i < calendarCells.length; i += 7) {
     weeks.push(calendarCells.slice(i, i + 7));
   }
 
-  const renderDay = (day) => {
-    if (!day) return <td key={Math.random()} className="empty"></td>;
+  const renderDay = (day, index) => {
+    if (!day) {
+      return <td key={`empty-${index}`} className="empty"></td>;
+    }
 
     const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(
       day
@@ -56,12 +60,15 @@ export default function CalendarBooking() {
       <td key={day} className={dayBookings.length ? "filled" : ""}>
         <div className="day-number">{day}</div>
 
-        {dayBookings.map((b) => (
-          <div key={b.id} className="event">
-            <strong>{b.acara}</strong>
-            <div className="client">{b.client_name}</div>
-          </div>
-        ))}
+        {/* ===== EVENT CONTAINER (ANTI KACAU) ===== */}
+        <div className="events">
+          {dayBookings.map((b) => (
+            <div key={b.id} className="event">
+              <strong>{b.acara}</strong>
+              <div className="client">{b.client_name}</div>
+            </div>
+          ))}
+        </div>
       </td>
     );
   };

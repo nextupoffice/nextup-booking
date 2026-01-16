@@ -1,15 +1,22 @@
+/* ===============================
+   CALENDAR CARD (WRAPPER)
+================================ */
 .calendar-card {
-  background: #fff;
-  padding: 16px;
-  border-radius: 14px;
+  background: #ffffff;
+  padding: 18px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  margin-top: 24px;
 }
 
-/* ================= HEADER ================= */
+/* ===============================
+   HEADER
+================================ */
 .calendar-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .calendar-header h3 {
@@ -20,89 +27,124 @@
 }
 
 .calendar-header button {
-  font-size: 18px;
-  padding: 6px 12px;
-  border: none;
   background: #111;
   color: #fff;
-  border-radius: 8px;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 10px;
+  font-size: 18px;
   cursor: pointer;
 }
 
-/* ================= TABLE ================= */
+/* ===============================
+   TABLE
+================================ */
 .calendar-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed; /* PENTING: biar kolom rata */
+  table-layout: fixed; /* KUNCI GRID */
 }
 
 .calendar-table th {
+  background: #f8fafc;
   border: 1px solid #e5e7eb;
-  background: #f9fafb;
+  padding: 10px 0;
   font-size: 12px;
-  padding: 8px 0;
   text-align: center;
+  font-weight: 600;
 }
 
+/* ===============================
+   DAY CELL
+================================ */
 .calendar-table td {
   border: 1px solid #e5e7eb;
   vertical-align: top;
+  height: 130px; /* KUNCI TINGGI */
   padding: 6px;
-  height: 120px;
-  font-size: 12px;
-  position: relative;
+  background: #fff;
 }
 
-/* ================= EMPTY CELL ================= */
+/* ===============================
+   EMPTY CELL
+================================ */
 .calendar-table td.empty {
-  background: #fafafa;
+  background: #f9fafb;
 }
 
-/* ================= DAY NUMBER ================= */
+/* ===============================
+   DAY NUMBER
+================================ */
 .day-number {
+  font-size: 12px;
   font-weight: 600;
-  font-size: 12px;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+  color: #111827;
 }
 
-/* ================= FILLED DAY ================= */
-.calendar-table td.filled {
-  background: #f0f9ff;
+/* ===============================
+   EVENT CONTAINER (ANTI KACAU)
+================================ */
+.calendar-table td .events {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 90px;      /* BATASI TINGGI */
+  overflow-y: auto;      /* SCROLL DALAM */
+  padding-right: 2px;
 }
 
-/* ================= EVENT ================= */
+/* ===============================
+   EVENT CARD
+================================ */
 .event {
-  background: #2563eb;
-  color: white;
-  border-radius: 6px;
-  padding: 4px 6px;
-  margin-bottom: 4px;
-  font-size: 12px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 11px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+/* JUDUL ACARA */
+.event strong {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
   line-height: 1.3;
 }
 
-.event strong {
-  display: block;
-  font-size: 12px;
-}
-
+/* NAMA CLIENT */
 .event .client {
-  font-size: 11px;
-  opacity: 0.9;
+  font-size: 10px;
+  opacity: 0.85;
 }
 
-/* ================= RESPONSIVE ================= */
+/* ===============================
+   SCROLL BAR HALUS
+================================ */
+.calendar-table td .events::-webkit-scrollbar {
+  width: 4px;
+}
+
+.calendar-table td .events::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.25);
+  border-radius: 4px;
+}
+
+/* ===============================
+   RESPONSIVE
+================================ */
 @media (max-width: 768px) {
   .calendar-table td {
-    height: 90px;
-    padding: 4px;
+    height: 110px;
+  }
+
+  .calendar-table td .events {
+    max-height: 70px;
   }
 
   .event {
-    font-size: 11px;
-  }
-
-  .event .client {
     font-size: 10px;
   }
 }
