@@ -5,6 +5,7 @@ import { formatRupiahDisplay } from "../utils/format";
 export default function BookingTable() {
   const user = JSON.parse(localStorage.getItem("user"));
   const [groupedData, setGroupedData] = useState({});
+  const [editingBooking, setEditingBooking] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -38,13 +39,9 @@ export default function BookingTable() {
       });
 
       if (!grouped[monthKey]) {
-        grouped[monthKey] = {
-          rows: [],
-          total: 0,
-        };
+        grouped[monthKey] = { rows: [], total: 0 };
       }
 
-      // 🔹 TOTAL BERBEDA SESUAI ROLE
       const value =
         user.role === "admin"
           ? (b.dp || 0) + (b.pelunasan || 0)
@@ -55,6 +52,28 @@ export default function BookingTable() {
     });
 
     setGroupedData(grouped);
+  };
+
+  /* =====================
+     SAVE REVISI
+  ===================== */
+  const saveRevision = async () => {
+    await supabase
+      .from("bookings")
+      .update({
+        client_name: editingBooking.client_name,
+        phone: editingBooking.phone,
+        acara: editingBooking.acara,
+        date: editingBooking.date,
+        time: editingBooking.time,
+        location: editingBooking.location,
+        dp: editingBooking.dp,
+        pelunasan: editingBooking.pelunasan,
+        team_split: editingBooking.team_split,
+      })
+      .eq("id", editingBooking.id);
+
+    setEditingBooking(null);
   };
 
   return (
@@ -79,6 +98,7 @@ export default function BookingTable() {
                     user.role === "admin" ? "DP" : "Pendapatan",
                     user.role === "admin" ? "Pelunasan" : "",
                     "Total",
+                    user.role === "admin" ? "Aksi" : "",
                   ]
                     .filter(Boolean)
                     .map((h) => (
@@ -126,6 +146,18 @@ export default function BookingTable() {
                       <td style={{ ...td, color: "#cba58a" }}>
                         {formatRupiahDisplay(total)}
                       </td>
+
+                      {user.role === "admin" && (
+                        <td style={td}>
+                          <button
+                            onClick={() =>
+                              setEditingBooking({ ...b })
+                            }
+                          >
+                            Edit
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
@@ -141,6 +173,77 @@ export default function BookingTable() {
           </div>
         </div>
       ))}
+
+      {/* =====================
+          MODAL EDIT
+      ===================== */}
+      {editingBooking && (
+        <div style={modal}>
+          <div style={modalBox}>
+            <h3>Edit Booking</h3>
+
+            {[
+              ["Client", "client_name"],
+              ["No HP", "phone"],
+              ["Acara", "acara"],
+              ["Tanggal", "date", "date"],
+              ["Waktu", "time"],
+              ["Lokasi", "location"],
+            ].map(([label, key, type]) => (
+              <input
+                key={key}
+                type={type || "text"}
+                placeholder={label}
+                value={editingBooking[key] || ""}
+                onChange={(e) =>
+                  setEditingBooking({
+                    ...editingBooking,
+                    [key]: e.target.value,
+                  })
+                }
+              />
+            ))}
+
+            {user.role === "admin" && (
+              <>
+                <input
+                  type="number"
+                  placeholder="DP"
+                  value={editingBooking.dp || 0}
+                  onChange={(e) =>
+                    setEditingBooking({
+                      ...editingBooking,
+                      dp: Number(e.target.value),
+                    })
+                  }
+                />
+
+                <input
+                  type="number"
+                  placeholder="Pelunasan"
+                  value={editingBooking.pelunasan || 0}
+                  onChange={(e) =>
+                    setEditingBooking({
+                      ...editingBooking,
+                      pelunasan: Number(e.target.value),
+                    })
+                  }
+                />
+              </>
+            )}
+
+            <div style={{ marginTop: 12 }}>
+              <button onClick={saveRevision}>Simpan</button>
+              <button
+                onClick={() => setEditingBooking(null)}
+                style={{ marginLeft: 8 }}
+              >
+                Batal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -158,4 +261,24 @@ const td = {
   padding: 10,
   borderBottom: "1px solid #222",
   fontSize: 13,
+};
+
+const modal = {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(0,0,0,.6)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  zIndex: 99,
+};
+
+const modalBox = {
+  background: "#111",
+  padding: 20,
+  borderRadius: 8,
+  width: 320,
+  display: "flex",
+  flexDirection: "column",
+  gap: 8,
 };
