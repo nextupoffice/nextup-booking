@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "../supabase/client";
 import { formatRupiahDisplay } from "../utils/format";
 
@@ -6,6 +6,9 @@ export default function BookingTable() {
   const user = JSON.parse(localStorage.getItem("user"));
   const [groupedData, setGroupedData] = useState({});
   const [editingBooking, setEditingBooking] = useState(null);
+
+  const [allTeamNames, setAllTeamNames] = useState([]);
+  const [allRoles, setAllRoles] = useState([]);
 
   useEffect(() => {
     fetchData();
@@ -31,6 +34,8 @@ export default function BookingTable() {
     if (!data) return;
 
     const grouped = {};
+    const names = new Set();
+    const roles = new Set();
 
     data.forEach((b) => {
       const monthKey = new Date(b.date).toLocaleString("id-ID", {
@@ -43,6 +48,12 @@ export default function BookingTable() {
       }
 
       const teamJobs = Array.isArray(b.team_jobs) ? b.team_jobs : [];
+
+      teamJobs.forEach((t) => {
+        if (t.name) names.add(t.name);
+        if (t.role) roles.add(t.role);
+      });
+
       const myJob = teamJobs.find((j) => j.name === user.username);
 
       const value =
@@ -50,11 +61,17 @@ export default function BookingTable() {
           ? (b.dp || 0) + (b.pelunasan || 0)
           : myJob?.income || 0;
 
-      grouped[monthKey].rows.push({ ...b, team_jobs: teamJobs });
+      grouped[monthKey].rows.push({
+        ...b,
+        team_jobs: teamJobs,
+      });
+
       grouped[monthKey].total += value;
     });
 
     setGroupedData(grouped);
+    setAllTeamNames([...names]);
+    setAllRoles([...roles]);
   };
 
   const saveRevision = async () => {
@@ -111,9 +128,11 @@ export default function BookingTable() {
                 {groupedData[month].rows.map((b) => {
                   const dp = b.dp || 0;
                   const pelunasan = b.pelunasan || 0;
+
                   const myJob = b.team_jobs.find(
                     (j) => j.name === user.username
                   );
+
                   const pendapatan = myJob?.income || 0;
 
                   const total =
@@ -169,60 +188,12 @@ export default function BookingTable() {
       {/* ===== MODAL EDIT ===== */}
       {editingBooking && (
         <div style={modal}>
-          <div style={modalBox}>
+          <div style={modalBoxScrollable}>
             <h3>Edit Booking</h3>
-
-            {[
-              ["Client", "client_name"],
-              ["No HP", "phone"],
-              ["Acara", "acara"],
-              ["Tanggal", "date", "date"],
-              ["Waktu", "time"],
-              ["Lokasi", "location"],
-            ].map(([label, key, type]) => (
-              <input
-                key={key}
-                type={type || "text"}
-                placeholder={label}
-                value={editingBooking[key] || ""}
-                onChange={(e) =>
-                  setEditingBooking({
-                    ...editingBooking,
-                    [key]: e.target.value,
-                  })
-                }
-              />
-            ))}
 
             {user.role === "admin" && (
               <>
-                <input
-                  type="number"
-                  placeholder="DP"
-                  value={editingBooking.dp || 0}
-                  onChange={(e) =>
-                    setEditingBooking({
-                      ...editingBooking,
-                      dp: Number(e.target.value),
-                    })
-                  }
-                />
-
-                <input
-                  type="number"
-                  placeholder="Pelunasan"
-                  value={editingBooking.pelunasan || 0}
-                  onChange={(e) =>
-                    setEditingBooking({
-                      ...editingBooking,
-                      pelunasan: Number(e.target.value),
-                    })
-                  }
-                />
-
-                <h4 style={{ marginTop: 10, color: "#cba58a" }}>
-                  Tim & Pembagian
-                </h4>
+                <h4 style={{ color: "#cba58a" }}>Tim & Pembagian</h4>
 
                 {editingBooking.team_jobs.map((job, i) => (
                   <div
@@ -233,52 +204,47 @@ export default function BookingTable() {
                       gap: 6,
                     }}
                   >
+                    {/* NAMA */}
                     <input
+                      list={job.type !== "freelance" ? "team-names" : undefined}
                       value={job.name}
                       placeholder="Nama"
                       onChange={(e) => {
                         const updated = [...editingBooking.team_jobs];
                         updated[i].name = e.target.value;
-                        setEditingBooking({
-                          ...editingBooking,
-                          team_jobs: updated,
-                        });
+                        setEditingBooking({ ...editingBooking, team_jobs: updated });
                       }}
                     />
 
+                    {/* ROLE */}
                     <input
+                      list="team-roles"
                       value={job.role}
                       placeholder="Role"
                       onChange={(e) => {
                         const updated = [...editingBooking.team_jobs];
                         updated[i].role = e.target.value;
-                        setEditingBooking({
-                          ...editingBooking,
-                          team_jobs: updated,
-                        });
+                        setEditingBooking({ ...editingBooking, team_jobs: updated });
                       }}
                     />
 
+                    {/* INCOME */}
                     <input
                       type="number"
                       value={job.income}
                       onChange={(e) => {
                         const updated = [...editingBooking.team_jobs];
                         updated[i].income = Number(e.target.value);
-                        setEditingBooking({
-                          ...editingBooking,
-                          team_jobs: updated,
-                        });
+                        setEditingBooking({ ...editingBooking, team_jobs: updated });
                       }}
                     />
 
+                    {/* REMOVE */}
                     <button
                       onClick={() =>
                         setEditingBooking({
                           ...editingBooking,
-                          team_jobs: editingBooking.team_jobs.filter(
-                            (_, idx) => idx !== i
-                          ),
+                          team_jobs: editingBooking.team_jobs.filter((_, idx) => idx !== i),
                         })
                       }
                     >
@@ -298,6 +264,7 @@ export default function BookingTable() {
                           name: "",
                           role: "",
                           income: 0,
+                          type: "internal",
                         },
                       ],
                     })
@@ -308,7 +275,7 @@ export default function BookingTable() {
               </>
             )}
 
-            <div style={{ marginTop: 14 }}>
+            <div style={{ marginTop: 12 }}>
               <button onClick={saveRevision}>Simpan</button>
               <button
                 onClick={() => setEditingBooking(null)}
@@ -317,6 +284,19 @@ export default function BookingTable() {
                 Batal
               </button>
             </div>
+
+            {/* ===== DATALIST ===== */}
+            <datalist id="team-names">
+              {allTeamNames.map((n) => (
+                <option key={n} value={n} />
+              ))}
+            </datalist>
+
+            <datalist id="team-roles">
+              {allRoles.map((r) => (
+                <option key={r} value={r} />
+              ))}
+            </datalist>
           </div>
         </div>
       )}
@@ -344,20 +324,19 @@ const modal = {
   inset: 0,
   background: "rgba(0,0,0,.6)",
   display: "flex",
-  alignItems: "flex-start",     // ⬅️ PENTING
+  alignItems: "center",
   justifyContent: "center",
-  paddingTop: "6vh",            // ⬅️ PENTING
   zIndex: 99,
 };
 
-const modalBox = {
+const modalBoxScrollable = {
   background: "#111",
   padding: 20,
-  borderRadius: 10,
+  borderRadius: 8,
   width: 420,
-  maxHeight: "88vh",             // ⬅️ ANTI KE POTONG
-  overflowY: "auto",             // ⬅️ SCROLL DALAM MODAL
+  maxHeight: "85vh",
+  overflowY: "auto",
   display: "flex",
   flexDirection: "column",
-  gap: 10,
+  gap: 8,
 };
