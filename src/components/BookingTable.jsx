@@ -7,9 +7,6 @@ export default function BookingTable() {
   const [groupedData, setGroupedData] = useState({});
   const [editingBooking, setEditingBooking] = useState(null);
 
-  const [allTeamNames, setAllTeamNames] = useState([]);
-  const [allRoles, setAllRoles] = useState([]);
-
   useEffect(() => {
     fetchData();
 
@@ -34,8 +31,6 @@ export default function BookingTable() {
     if (!data) return;
 
     const grouped = {};
-    const names = new Set();
-    const roles = new Set();
 
     data.forEach((b) => {
       const monthKey = new Date(b.date).toLocaleString("id-ID", {
@@ -48,12 +43,6 @@ export default function BookingTable() {
       }
 
       const teamJobs = Array.isArray(b.team_jobs) ? b.team_jobs : [];
-
-      teamJobs.forEach((t) => {
-        if (t.name) names.add(t.name);
-        if (t.role) roles.add(t.role);
-      });
-
       const myJob = teamJobs.find((j) => j.name === user.username);
 
       const value =
@@ -61,18 +50,29 @@ export default function BookingTable() {
           ? (b.dp || 0) + (b.pelunasan || 0)
           : myJob?.income || 0;
 
-      grouped[monthKey].rows.push({
-        ...b,
-        team_jobs: teamJobs,
-      });
-
+      grouped[monthKey].rows.push({ ...b, team_jobs: teamJobs });
       grouped[monthKey].total += value;
     });
 
     setGroupedData(grouped);
-    setAllTeamNames([...names]);
-    setAllRoles([...roles]);
   };
+
+  /* ================= MASTER DATA ================= */
+  const teamMaster = useMemo(() => {
+    return Object.values(groupedData)
+      .flatMap((m) => m.rows)
+      .flatMap((b) => b.team_jobs || []);
+  }, [groupedData]);
+
+  const teamNames = useMemo(
+    () => [...new Set(teamMaster.map((j) => j.name).filter(Boolean))],
+    [teamMaster]
+  );
+
+  const roleOptions = useMemo(
+    () => [...new Set(teamMaster.map((j) => j.role).filter(Boolean))],
+    [teamMaster]
+  );
 
   const saveRevision = async () => {
     await supabase
@@ -128,11 +128,9 @@ export default function BookingTable() {
                 {groupedData[month].rows.map((b) => {
                   const dp = b.dp || 0;
                   const pelunasan = b.pelunasan || 0;
-
                   const myJob = b.team_jobs.find(
                     (j) => j.name === user.username
                   );
-
                   const pendapatan = myJob?.income || 0;
 
                   const total =
@@ -185,97 +183,170 @@ export default function BookingTable() {
         </div>
       ))}
 
-      {/* ===== MODAL EDIT ===== */}
+      {/* ================= MODAL EDIT ================= */}
       {editingBooking && (
         <div style={modal}>
-          <div style={modalBoxScrollable}>
+          <div style={modalBox}>
             <h3>Edit Booking</h3>
 
-            {user.role === "admin" && (
-              <>
-                <h4 style={{ color: "#cba58a" }}>Tim & Pembagian</h4>
+            {[
+              ["Client", "client_name"],
+              ["No HP", "phone"],
+              ["Acara", "acara"],
+              ["Tanggal", "date", "date"],
+              ["Waktu", "time"],
+              ["Lokasi", "location"],
+            ].map(([label, key, type]) => (
+              <input
+                key={key}
+                type={type || "text"}
+                placeholder={label}
+                value={editingBooking[key] || ""}
+                onChange={(e) =>
+                  setEditingBooking({
+                    ...editingBooking,
+                    [key]: e.target.value,
+                  })
+                }
+              />
+            ))}
 
-                {editingBooking.team_jobs.map((job, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr 1fr auto",
-                      gap: 6,
-                    }}
-                  >
-                    {/* NAMA */}
-                    <input
-                      list={job.type !== "freelance" ? "team-names" : undefined}
-                      value={job.name}
-                      placeholder="Nama"
-                      onChange={(e) => {
-                        const updated = [...editingBooking.team_jobs];
-                        updated[i].name = e.target.value;
-                        setEditingBooking({ ...editingBooking, team_jobs: updated });
-                      }}
-                    />
+            <input
+              type="number"
+              placeholder="DP"
+              value={editingBooking.dp || 0}
+              onChange={(e) =>
+                setEditingBooking({
+                  ...editingBooking,
+                  dp: Number(e.target.value),
+                })
+              }
+            />
 
-                    {/* ROLE */}
-                    <input
-                      list="team-roles"
-                      value={job.role}
-                      placeholder="Role"
-                      onChange={(e) => {
-                        const updated = [...editingBooking.team_jobs];
-                        updated[i].role = e.target.value;
-                        setEditingBooking({ ...editingBooking, team_jobs: updated });
-                      }}
-                    />
+            <input
+              type="number"
+              placeholder="Pelunasan"
+              value={editingBooking.pelunasan || 0}
+              onChange={(e) =>
+                setEditingBooking({
+                  ...editingBooking,
+                  pelunasan: Number(e.target.value),
+                })
+              }
+            />
 
-                    {/* INCOME */}
-                    <input
-                      type="number"
-                      value={job.income}
-                      onChange={(e) => {
-                        const updated = [...editingBooking.team_jobs];
-                        updated[i].income = Number(e.target.value);
-                        setEditingBooking({ ...editingBooking, team_jobs: updated });
-                      }}
-                    />
+            <h4 style={{ marginTop: 10, color: "#cba58a" }}>
+              Tim & Pembagian
+            </h4>
 
-                    {/* REMOVE */}
-                    <button
-                      onClick={() =>
-                        setEditingBooking({
-                          ...editingBooking,
-                          team_jobs: editingBooking.team_jobs.filter((_, idx) => idx !== i),
-                        })
-                      }
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
+            {editingBooking.team_jobs.map((job, i) => (
+              <div
+                key={i}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1.2fr 1fr 1fr auto",
+                  gap: 6,
+                }}
+              >
+                <input
+                  list="team-names"
+                  placeholder="Nama"
+                  value={job.name}
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    const last = teamMaster
+                      .filter((t) => t.name === name)
+                      .slice(-1)[0];
+
+                    const updated = [...editingBooking.team_jobs];
+                    updated[i] = {
+                      ...updated[i],
+                      name,
+                      role: last?.role || updated[i].role,
+                      income: last?.income || updated[i].income,
+                    };
+
+                    setEditingBooking({
+                      ...editingBooking,
+                      team_jobs: updated,
+                    });
+                  }}
+                />
+
+                <input
+                  list="role-options"
+                  placeholder="Role"
+                  value={job.role}
+                  onChange={(e) => {
+                    const role = e.target.value;
+                    const last = teamMaster
+                      .filter(
+                        (t) => t.name === job.name && t.role === role
+                      )
+                      .slice(-1)[0];
+
+                    const updated = [...editingBooking.team_jobs];
+                    updated[i] = {
+                      ...updated[i],
+                      role,
+                      income: last?.income || updated[i].income,
+                    };
+
+                    setEditingBooking({
+                      ...editingBooking,
+                      team_jobs: updated,
+                    });
+                  }}
+                />
+
+                <input
+                  type="number"
+                  value={job.income}
+                  onChange={(e) => {
+                    const updated = [...editingBooking.team_jobs];
+                    updated[i].income = Number(e.target.value);
+                    setEditingBooking({
+                      ...editingBooking,
+                      team_jobs: updated,
+                    });
+                  }}
+                />
 
                 <button
                   onClick={() =>
                     setEditingBooking({
                       ...editingBooking,
-                      team_jobs: [
-                        ...editingBooking.team_jobs,
-                        {
-                          user_id: crypto.randomUUID(),
-                          name: "",
-                          role: "",
-                          income: 0,
-                          type: "internal",
-                        },
-                      ],
+                      team_jobs: editingBooking.team_jobs.filter(
+                        (_, idx) => idx !== i
+                      ),
                     })
                   }
                 >
-                  + Tambah Tim
+                  ✕
                 </button>
-              </>
-            )}
+              </div>
+            ))}
 
-            <div style={{ marginTop: 12 }}>
+            <button
+              onClick={() =>
+                setEditingBooking({
+                  ...editingBooking,
+                  team_jobs: [
+                    ...editingBooking.team_jobs,
+                    {
+                      user_id: crypto.randomUUID(),
+                      name: "",
+                      role: "",
+                      income: 0,
+                    },
+                  ],
+                })
+              }
+            >
+              + Tambah Tim
+            </button>
+
+            <div style={{ marginTop: 14 }}>
               <button onClick={saveRevision}>Simpan</button>
               <button
                 onClick={() => setEditingBooking(null)}
@@ -287,15 +358,16 @@ export default function BookingTable() {
 
             {/* ===== DATALIST ===== */}
             <datalist id="team-names">
-              {allTeamNames.map((n) => (
+              {teamNames.map((n) => (
                 <option key={n} value={n} />
               ))}
             </datalist>
 
-            <datalist id="team-roles">
-              {allRoles.map((r) => (
+            <datalist id="role-options">
+              {roleOptions.map((r) => (
                 <option key={r} value={r} />
               ))}
+              <option value="freelance" />
             </datalist>
           </div>
         </div>
@@ -304,7 +376,7 @@ export default function BookingTable() {
   );
 }
 
-/* ===== STYLE ===== */
+/* ================= STYLE ================= */
 const th = {
   padding: 10,
   textAlign: "left",
@@ -324,19 +396,20 @@ const modal = {
   inset: 0,
   background: "rgba(0,0,0,.6)",
   display: "flex",
-  alignItems: "center",
+  alignItems: "flex-start",
   justifyContent: "center",
+  paddingTop: "6vh",
   zIndex: 99,
 };
 
-const modalBoxScrollable = {
+const modalBox = {
   background: "#111",
   padding: 20,
-  borderRadius: 8,
+  borderRadius: 10,
   width: 420,
-  maxHeight: "85vh",
+  maxHeight: "88vh",
   overflowY: "auto",
   display: "flex",
   flexDirection: "column",
-  gap: 8,
+  gap: 10,
 };
