@@ -55,7 +55,7 @@ export default function BookingTable() {
   };
 
   /* =====================
-     SAVE REVISI
+     SAVE REVISI (SUDAH BENAR)
   ===================== */
   const saveRevision = async () => {
     await supabase
@@ -151,7 +151,10 @@ export default function BookingTable() {
                         <td style={td}>
                           <button
                             onClick={() =>
-                              setEditingBooking({ ...b })
+                              setEditingBooking({
+                                ...b,
+                                team_split: b.team_split || {},
+                              })
                             }
                           >
                             Edit
@@ -164,18 +167,11 @@ export default function BookingTable() {
               </tbody>
             </table>
           </div>
-
-          <div style={{ textAlign: "right", marginTop: 8 }}>
-            <strong>
-              Total Bulan Ini:{" "}
-              {formatRupiahDisplay(groupedData[month].total)}
-            </strong>
-          </div>
         </div>
       ))}
 
       {/* =====================
-          MODAL EDIT
+          MODAL EDIT (DIPERBAIKI)
       ===================== */}
       {editingBooking && (
         <div style={modal}>
@@ -204,6 +200,7 @@ export default function BookingTable() {
               />
             ))}
 
+            {/* ===== ADMIN ONLY ===== */}
             {user.role === "admin" && (
               <>
                 <input
@@ -229,6 +226,47 @@ export default function BookingTable() {
                     })
                   }
                 />
+
+                {/* ===== EDIT TEAM SPLIT ===== */}
+                <h4 style={{ marginTop: 10, color: "#cba58a" }}>
+                  Tim & Pembagian
+                </h4>
+
+                {Object.keys(editingBooking.team_split || {}).map(
+                  (role) => (
+                    <div
+                      key={role}
+                      style={{
+                        display: "flex",
+                        gap: 6,
+                        alignItems: "center",
+                      }}
+                    >
+                      <input
+                        value={role}
+                        disabled
+                        style={{ flex: 1 }}
+                      />
+
+                      <input
+                        type="number"
+                        value={
+                          editingBooking.team_split[role] || 0
+                        }
+                        onChange={(e) =>
+                          setEditingBooking({
+                            ...editingBooking,
+                            team_split: {
+                              ...editingBooking.team_split,
+                              [role]: Number(e.target.value),
+                            },
+                          })
+                        }
+                        style={{ flex: 1 }}
+                      />
+                    </div>
+                  )
+                )}
               </>
             )}
 
@@ -277,7 +315,7 @@ const modalBox = {
   background: "#111",
   padding: 20,
   borderRadius: 8,
-  width: 320,
+  width: 340,
   display: "flex",
   flexDirection: "column",
   gap: 8,
