@@ -44,9 +44,7 @@ export default function BookingTable() {
 
       const teamJobs = Array.isArray(b.team_jobs) ? b.team_jobs : [];
 
-      const myJob = teamJobs.find(
-        (j) => j.name === user.username
-      );
+      const myJob = teamJobs.find((j) => j.name === user.username);
 
       const value =
         user.role === "admin"
@@ -234,30 +232,88 @@ export default function BookingTable() {
                   Tim & Pembagian
                 </h4>
 
-                {editingBooking.team_jobs.length === 0 && (
-                  <small style={{ color: "#777" }}>Belum ada tim</small>
-                )}
-
                 {editingBooking.team_jobs.map((job, i) => (
-                  <div key={i} style={{ display: "flex", gap: 6 }}>
-                    <input value={job.name} disabled style={{ flex: 1 }} />
-                    <input value={job.role} disabled style={{ flex: 1 }} />
+                  <div
+                    key={i}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr 1fr auto",
+                      gap: 6,
+                    }}
+                  >
+                    <input
+                      value={job.name}
+                      placeholder="Nama"
+                      onChange={(e) => {
+                        const updated = [...editingBooking.team_jobs];
+                        updated[i].name = e.target.value;
+                        setEditingBooking({
+                          ...editingBooking,
+                          team_jobs: updated,
+                        });
+                      }}
+                    />
+
+                    <input
+                      value={job.role}
+                      placeholder="Role"
+                      onChange={(e) => {
+                        const updated = [...editingBooking.team_jobs];
+                        updated[i].role = e.target.value;
+                        setEditingBooking({
+                          ...editingBooking,
+                          team_jobs: updated,
+                        });
+                      }}
+                    />
+
                     <input
                       type="number"
                       value={job.income}
                       onChange={(e) => {
                         const updated = [...editingBooking.team_jobs];
                         updated[i].income = Number(e.target.value);
-
                         setEditingBooking({
                           ...editingBooking,
                           team_jobs: updated,
                         });
                       }}
-                      style={{ flex: 1 }}
                     />
+
+                    <button
+                      onClick={() => {
+                        setEditingBooking({
+                          ...editingBooking,
+                          team_jobs: editingBooking.team_jobs.filter(
+                            (_, idx) => idx !== i
+                          ),
+                        });
+                      }}
+                    >
+                      ✕
+                    </button>
                   </div>
                 ))}
+
+                <button
+                  onClick={() =>
+                    setEditingBooking({
+                      ...editingBooking,
+                      team_jobs: [
+                        ...editingBooking.team_jobs,
+                        {
+                          user_id: crypto.randomUUID(),
+                          name: "",
+                          role: "",
+                          income: 0,
+                          type: "internal",
+                        },
+                      ],
+                    })
+                  }
+                >
+                  + Tambah Tim
+                </button>
               </>
             )}
 
@@ -306,7 +362,7 @@ const modalBox = {
   background: "#111",
   padding: 20,
   borderRadius: 8,
-  width: 380,
+  width: 420,
   display: "flex",
   flexDirection: "column",
   gap: 8,
