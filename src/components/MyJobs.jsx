@@ -14,11 +14,13 @@ export default function MyJobs() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "bookings" },
-        fetchJobs
+        () => fetchJobs()
       )
       .subscribe();
 
-    return () => supabase.removeChannel(channel);
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchJobs = async () => {
@@ -27,23 +29,28 @@ export default function MyJobs() {
       .select("*")
       .order("date", { ascending: true });
 
-    if (error) return console.error(error);
+    if (error) {
+      console.error(error);
+      return;
+    }
 
     const myJobs = [];
 
     data.forEach((b) => {
-      b.team_jobs?.forEach((t) => {
-        if (t.name === user.username) {
+      if (!Array.isArray(b.team_jobs)) return;
+
+      b.team_jobs.forEach((t) => {
+        if (t.user_id === user.id) {
           myJobs.push({
-            id: b.id + t.name,
+            id: `${b.id}-${t.user_id}`,
             acara: b.acara,
-            client_name: b.client_name, // ✅ NAMA CLIENT
+            client_name: b.client_name,
+            phone: b.phone,
             date: b.date,
             time: b.time,
             location: b.location,
-            phone: b.phone,
             role: t.role,
-            income: t.income,
+            income: t.income || 0,
           });
         }
       });
@@ -54,7 +61,7 @@ export default function MyJobs() {
 
   // === GROUP PER BULAN ===
   const grouped = jobs.reduce((acc, job) => {
-    const month = job.date.slice(0, 7); // YYYY-MM
+    const month = job.date.slice(0, 7);
     if (!acc[month]) acc[month] = [];
     acc[month].push(job);
     return acc;
@@ -65,7 +72,7 @@ export default function MyJobs() {
       <h3>My Jobs</h3>
 
       {Object.entries(grouped).map(([month, items]) => {
-        const total = items.reduce((s, i) => s + i.income, 0);
+        const total = items.reduce((sum, i) => sum + i.income, 0);
 
         return (
           <div key={month} style={{ marginTop: 24 }}>
@@ -90,7 +97,6 @@ export default function MyJobs() {
                 <div>
                   <strong>{job.acara}</strong>
 
-                  {/* ✅ NAMA CLIENT */}
                   {job.client_name && (
                     <div
                       style={{

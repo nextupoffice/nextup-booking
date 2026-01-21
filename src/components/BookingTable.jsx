@@ -7,10 +7,6 @@ export default function BookingTable() {
   const [groupedData, setGroupedData] = useState({});
   const [editingBooking, setEditingBooking] = useState(null);
 
-  // === STATE TAMBAHAN UNTUK TEAM ===
-  const [newTeamRole, setNewTeamRole] = useState("");
-  const [newTeamValue, setNewTeamValue] = useState("");
-
   useEffect(() => {
     fetchData();
 
@@ -46,17 +42,22 @@ export default function BookingTable() {
         grouped[monthKey] = { rows: [], total: 0 };
       }
 
-      const teamSplit =
-        typeof b.team_split === "string"
-          ? JSON.parse(b.team_split)
-          : b.team_split || {};
+      const teamJobs = Array.isArray(b.team_jobs) ? b.team_jobs : [];
+
+      const myJob = teamJobs.find(
+        (j) => j.name === user.username
+      );
 
       const value =
         user.role === "admin"
           ? (b.dp || 0) + (b.pelunasan || 0)
-          : teamSplit?.[user.username] || 0;
+          : myJob?.income || 0;
 
-      grouped[monthKey].rows.push({ ...b, team_split: teamSplit });
+      grouped[monthKey].rows.push({
+        ...b,
+        team_jobs: teamJobs,
+      });
+
       grouped[monthKey].total += value;
     });
 
@@ -76,7 +77,7 @@ export default function BookingTable() {
         location: editingBooking.location,
         dp: editingBooking.dp,
         pelunasan: editingBooking.pelunasan,
-        team_split: editingBooking.team_split,
+        team_jobs: editingBooking.team_jobs,
       })
       .eq("id", editingBooking.id);
 
@@ -109,9 +110,7 @@ export default function BookingTable() {
                   ]
                     .filter(Boolean)
                     .map((h) => (
-                      <th key={h} style={th}>
-                        {h}
-                      </th>
+                      <th key={h} style={th}>{h}</th>
                     ))}
                 </tr>
               </thead>
@@ -120,8 +119,12 @@ export default function BookingTable() {
                 {groupedData[month].rows.map((b) => {
                   const dp = b.dp || 0;
                   const pelunasan = b.pelunasan || 0;
-                  const pendapatan =
-                    b.team_split?.[user.username] || 0;
+
+                  const myJob = b.team_jobs.find(
+                    (j) => j.name === user.username
+                  );
+
+                  const pendapatan = myJob?.income || 0;
 
                   const total =
                     user.role === "admin"
@@ -140,14 +143,10 @@ export default function BookingTable() {
                       {user.role === "admin" ? (
                         <>
                           <td style={td}>{formatRupiahDisplay(dp)}</td>
-                          <td style={td}>
-                            {formatRupiahDisplay(pelunasan)}
-                          </td>
+                          <td style={td}>{formatRupiahDisplay(pelunasan)}</td>
                         </>
                       ) : (
-                        <td style={td}>
-                          {formatRupiahDisplay(pendapatan)}
-                        </td>
+                        <td style={td}>{formatRupiahDisplay(pendapatan)}</td>
                       )}
 
                       <td style={{ ...td, color: "#cba58a" }}>
@@ -160,10 +159,7 @@ export default function BookingTable() {
                             onClick={() =>
                               setEditingBooking({
                                 ...b,
-                                team_split:
-                                  typeof b.team_split === "string"
-                                    ? JSON.parse(b.team_split)
-                                    : b.team_split || {},
+                                team_jobs: b.team_jobs || [],
                               })
                             }
                           >
@@ -208,7 +204,6 @@ export default function BookingTable() {
               />
             ))}
 
-            {/* ===== ADMIN ONLY ===== */}
             {user.role === "admin" && (
               <>
                 <input
@@ -239,70 +234,30 @@ export default function BookingTable() {
                   Tim & Pembagian
                 </h4>
 
-                {Object.keys(editingBooking.team_split).length === 0 && (
-                  <small style={{ color: "#777" }}>
-                    Belum ada tim
-                  </small>
+                {editingBooking.team_jobs.length === 0 && (
+                  <small style={{ color: "#777" }}>Belum ada tim</small>
                 )}
 
-                {Object.keys(editingBooking.team_split).map((role) => (
-                  <div
-                    key={role}
-                    style={{ display: "flex", gap: 6 }}
-                  >
-                    <input value={role} disabled style={{ flex: 1 }} />
+                {editingBooking.team_jobs.map((job, i) => (
+                  <div key={i} style={{ display: "flex", gap: 6 }}>
+                    <input value={job.name} disabled style={{ flex: 1 }} />
+                    <input value={job.role} disabled style={{ flex: 1 }} />
                     <input
                       type="number"
-                      value={editingBooking.team_split[role]}
-                      onChange={(e) =>
+                      value={job.income}
+                      onChange={(e) => {
+                        const updated = [...editingBooking.team_jobs];
+                        updated[i].income = Number(e.target.value);
+
                         setEditingBooking({
                           ...editingBooking,
-                          team_split: {
-                            ...editingBooking.team_split,
-                            [role]: Number(e.target.value),
-                          },
-                        })
-                      }
+                          team_jobs: updated,
+                        });
+                      }}
                       style={{ flex: 1 }}
                     />
                   </div>
                 ))}
-
-                {/* TAMBAH TIM */}
-                <div style={{ display: "flex", gap: 6 }}>
-                  <input
-                    placeholder="Role (fotografer)"
-                    value={newTeamRole}
-                    onChange={(e) => setNewTeamRole(e.target.value)}
-                    style={{ flex: 1 }}
-                  />
-                  <input
-                    type="number"
-                    placeholder="Nominal"
-                    value={newTeamValue}
-                    onChange={(e) => setNewTeamValue(e.target.value)}
-                    style={{ flex: 1 }}
-                  />
-                </div>
-
-                <button
-                  onClick={() => {
-                    if (!newTeamRole || !newTeamValue) return;
-
-                    setEditingBooking({
-                      ...editingBooking,
-                      team_split: {
-                        ...editingBooking.team_split,
-                        [newTeamRole]: Number(newTeamValue),
-                      },
-                    });
-
-                    setNewTeamRole("");
-                    setNewTeamValue("");
-                  }}
-                >
-                  + Tambah Tim
-                </button>
               </>
             )}
 
@@ -351,7 +306,7 @@ const modalBox = {
   background: "#111",
   padding: 20,
   borderRadius: 8,
-  width: 360,
+  width: 380,
   display: "flex",
   flexDirection: "column",
   gap: 8,
