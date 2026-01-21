@@ -46,12 +46,17 @@ export default function BookingTable() {
         grouped[monthKey] = { rows: [], total: 0 };
       }
 
+      const teamSplit =
+        typeof b.team_split === "string"
+          ? JSON.parse(b.team_split)
+          : b.team_split || {};
+
       const value =
         user.role === "admin"
           ? (b.dp || 0) + (b.pelunasan || 0)
-          : b.team_split?.[user.username] || 0;
+          : teamSplit?.[user.username] || 0;
 
-      grouped[monthKey].rows.push(b);
+      grouped[monthKey].rows.push({ ...b, team_split: teamSplit });
       grouped[monthKey].total += value;
     });
 
@@ -155,7 +160,10 @@ export default function BookingTable() {
                             onClick={() =>
                               setEditingBooking({
                                 ...b,
-                                team_split: b.team_split || {},
+                                team_split:
+                                  typeof b.team_split === "string"
+                                    ? JSON.parse(b.team_split)
+                                    : b.team_split || {},
                               })
                             }
                           >
@@ -231,7 +239,6 @@ export default function BookingTable() {
                   Tim & Pembagian
                 </h4>
 
-                {/* LIST TIM */}
                 {Object.keys(editingBooking.team_split).length === 0 && (
                   <small style={{ color: "#777" }}>
                     Belum ada tim
