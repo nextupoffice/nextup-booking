@@ -43,7 +43,6 @@ export default function BookingTable() {
       }
 
       const teamJobs = Array.isArray(b.team_jobs) ? b.team_jobs : [];
-
       const myJob = teamJobs.find((j) => j.name === user.username);
 
       const value =
@@ -51,18 +50,13 @@ export default function BookingTable() {
           ? (b.dp || 0) + (b.pelunasan || 0)
           : myJob?.income || 0;
 
-      grouped[monthKey].rows.push({
-        ...b,
-        team_jobs: teamJobs,
-      });
-
+      grouped[monthKey].rows.push({ ...b, team_jobs: teamJobs });
       grouped[monthKey].total += value;
     });
 
     setGroupedData(grouped);
   };
 
-  // ===== SAVE REVISI =====
   const saveRevision = async () => {
     await supabase
       .from("bookings")
@@ -117,11 +111,9 @@ export default function BookingTable() {
                 {groupedData[month].rows.map((b) => {
                   const dp = b.dp || 0;
                   const pelunasan = b.pelunasan || 0;
-
                   const myJob = b.team_jobs.find(
                     (j) => j.name === user.username
                   );
-
                   const pendapatan = myJob?.income || 0;
 
                   const total =
@@ -281,14 +273,14 @@ export default function BookingTable() {
                     />
 
                     <button
-                      onClick={() => {
+                      onClick={() =>
                         setEditingBooking({
                           ...editingBooking,
                           team_jobs: editingBooking.team_jobs.filter(
                             (_, idx) => idx !== i
                           ),
-                        });
-                      }}
+                        })
+                      }
                     >
                       ✕
                     </button>
@@ -306,7 +298,6 @@ export default function BookingTable() {
                           name: "",
                           role: "",
                           income: 0,
-                          type: "internal",
                         },
                       ],
                     })
@@ -317,7 +308,7 @@ export default function BookingTable() {
               </>
             )}
 
-            <div style={{ marginTop: 12 }}>
+            <div style={{ marginTop: 14 }}>
               <button onClick={saveRevision}>Simpan</button>
               <button
                 onClick={() => setEditingBooking(null)}
@@ -353,17 +344,20 @@ const modal = {
   inset: 0,
   background: "rgba(0,0,0,.6)",
   display: "flex",
-  alignItems: "center",
+  alignItems: "flex-start",     // ⬅️ PENTING
   justifyContent: "center",
+  paddingTop: "6vh",            // ⬅️ PENTING
   zIndex: 99,
 };
 
 const modalBox = {
   background: "#111",
   padding: 20,
-  borderRadius: 8,
+  borderRadius: 10,
   width: 420,
+  maxHeight: "88vh",             // ⬅️ ANTI KE POTONG
+  overflowY: "auto",             // ⬅️ SCROLL DALAM MODAL
   display: "flex",
   flexDirection: "column",
-  gap: 8,
+  gap: 10,
 };
