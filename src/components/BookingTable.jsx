@@ -7,6 +7,10 @@ export default function BookingTable() {
   const [groupedData, setGroupedData] = useState({});
   const [editingBooking, setEditingBooking] = useState(null);
 
+  // === STATE TAMBAHAN UNTUK TEAM ===
+  const [newTeamRole, setNewTeamRole] = useState("");
+  const [newTeamValue, setNewTeamValue] = useState("");
+
   useEffect(() => {
     fetchData();
 
@@ -54,9 +58,7 @@ export default function BookingTable() {
     setGroupedData(grouped);
   };
 
-  /* =====================
-     SAVE REVISI (SUDAH BENAR)
-  ===================== */
+  // ===== SAVE REVISI =====
   const saveRevision = async () => {
     await supabase
       .from("bookings")
@@ -170,9 +172,7 @@ export default function BookingTable() {
         </div>
       ))}
 
-      {/* =====================
-          MODAL EDIT (DIPERBAIKI)
-      ===================== */}
+      {/* ===== MODAL EDIT ===== */}
       {editingBooking && (
         <div style={modal}>
           <div style={modalBox}>
@@ -227,46 +227,75 @@ export default function BookingTable() {
                   }
                 />
 
-                {/* ===== EDIT TEAM SPLIT ===== */}
                 <h4 style={{ marginTop: 10, color: "#cba58a" }}>
                   Tim & Pembagian
                 </h4>
 
-                {Object.keys(editingBooking.team_split || {}).map(
-                  (role) => (
-                    <div
-                      key={role}
-                      style={{
-                        display: "flex",
-                        gap: 6,
-                        alignItems: "center",
-                      }}
-                    >
-                      <input
-                        value={role}
-                        disabled
-                        style={{ flex: 1 }}
-                      />
-
-                      <input
-                        type="number"
-                        value={
-                          editingBooking.team_split[role] || 0
-                        }
-                        onChange={(e) =>
-                          setEditingBooking({
-                            ...editingBooking,
-                            team_split: {
-                              ...editingBooking.team_split,
-                              [role]: Number(e.target.value),
-                            },
-                          })
-                        }
-                        style={{ flex: 1 }}
-                      />
-                    </div>
-                  )
+                {/* LIST TIM */}
+                {Object.keys(editingBooking.team_split).length === 0 && (
+                  <small style={{ color: "#777" }}>
+                    Belum ada tim
+                  </small>
                 )}
+
+                {Object.keys(editingBooking.team_split).map((role) => (
+                  <div
+                    key={role}
+                    style={{ display: "flex", gap: 6 }}
+                  >
+                    <input value={role} disabled style={{ flex: 1 }} />
+                    <input
+                      type="number"
+                      value={editingBooking.team_split[role]}
+                      onChange={(e) =>
+                        setEditingBooking({
+                          ...editingBooking,
+                          team_split: {
+                            ...editingBooking.team_split,
+                            [role]: Number(e.target.value),
+                          },
+                        })
+                      }
+                      style={{ flex: 1 }}
+                    />
+                  </div>
+                ))}
+
+                {/* TAMBAH TIM */}
+                <div style={{ display: "flex", gap: 6 }}>
+                  <input
+                    placeholder="Role (fotografer)"
+                    value={newTeamRole}
+                    onChange={(e) => setNewTeamRole(e.target.value)}
+                    style={{ flex: 1 }}
+                  />
+                  <input
+                    type="number"
+                    placeholder="Nominal"
+                    value={newTeamValue}
+                    onChange={(e) => setNewTeamValue(e.target.value)}
+                    style={{ flex: 1 }}
+                  />
+                </div>
+
+                <button
+                  onClick={() => {
+                    if (!newTeamRole || !newTeamValue) return;
+
+                    setEditingBooking({
+                      ...editingBooking,
+                      team_split: {
+                        ...editingBooking.team_split,
+                        [newTeamRole]: Number(newTeamValue),
+                      },
+                    });
+
+                    setNewTeamRole("");
+                    setNewTeamValue("");
+                  }}
+                >
+                  + Tambah Tim
+                </button>
               </>
             )}
 
@@ -315,7 +344,7 @@ const modalBox = {
   background: "#111",
   padding: 20,
   borderRadius: 8,
-  width: 340,
+  width: 360,
   display: "flex",
   flexDirection: "column",
   gap: 8,
