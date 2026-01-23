@@ -45,31 +45,27 @@ export default function BookingTable() {
 
       const teamJobs = Array.isArray(b.team_jobs) ? b.team_jobs : [];
 
-      // ✅ AMBIL SEMUA JOB MILIK USER LOGIN
+      // ✅ AMBIL JOB KHUSUS USER LOGIN
       const myJobs = teamJobs.filter((j) => {
-        if (j.user_id && user?.id) {
-          return j.user_id === user.id;
-        }
-        return (
-          j.name?.toLowerCase() === user?.username?.toLowerCase()
-        );
+        if (j.user_id && user?.id) return j.user_id === user.id;
+        return j.name?.toLowerCase() === user?.username?.toLowerCase();
       });
 
-      // ✅ TOTAL PENDAPATAN USER (ANTI SALAH)
       const myIncome = myJobs.reduce(
         (sum, j) => sum + (Number(j.income) || 0),
         0
       );
 
+      const adminTotal =
+        (Number(b.dp) || 0) + (Number(b.pelunasan) || 0);
+
       const value =
-        user.role === "admin"
-          ? (b.dp || 0) + (b.pelunasan || 0)
-          : myIncome;
+        user.role === "admin" ? adminTotal : myIncome;
 
       grouped[monthKey].rows.push({
         ...b,
         team_jobs: teamJobs,
-        _myIncome: myIncome, // ⬅️ DISIMPAN KHUSUS USER
+        _myIncome: myIncome,
       });
 
       grouped[monthKey].total += value;
@@ -148,10 +144,8 @@ export default function BookingTable() {
 
               <tbody>
                 {groupedData[month].rows.map((b) => {
-                  const dp = b.dp || 0;
-                  const pelunasan = b.pelunasan || 0;
-
-                  // ✅ AMBIL DARI HASIL HITUNG FETCH
+                  const dp = Number(b.dp) || 0;
+                  const pelunasan = Number(b.pelunasan) || 0;
                   const pendapatan = b._myIncome || 0;
 
                   const total =
@@ -203,6 +197,21 @@ export default function BookingTable() {
               </tbody>
             </table>
           </div>
+
+          {/* ✅ TOTAL BULANAN ADMIN */}
+          {user.role === "admin" && (
+            <div
+              style={{
+                textAlign: "right",
+                marginTop: 10,
+                fontWeight: 600,
+                color: "#cba58a",
+              }}
+            >
+              Total Bulan Ini:{" "}
+              {formatRupiahDisplay(groupedData[month].total)}
+            </div>
+          )}
         </div>
       ))}
 
@@ -273,8 +282,8 @@ export default function BookingTable() {
               >
                 <input
                   list="team-names"
-                  placeholder="Nama"
                   value={job.name}
+                  placeholder="Nama"
                   onChange={(e) => {
                     const name = e.target.value;
                     const last = teamMaster
@@ -298,8 +307,8 @@ export default function BookingTable() {
 
                 <input
                   list="role-options"
-                  placeholder="Role"
                   value={job.role}
+                  placeholder="Role"
                   onChange={(e) => {
                     const role = e.target.value;
                     const last = teamMaster
@@ -312,7 +321,7 @@ export default function BookingTable() {
                     updated[i] = {
                       ...updated[i],
                       role,
-                      income: last?.income || updated[i].income,
+                      income: last?.income || 0,
                     };
 
                     setEditingBooking({
