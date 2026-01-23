@@ -22,7 +22,7 @@ export default function BookingTable() {
     return () => supabase.removeChannel(channel);
   }, []);
 
-  /* ================= FETCH DATA (FIX MYJOBS) ================= */
+  /* ================= FETCH DATA ================= */
   const fetchData = async () => {
     const { data } = await supabase
       .from("bookings")
@@ -45,42 +45,34 @@ export default function BookingTable() {
 
       const teamJobs = Array.isArray(b.team_jobs) ? b.team_jobs : [];
 
-      /* ================= ADMIN ================= */
-      if (user.role === "admin") {
-        const totalAdmin = (b.dp || 0) + (b.pelunasan || 0);
-
-        grouped[monthKey].rows.push({
-          ...b,
-          team_jobs: teamJobs,
-        });
-
-        grouped[monthKey].total += totalAdmin;
-        return;
-      }
-
-      /* ================= TIM ================= */
+      // ✅ AMBIL SEMUA JOB MILIK USER LOGIN
       const myJobs = teamJobs.filter((j) => {
-        if (j.user_id && user?.id) return j.user_id === user.id;
+        if (j.user_id && user?.id) {
+          return j.user_id === user.id;
+        }
         return (
           j.name?.toLowerCase() === user?.username?.toLowerCase()
         );
       });
 
-      // ❗ USER TIDAK IKUT → JANGAN MASUK TABEL
-      if (myJobs.length === 0) return;
-
+      // ✅ TOTAL PENDAPATAN USER (ANTI SALAH)
       const myIncome = myJobs.reduce(
         (sum, j) => sum + (Number(j.income) || 0),
         0
       );
 
+      const value =
+        user.role === "admin"
+          ? (b.dp || 0) + (b.pelunasan || 0)
+          : myIncome;
+
       grouped[monthKey].rows.push({
         ...b,
         team_jobs: teamJobs,
-        _myIncome: myIncome,
+        _myIncome: myIncome, // ⬅️ DISIMPAN KHUSUS USER
       });
 
-      grouped[monthKey].total += myIncome;
+      grouped[monthKey].total += value;
     });
 
     setGroupedData(grouped);
@@ -158,6 +150,8 @@ export default function BookingTable() {
                 {groupedData[month].rows.map((b) => {
                   const dp = b.dp || 0;
                   const pelunasan = b.pelunasan || 0;
+
+                  // ✅ AMBIL DARI HASIL HITUNG FETCH
                   const pendapatan = b._myIncome || 0;
 
                   const total =
@@ -211,6 +205,195 @@ export default function BookingTable() {
           </div>
         </div>
       ))}
+
+      {/* ================= MODAL EDIT ================= */}
+      {editingBooking && (
+        <div style={modal}>
+          <div style={modalBox}>
+            <h3>Edit Booking</h3>
+
+            {[
+              ["Client", "client_name"],
+              ["No HP", "phone"],
+              ["Acara", "acara"],
+              ["Tanggal", "date", "date"],
+              ["Waktu", "time"],
+              ["Lokasi", "location"],
+            ].map(([label, key, type]) => (
+              <input
+                key={key}
+                type={type || "text"}
+                placeholder={label}
+                value={editingBooking[key] || ""}
+                onChange={(e) =>
+                  setEditingBooking({
+                    ...editingBooking,
+                    [key]: e.target.value,
+                  })
+                }
+              />
+            ))}
+
+            <input
+              type="number"
+              placeholder="DP"
+              value={editingBooking.dp || 0}
+              onChange={(e) =>
+                setEditingBooking({
+                  ...editingBooking,
+                  dp: Number(e.target.value),
+                })
+              }
+            />
+
+            <input
+              type="number"
+              placeholder="Pelunasan"
+              value={editingBooking.pelunasan || 0}
+              onChange={(e) =>
+                setEditingBooking({
+                  ...editingBooking,
+                  pelunasan: Number(e.target.value),
+                })
+              }
+            />
+
+            <h4 style={{ marginTop: 10, color: "#cba58a" }}>
+              Tim & Pembagian
+            </h4>
+
+            {editingBooking.team_jobs.map((job, i) => (
+              <div
+                key={i}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1.2fr 1fr 1fr auto",
+                  gap: 6,
+                }}
+              >
+                <input
+                  list="team-names"
+                  placeholder="Nama"
+                  value={job.name}
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    const last = teamMaster
+                      .filter((t) => t.name === name)
+                      .slice(-1)[0];
+
+                    const updated = [...editingBooking.team_jobs];
+                    updated[i] = {
+                      ...updated[i],
+                      name,
+                      role: last?.role || "",
+                      income: last?.income || 0,
+                    };
+
+                    setEditingBooking({
+                      ...editingBooking,
+                      team_jobs: updated,
+                    });
+                  }}
+                />
+
+                <input
+                  list="role-options"
+                  placeholder="Role"
+                  value={job.role}
+                  onChange={(e) => {
+                    const role = e.target.value;
+                    const last = teamMaster
+                      .filter(
+                        (t) => t.name === job.name && t.role === role
+                      )
+                      .slice(-1)[0];
+
+                    const updated = [...editingBooking.team_jobs];
+                    updated[i] = {
+                      ...updated[i],
+                      role,
+                      income: last?.income || updated[i].income,
+                    };
+
+                    setEditingBooking({
+                      ...editingBooking,
+                      team_jobs: updated,
+                    });
+                  }}
+                />
+
+                <input
+                  type="number"
+                  value={job.income}
+                  onChange={(e) => {
+                    const updated = [...editingBooking.team_jobs];
+                    updated[i].income = Number(e.target.value);
+                    setEditingBooking({
+                      ...editingBooking,
+                      team_jobs: updated,
+                    });
+                  }}
+                />
+
+                <button
+                  onClick={() =>
+                    setEditingBooking({
+                      ...editingBooking,
+                      team_jobs: editingBooking.team_jobs.filter(
+                        (_, idx) => idx !== i
+                      ),
+                    })
+                  }
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+
+            <button
+              onClick={() =>
+                setEditingBooking({
+                  ...editingBooking,
+                  team_jobs: [
+                    ...editingBooking.team_jobs,
+                    {
+                      user_id: crypto.randomUUID(),
+                      name: "",
+                      role: "",
+                      income: 0,
+                    },
+                  ],
+                })
+              }
+            >
+              + Tambah Tim
+            </button>
+
+            <div style={{ marginTop: 14 }}>
+              <button onClick={saveRevision}>Simpan</button>
+              <button
+                onClick={() => setEditingBooking(null)}
+                style={{ marginLeft: 8 }}
+              >
+                Batal
+              </button>
+            </div>
+
+            <datalist id="team-names">
+              {teamNames.map((n) => (
+                <option key={n} value={n} />
+              ))}
+            </datalist>
+
+            <datalist id="role-options">
+              {roleOptions.map((r) => (
+                <option key={r} value={r} />
+              ))}
+              <option value="freelance" />
+            </datalist>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -228,4 +411,27 @@ const td = {
   padding: 10,
   borderBottom: "1px solid #222",
   fontSize: 13,
+};
+
+const modal = {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(0,0,0,.6)",
+  display: "flex",
+  alignItems: "flex-start",
+  justifyContent: "center",
+  paddingTop: "6vh",
+  zIndex: 99,
+};
+
+const modalBox = {
+  background: "#111",
+  padding: 20,
+  borderRadius: 10,
+  width: 420,
+  maxHeight: "88vh",
+  overflowY: "auto",
+  display: "flex",
+  flexDirection: "column",
+  gap: 10,
 };
