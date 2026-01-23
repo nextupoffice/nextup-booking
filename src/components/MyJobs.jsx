@@ -14,13 +14,11 @@ export default function MyJobs() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "bookings" },
-        () => fetchJobs()
+        fetchJobs
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => supabase.removeChannel(channel);
   }, []);
 
   const fetchJobs = async () => {
@@ -39,20 +37,33 @@ export default function MyJobs() {
     data.forEach((b) => {
       if (!Array.isArray(b.team_jobs)) return;
 
-      b.team_jobs.forEach((t) => {
-        if (t.user_id === user.id) {
-          myJobs.push({
-            id: `${b.id}-${t.user_id}`,
-            acara: b.acara,
-            client_name: b.client_name,
-            phone: b.phone,
-            date: b.date,
-            time: b.time,
-            location: b.location,
-            role: t.role,
-            income: t.income || 0,
-          });
+      // ✅ FILTER KHUSUS JOB MILIK USER LOGIN
+      const myTeamJobs = b.team_jobs.filter((t) => {
+        if (t.user_id && user?.id) {
+          return t.user_id === user.id;
         }
+
+        return (
+          t.name &&
+          user?.username &&
+          t.name.toLowerCase() === user.username.toLowerCase()
+        );
+      });
+
+      if (myTeamJobs.length === 0) return;
+
+      myTeamJobs.forEach((t) => {
+        myJobs.push({
+          id: `${b.id}-${t.user_id || t.name}`,
+          acara: b.acara,
+          client_name: b.client_name,
+          phone: b.phone,
+          date: b.date,
+          time: b.time,
+          location: b.location,
+          role: t.role,
+          income: Number(t.income) || 0,
+        });
       });
     });
 
@@ -61,7 +72,7 @@ export default function MyJobs() {
 
   // === GROUP PER BULAN ===
   const grouped = jobs.reduce((acc, job) => {
-    const month = job.date.slice(0, 7);
+    const month = job.date.slice(0, 7); // YYYY-MM
     if (!acc[month]) acc[month] = [];
     acc[month].push(job);
     return acc;
@@ -72,7 +83,10 @@ export default function MyJobs() {
       <h3>My Jobs</h3>
 
       {Object.entries(grouped).map(([month, items]) => {
-        const total = items.reduce((sum, i) => sum + i.income, 0);
+        const total = items.reduce(
+          (sum, i) => sum + (Number(i.income) || 0),
+          0
+        );
 
         return (
           <div key={month} style={{ marginTop: 24 }}>
