@@ -22,6 +22,7 @@ export default function BookingTable() {
     return () => supabase.removeChannel(channel);
   }, []);
 
+  /* ================= FETCH DATA ================= */
   const fetchData = async () => {
     const { data } = await supabase
       .from("bookings")
@@ -43,14 +44,34 @@ export default function BookingTable() {
       }
 
       const teamJobs = Array.isArray(b.team_jobs) ? b.team_jobs : [];
-      const myJob = teamJobs.find((j) => j.name === user.username);
+
+      // ✅ AMBIL SEMUA JOB MILIK USER LOGIN
+      const myJobs = teamJobs.filter((j) => {
+        if (j.user_id && user?.id) {
+          return j.user_id === user.id;
+        }
+        return (
+          j.name?.toLowerCase() === user?.username?.toLowerCase()
+        );
+      });
+
+      // ✅ TOTAL PENDAPATAN USER (ANTI SALAH)
+      const myIncome = myJobs.reduce(
+        (sum, j) => sum + (Number(j.income) || 0),
+        0
+      );
 
       const value =
         user.role === "admin"
           ? (b.dp || 0) + (b.pelunasan || 0)
-          : myJob?.income || 0;
+          : myIncome;
 
-      grouped[monthKey].rows.push({ ...b, team_jobs: teamJobs });
+      grouped[monthKey].rows.push({
+        ...b,
+        team_jobs: teamJobs,
+        _myIncome: myIncome, // ⬅️ DISIMPAN KHUSUS USER
+      });
+
       grouped[monthKey].total += value;
     });
 
@@ -74,6 +95,7 @@ export default function BookingTable() {
     [teamMaster]
   );
 
+  /* ================= SAVE ================= */
   const saveRevision = async () => {
     await supabase
       .from("bookings")
@@ -128,10 +150,9 @@ export default function BookingTable() {
                 {groupedData[month].rows.map((b) => {
                   const dp = b.dp || 0;
                   const pelunasan = b.pelunasan || 0;
-                  const myJob = b.team_jobs.find(
-                    (j) => j.name === user.username
-                  );
-                  const pendapatan = myJob?.income || 0;
+
+                  // ✅ AMBIL DARI HASIL HITUNG FETCH
+                  const pendapatan = b._myIncome || 0;
 
                   const total =
                     user.role === "admin"
@@ -153,7 +174,9 @@ export default function BookingTable() {
                           <td style={td}>{formatRupiahDisplay(pelunasan)}</td>
                         </>
                       ) : (
-                        <td style={td}>{formatRupiahDisplay(pendapatan)}</td>
+                        <td style={td}>
+                          {formatRupiahDisplay(pendapatan)}
+                        </td>
                       )}
 
                       <td style={{ ...td, color: "#cba58a" }}>
@@ -262,8 +285,8 @@ export default function BookingTable() {
                     updated[i] = {
                       ...updated[i],
                       name,
-                      role: last?.role || updated[i].role,
-                      income: last?.income || updated[i].income,
+                      role: last?.role || "",
+                      income: last?.income || 0,
                     };
 
                     setEditingBooking({
@@ -356,7 +379,6 @@ export default function BookingTable() {
               </button>
             </div>
 
-            {/* ===== DATALIST ===== */}
             <datalist id="team-names">
               {teamNames.map((n) => (
                 <option key={n} value={n} />
