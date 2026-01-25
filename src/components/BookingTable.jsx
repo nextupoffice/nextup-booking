@@ -83,9 +83,11 @@ export default function BookingTable() {
   const teamNames = [...new Set(teamMaster.map((j) => j.name).filter(Boolean))];
   const roleOptions = [...new Set(teamMaster.map((j) => j.role).filter(Boolean))];
 
-  /* ================= SAVE ================= */
+  /* ================= SAVE (ALERT) ================= */
   const saveRevision = async () => {
-    await supabase
+    if (!window.confirm("Simpan perubahan booking ini?")) return;
+
+    const { error } = await supabase
       .from("bookings")
       .update({
         client_name: editingBooking.client_name,
@@ -100,6 +102,12 @@ export default function BookingTable() {
       })
       .eq("id", editingBooking.id);
 
+    if (error) {
+      alert("❌ Gagal menyimpan booking");
+      return;
+    }
+
+    alert("✅ Booking berhasil diperbarui");
     setEditingBooking(null);
   };
 
@@ -169,12 +177,13 @@ export default function BookingTable() {
                         {user.role === "admin" && (
                           <td style={td}>
                             <button
-                              onClick={() =>
+                              onClick={() => {
+                                alert("✏️ Mode edit booking dibuka");
                                 setEditingBooking({
                                   ...b,
                                   team_jobs: b.team_jobs || [],
-                                })
-                              }
+                                });
+                              }}
                             >
                               Edit
                             </button>
@@ -190,7 +199,7 @@ export default function BookingTable() {
         ))}
       </div>
 
-      {/* ================= MODAL EDIT (SCROLL FIX) ================= */}
+      {/* ================= MODAL EDIT ================= */}
       {editingBooking && (
         <div style={modal}>
           <div style={modalBox}>
@@ -294,7 +303,16 @@ export default function BookingTable() {
 
             <div style={{ display: "flex", gap: 8 }}>
               <button onClick={saveRevision}>Simpan</button>
-              <button onClick={() => setEditingBooking(null)}>Batal</button>
+              <button
+                onClick={() => {
+                  if (window.confirm("Batalkan perubahan booking?")) {
+                    alert("❌ Edit dibatalkan");
+                    setEditingBooking(null);
+                  }
+                }}
+              >
+                Batal
+              </button>
             </div>
           </div>
         </div>
@@ -315,7 +333,7 @@ const modal = {
   justifyContent: "center",
   alignItems: "flex-start",
   padding: "4vh 12px",
-  overflowY: "auto",   // 🔥 FIX UTAMA
+  overflowY: "auto",
   zIndex: 99,
 };
 
@@ -324,8 +342,8 @@ const modalBox = {
   padding: 20,
   width: 460,
   maxWidth: "100%",
-  maxHeight: "92vh",   // 🔥 BATAS TINGGI
-  overflowY: "auto",   // 🔥 SCROLL DALAM MODAL
+  maxHeight: "92vh",
+  overflowY: "auto",
   borderRadius: 10,
   display: "flex",
   flexDirection: "column",
