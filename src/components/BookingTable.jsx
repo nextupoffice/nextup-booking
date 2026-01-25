@@ -6,6 +6,7 @@ export default function BookingTable() {
   const user = JSON.parse(localStorage.getItem("user"));
   const [groupedData, setGroupedData] = useState({});
   const [editingBooking, setEditingBooking] = useState(null);
+  const [originalBooking, setOriginalBooking] = useState(null); // 🔥 tambahan kecil
 
   useEffect(() => {
     fetchData();
@@ -83,7 +84,7 @@ export default function BookingTable() {
   const teamNames = [...new Set(teamMaster.map((j) => j.name).filter(Boolean))];
   const roleOptions = [...new Set(teamMaster.map((j) => j.role).filter(Boolean))];
 
-  /* ================= SAVE (ALERT) ================= */
+  /* ================= SAVE ================= */
   const saveRevision = async () => {
     if (!window.confirm("Simpan perubahan booking ini?")) return;
 
@@ -109,6 +110,7 @@ export default function BookingTable() {
 
     alert("✅ Booking berhasil diperbarui");
     setEditingBooking(null);
+    setOriginalBooking(null);
   };
 
   return (
@@ -178,11 +180,9 @@ export default function BookingTable() {
                           <td style={td}>
                             <button
                               onClick={() => {
-                                alert("✏️ Mode edit booking dibuka");
-                                setEditingBooking({
-                                  ...b,
-                                  team_jobs: b.team_jobs || [],
-                                });
+                                const clone = JSON.parse(JSON.stringify(b));
+                                setOriginalBooking(clone);
+                                setEditingBooking(clone);
                               }}
                             >
                               Edit
@@ -212,13 +212,11 @@ export default function BookingTable() {
                 onChange={(e) =>
                   setEditingBooking({ ...editingBooking, [k]: e.target.value })
                 }
-                placeholder={k}
               />
             ))}
 
             <input
               type="number"
-              placeholder="DP"
               value={editingBooking.dp || 0}
               onChange={(e) =>
                 setEditingBooking({ ...editingBooking, dp: +e.target.value })
@@ -227,87 +225,19 @@ export default function BookingTable() {
 
             <input
               type="number"
-              placeholder="Pelunasan"
               value={editingBooking.pelunasan || 0}
               onChange={(e) =>
                 setEditingBooking({ ...editingBooking, pelunasan: +e.target.value })
               }
             />
 
-            <h4>Tim</h4>
-            {editingBooking.team_jobs.map((j, i) => (
-              <div key={i} style={{ display: "flex", gap: 6 }}>
-                <select
-                  value={j.name}
-                  onChange={(e) => {
-                    const t = [...editingBooking.team_jobs];
-                    t[i].name = e.target.value;
-                    setEditingBooking({ ...editingBooking, team_jobs: t });
-                  }}
-                >
-                  <option value="">Pilih Tim</option>
-                  {teamNames.map((n) => (
-                    <option key={n}>{n}</option>
-                  ))}
-                  <option value="Freelance">Freelance</option>
-                </select>
-
-                <select
-                  value={j.role}
-                  onChange={(e) => {
-                    const t = [...editingBooking.team_jobs];
-                    t[i].role = e.target.value;
-                    setEditingBooking({ ...editingBooking, team_jobs: t });
-                  }}
-                >
-                  <option value="">Role</option>
-                  {roleOptions.map((r) => (
-                    <option key={r}>{r}</option>
-                  ))}
-                </select>
-
-                <input
-                  type="number"
-                  value={j.income}
-                  onChange={(e) => {
-                    const t = [...editingBooking.team_jobs];
-                    t[i].income = +e.target.value;
-                    setEditingBooking({ ...editingBooking, team_jobs: t });
-                  }}
-                  placeholder="Rp"
-                />
-
-                <button
-                  onClick={() =>
-                    setEditingBooking({
-                      ...editingBooking,
-                      team_jobs: editingBooking.team_jobs.filter((_, x) => x !== i),
-                    })
-                  }
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-
-            <button
-              onClick={() =>
-                setEditingBooking({
-                  ...editingBooking,
-                  team_jobs: [...editingBooking.team_jobs, { name: "", role: "", income: 0 }],
-                })
-              }
-            >
-              + Tambah Tim
-            </button>
-
             <div style={{ display: "flex", gap: 8 }}>
               <button onClick={saveRevision}>Simpan</button>
               <button
                 onClick={() => {
                   if (window.confirm("Batalkan perubahan booking?")) {
-                    alert("❌ Edit dibatalkan");
                     setEditingBooking(null);
+                    setOriginalBooking(null);
                   }
                 }}
               >
