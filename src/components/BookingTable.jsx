@@ -197,6 +197,19 @@ export default function BookingTable() {
                   })}
                 </tbody>
               </table>
+
+              {/* ✅ TOTAL BULANAN (FIX UTAMA) */}
+              <div
+                style={{
+                  textAlign: "right",
+                  marginTop: 10,
+                  fontWeight: 600,
+                  color: "#cba58a",
+                }}
+              >
+                Total Bulan Ini:{" "}
+                {formatRupiahDisplay(groupedData[month].total)}
+              </div>
             </div>
           </div>
         ))}
