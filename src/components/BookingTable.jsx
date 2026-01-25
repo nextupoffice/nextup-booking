@@ -58,9 +58,6 @@ export default function BookingTable() {
         0
       );
 
-      const adminTotal =
-        (Number(b.dp) || 0) + (Number(b.pelunasan) || 0);
-
       grouped[monthKey].rows.push({
         ...b,
         team_jobs: teamJobs,
@@ -68,7 +65,9 @@ export default function BookingTable() {
       });
 
       grouped[monthKey].total +=
-        user.role === "admin" ? adminTotal : myIncome;
+        user.role === "admin"
+          ? (Number(b.dp) || 0) + (Number(b.pelunasan) || 0)
+          : myIncome;
     });
 
     setGroupedData(grouped);
@@ -191,7 +190,7 @@ export default function BookingTable() {
         ))}
       </div>
 
-      {/* ================= MODAL EDIT FULL ================= */}
+      {/* ================= MODAL EDIT (SCROLL FIX) ================= */}
       {editingBooking && (
         <div style={modal}>
           <div style={modalBox}>
@@ -314,13 +313,19 @@ const modal = {
   background: "rgba(0,0,0,.6)",
   display: "flex",
   justifyContent: "center",
-  paddingTop: "5vh",
+  alignItems: "flex-start",
+  padding: "4vh 12px",
+  overflowY: "auto",   // 🔥 FIX UTAMA
+  zIndex: 99,
 };
 
 const modalBox = {
   background: "#111",
   padding: 20,
   width: 460,
+  maxWidth: "100%",
+  maxHeight: "92vh",   // 🔥 BATAS TINGGI
+  overflowY: "auto",   // 🔥 SCROLL DALAM MODAL
   borderRadius: 10,
   display: "flex",
   flexDirection: "column",
