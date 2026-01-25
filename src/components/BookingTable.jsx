@@ -27,14 +27,14 @@ export default function BookingTable() {
     const { data } = await supabase
       .from("bookings")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("date", { ascending: true })   // ✅ URUT TANGGAL ACARA
+      .order("time", { ascending: true });  // ✅ LANJUT JAM ACARA
 
     if (!data) return;
 
     const grouped = {};
 
     data.forEach((b) => {
-      // ✅ FIX KRITIKAL LAPTOP (hindari render crash)
       if (!b?.date) return;
 
       const monthKey = new Date(b.date).toLocaleString("id-ID", {
@@ -121,12 +121,11 @@ export default function BookingTable() {
         <div key={month} style={{ marginTop: 24 }}>
           <h4>{month}</h4>
 
-          {/* ✅ FIX TABEL LAPTOP */}
           <div style={{ width: "100%", overflowX: "auto" }}>
             <table
               style={{
                 width: "100%",
-                minWidth: 900, // 🔥 penting untuk desktop
+                minWidth: 900,
                 borderCollapse: "collapse",
               }}
             >
@@ -222,13 +221,6 @@ export default function BookingTable() {
           )}
         </div>
       ))}
-
-      {/* MODAL TIDAK DIUBAH */}
-      {editingBooking && (
-        <div style={modal}>
-          <div style={modalBox}>{/* isi sama */}</div>
-        </div>
-      )}
     </div>
   );
 }
@@ -246,27 +238,4 @@ const td = {
   padding: 10,
   borderBottom: "1px solid #222",
   fontSize: 13,
-};
-
-const modal = {
-  position: "fixed",
-  inset: 0,
-  background: "rgba(0,0,0,.6)",
-  display: "flex",
-  alignItems: "flex-start",
-  justifyContent: "center",
-  paddingTop: "6vh",
-  zIndex: 99,
-};
-
-const modalBox = {
-  background: "#111",
-  padding: 20,
-  borderRadius: 10,
-  width: 420,
-  maxHeight: "88vh",
-  overflowY: "auto",
-  display: "flex",
-  flexDirection: "column",
-  gap: 10,
 };
