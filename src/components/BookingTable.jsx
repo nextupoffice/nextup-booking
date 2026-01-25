@@ -27,8 +27,8 @@ export default function BookingTable() {
     const { data } = await supabase
       .from("bookings")
       .select("*")
-      .order("date", { ascending: true })   // ✅ URUT TANGGAL ACARA
-      .order("time", { ascending: true });  // ✅ LANJUT JAM ACARA
+      .order("date", { ascending: true })
+      .order("time", { ascending: true });
 
     if (!data) return;
 
@@ -66,7 +66,6 @@ export default function BookingTable() {
 
       grouped[monthKey].rows.push({
         ...b,
-        team_jobs: teamJobs,
         _myIncome: myIncome,
       });
 
@@ -75,23 +74,6 @@ export default function BookingTable() {
 
     setGroupedData(grouped);
   };
-
-  /* ================= MASTER DATA ================= */
-  const teamMaster = useMemo(() => {
-    return Object.values(groupedData)
-      .flatMap((m) => m.rows)
-      .flatMap((b) => b.team_jobs || []);
-  }, [groupedData]);
-
-  const teamNames = useMemo(
-    () => [...new Set(teamMaster.map((j) => j.name).filter(Boolean))],
-    [teamMaster]
-  );
-
-  const roleOptions = useMemo(
-    () => [...new Set(teamMaster.map((j) => j.role).filter(Boolean))],
-    [teamMaster]
-  );
 
   /* ================= SAVE ================= */
   const saveRevision = async () => {
@@ -106,7 +88,6 @@ export default function BookingTable() {
         location: editingBooking.location,
         dp: editingBooking.dp,
         pelunasan: editingBooking.pelunasan,
-        team_jobs: editingBooking.team_jobs,
       })
       .eq("id", editingBooking.id);
 
@@ -187,14 +168,7 @@ export default function BookingTable() {
 
                       {user.role === "admin" && (
                         <td style={td}>
-                          <button
-                            onClick={() =>
-                              setEditingBooking({
-                                ...b,
-                                team_jobs: b.team_jobs || [],
-                              })
-                            }
-                          >
+                          <button onClick={() => setEditingBooking(b)}>
                             Edit
                           </button>
                         </td>
@@ -221,6 +195,73 @@ export default function BookingTable() {
           )}
         </div>
       ))}
+
+      {/* ================= MODAL EDIT ================= */}
+      {editingBooking && (
+        <div style={modal}>
+          <div style={modalBox}>
+            <h3>Edit Booking</h3>
+
+            {[
+              ["Client", "client_name"],
+              ["No HP", "phone"],
+              ["Acara", "acara"],
+              ["Tanggal", "date", "date"],
+              ["Waktu", "time", "time"],
+              ["Lokasi", "location"],
+            ].map(([label, key, type]) => (
+              <input
+                key={key}
+                type={type || "text"}
+                placeholder={label}
+                value={editingBooking[key] || ""}
+                onChange={(e) =>
+                  setEditingBooking({
+                    ...editingBooking,
+                    [key]: e.target.value,
+                  })
+                }
+              />
+            ))}
+
+            <input
+              type="number"
+              placeholder="DP"
+              value={editingBooking.dp || 0}
+              onChange={(e) =>
+                setEditingBooking({
+                  ...editingBooking,
+                  dp: Number(e.target.value),
+                })
+              }
+            />
+
+            <input
+              type="number"
+              placeholder="Pelunasan"
+              value={editingBooking.pelunasan || 0}
+              onChange={(e) =>
+                setEditingBooking({
+                  ...editingBooking,
+                  pelunasan: Number(e.target.value),
+                })
+              }
+            />
+
+            <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+              <button onClick={saveRevision} style={{ flex: 1 }}>
+                Simpan
+              </button>
+              <button
+                onClick={() => setEditingBooking(null)}
+                style={{ flex: 1, background: "#333" }}
+              >
+                Batal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -238,4 +279,27 @@ const td = {
   padding: 10,
   borderBottom: "1px solid #222",
   fontSize: 13,
+};
+
+const modal = {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(0,0,0,.6)",
+  display: "flex",
+  alignItems: "flex-start",
+  justifyContent: "center",
+  paddingTop: "6vh",
+  zIndex: 99,
+};
+
+const modalBox = {
+  background: "#111",
+  padding: 20,
+  borderRadius: 10,
+  width: 420,
+  maxHeight: "88vh",
+  overflowY: "auto",
+  display: "flex",
+  flexDirection: "column",
+  gap: 10,
 };
