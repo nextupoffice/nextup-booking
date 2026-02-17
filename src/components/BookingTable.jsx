@@ -31,7 +31,10 @@ export default function BookingTable() {
       .order("date", { ascending: true })
       .order("time", { ascending: true });
 
-    if (!data) return;
+    if (!data) {
+      setGroupedData({});
+      return;
+    }
 
     const grouped = {};
 
@@ -66,7 +69,7 @@ export default function BookingTable() {
       });
 
       grouped[monthKey].total +=
-        user.role === "admin"
+        user?.role === "admin"
           ? (Number(b.dp) || 0) + (Number(b.pelunasan) || 0)
           : myIncome;
     });
@@ -77,12 +80,12 @@ export default function BookingTable() {
   /* ================= MASTER TEAM ================= */
   const teamMaster = useMemo(() => {
     return Object.values(groupedData)
-      .flatMap((m) => m.rows)
-      .flatMap((b) => b.team_jobs || []);
+      .flatMap((m) => m?.rows || [])
+      .flatMap((b) => b?.team_jobs || []);
   }, [groupedData]);
 
-  const teamNames = [...new Set(teamMaster.map((j) => j.name).filter(Boolean))];
-  const roleOptions = [...new Set(teamMaster.map((j) => j.role).filter(Boolean))];
+  const teamNames = [...new Set(teamMaster.map((j) => j?.name).filter(Boolean))];
+  const roleOptions = [...new Set(teamMaster.map((j) => j?.role).filter(Boolean))];
 
   /* ================= SAVE ================= */
   const saveRevision = async () => {
@@ -118,101 +121,106 @@ export default function BookingTable() {
       <div className="card" style={{ width: "100%", overflow: "visible" }}>
         <h3>Data Booking</h3>
 
-        {Object.keys(groupedData).map((month) => (
-          <div key={month} style={{ marginTop: 24 }}>
-            <h4>{month}</h4>
+        {Object.keys(groupedData || {}).map((month) => {
+          const monthData = groupedData?.[month];
+          if (!monthData) return null;
 
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", minWidth: 900 }}>
-                <thead>
-                  <tr>
-                    {[
-                      "Client",
-                      "No HP",
-                      "Acara",
-                      "Tanggal",
-                      "Waktu",
-                      "Lokasi",
-                      user.role === "admin" ? "DP" : "Pendapatan",
-                      user.role === "admin" ? "Pelunasan" : "",
-                      "Total",
-                      user.role === "admin" ? "Aksi" : "",
-                    ]
-                      .filter(Boolean)
-                      .map((h) => (
-                        <th key={h} style={th}>{h}</th>
-                      ))}
-                  </tr>
-                </thead>
+          return (
+            <div key={month} style={{ marginTop: 24 }}>
+              <h4>{month}</h4>
 
-                <tbody>
-                  {groupedData[month].rows.map((b) => {
-                    const total =
-                      user.role === "admin"
-                        ? (Number(b.dp) || 0) + (Number(b.pelunasan) || 0)
-                        : b._myIncome;
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", minWidth: 900 }}>
+                  <thead>
+                    <tr>
+                      {[
+                        "Client",
+                        "No HP",
+                        "Acara",
+                        "Tanggal",
+                        "Waktu",
+                        "Lokasi",
+                        user?.role === "admin" ? "DP" : "Pendapatan",
+                        user?.role === "admin" ? "Pelunasan" : "",
+                        "Total",
+                        user?.role === "admin" ? "Aksi" : "",
+                      ]
+                        .filter(Boolean)
+                        .map((h) => (
+                          <th key={h} style={th}>{h}</th>
+                        ))}
+                    </tr>
+                  </thead>
 
-                    return (
-                      <tr key={b.id}>
-                        <td style={td}>{b.client_name}</td>
-                        <td style={td}>{b.phone}</td>
-                        <td style={td}>{b.acara}</td>
-                        <td style={td}>{b.date}</td>
-                        <td style={td}>{b.time}</td>
-                        <td style={td}>{b.location}</td>
+                  <tbody>
+                    {(monthData?.rows || []).map((b) => {
+                      const total =
+                        user?.role === "admin"
+                          ? (Number(b.dp) || 0) + (Number(b.pelunasan) || 0)
+                          : b._myIncome || 0;
 
-                        {user.role === "admin" ? (
-                          <>
-                            <td style={td}>{formatRupiahDisplay(b.dp)}</td>
-                            <td style={td}>{formatRupiahDisplay(b.pelunasan)}</td>
-                          </>
-                        ) : (
-                          <td style={td}>{formatRupiahDisplay(b._myIncome)}</td>
-                        )}
+                      return (
+                        <tr key={b.id}>
+                          <td style={td}>{b.client_name}</td>
+                          <td style={td}>{b.phone}</td>
+                          <td style={td}>{b.acara}</td>
+                          <td style={td}>{b.date}</td>
+                          <td style={td}>{b.time}</td>
+                          <td style={td}>{b.location}</td>
 
-                        <td style={{ ...td, color: "#cba58a" }}>
-                          {formatRupiahDisplay(total)}
-                        </td>
+                          {user?.role === "admin" ? (
+                            <>
+                              <td style={td}>{formatRupiahDisplay(b.dp || 0)}</td>
+                              <td style={td}>{formatRupiahDisplay(b.pelunasan || 0)}</td>
+                            </>
+                          ) : (
+                            <td style={td}>{formatRupiahDisplay(b._myIncome || 0)}</td>
+                          )}
 
-                        {user.role === "admin" && (
-                          <td style={td}>
-                            <button
-                              onClick={() => {
-                                const clone = JSON.parse(JSON.stringify({
-                                  ...b,
-                                  team_jobs: Array.isArray(b.team_jobs)
-                                    ? b.team_jobs
-                                    : [],
-                                }));
-                                setOriginalBooking(clone);
-                                setEditingBooking(clone);
-                              }}
-                            >
-                              Edit
-                            </button>
+                          <td style={{ ...td, color: "#cba58a" }}>
+                            {formatRupiahDisplay(total)}
                           </td>
-                        )}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
 
-              {/* ✅ TOTAL BULANAN (FIX UTAMA) */}
-              <div
-                style={{
-                  textAlign: "right",
-                  marginTop: 10,
-                  fontWeight: 600,
-                  color: "#cba58a",
-                }}
-              >
-                Total Bulan Ini:{" "}
-                {formatRupiahDisplay(groupedData[month].total)}
+                          {user?.role === "admin" && (
+                            <td style={td}>
+                              <button
+                                onClick={() => {
+                                  const clone = JSON.parse(JSON.stringify({
+                                    ...b,
+                                    team_jobs: Array.isArray(b.team_jobs)
+                                      ? b.team_jobs
+                                      : [],
+                                  }));
+                                  setOriginalBooking(clone);
+                                  setEditingBooking(clone);
+                                }}
+                              >
+                                Edit
+                              </button>
+                            </td>
+                          )}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+
+                {/* TOTAL BULANAN FIX */}
+                <div
+                  style={{
+                    textAlign: "right",
+                    marginTop: 10,
+                    fontWeight: 600,
+                    color: "#cba58a",
+                  }}
+                >
+                  Total Bulan Ini:{" "}
+                  {formatRupiahDisplay(monthData?.total || 0)}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* ================= MODAL EDIT ================= */}
@@ -251,7 +259,7 @@ export default function BookingTable() {
 
             <h4>Tim</h4>
 
-            {editingBooking.team_jobs.map((j, i) => (
+            {(editingBooking.team_jobs || []).map((j, i) => (
               <div key={i} style={{ display: "flex", gap: 6 }}>
                 <select
                   value={j.name || ""}
@@ -311,7 +319,7 @@ export default function BookingTable() {
                 setEditingBooking({
                   ...editingBooking,
                   team_jobs: [
-                    ...editingBooking.team_jobs,
+                    ...(editingBooking.team_jobs || []),
                     { name: "", role: "", income: 0 },
                   ],
                 })
