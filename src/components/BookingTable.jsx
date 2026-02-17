@@ -5,6 +5,7 @@ import { formatRupiahDisplay } from "../utils/format";
 export default function BookingTable() {
   const user = JSON.parse(localStorage.getItem("user"));
   const [groupedData, setGroupedData] = useState({});
+  const [selectedMonth, setSelectedMonth] = useState(null);
   const [editingBooking, setEditingBooking] = useState(null);
   const [originalBooking, setOriginalBooking] = useState(null);
 
@@ -22,6 +23,13 @@ export default function BookingTable() {
 
     return () => supabase.removeChannel(channel);
   }, []);
+
+  useEffect(() => {
+    const months = Object.keys(groupedData);
+    if (months.length > 0 && !selectedMonth) {
+      setSelectedMonth(months[months.length - 1]);
+    }
+  }, [groupedData]);
 
   /* ================= FETCH DATA ================= */
   const fetchData = async () => {
@@ -121,106 +129,121 @@ export default function BookingTable() {
       <div className="card" style={{ width: "100%", overflow: "visible" }}>
         <h3>Data Booking</h3>
 
-        {Object.keys(groupedData || {}).map((month) => {
-          const monthData = groupedData?.[month];
-          if (!monthData) return null;
+        {/* ==== BUTTON BULAN ==== */}
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
+          {Object.keys(groupedData).map((month) => (
+            <button
+              key={month}
+              onClick={() => setSelectedMonth(month)}
+              style={{
+                padding: "6px 14px",
+                borderRadius: 20,
+                border: "1px solid #333",
+                background: selectedMonth === month ? "#cba58a" : "#111",
+                color: selectedMonth === month ? "#000" : "#cba58a",
+                cursor: "pointer",
+              }}
+            >
+              {month}
+            </button>
+          ))}
+        </div>
 
-          return (
-            <div key={month} style={{ marginTop: 24 }}>
-              <h4>{month}</h4>
+        {/* ==== TABLE BULAN TERPILIH ==== */}
+        {selectedMonth && groupedData[selectedMonth] && (
+          <div style={{ marginTop: 24 }}>
+            <h4>{selectedMonth}</h4>
 
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", minWidth: 900 }}>
-                  <thead>
-                    <tr>
-                      {[
-                        "Client",
-                        "No HP",
-                        "Acara",
-                        "Tanggal",
-                        "Waktu",
-                        "Lokasi",
-                        user?.role === "admin" ? "DP" : "Pendapatan",
-                        user?.role === "admin" ? "Pelunasan" : "",
-                        "Total",
-                        user?.role === "admin" ? "Aksi" : "",
-                      ]
-                        .filter(Boolean)
-                        .map((h) => (
-                          <th key={h} style={th}>{h}</th>
-                        ))}
-                    </tr>
-                  </thead>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", minWidth: 900 }}>
+                <thead>
+                  <tr>
+                    {[
+                      "Client",
+                      "No HP",
+                      "Acara",
+                      "Tanggal",
+                      "Waktu",
+                      "Lokasi",
+                      user?.role === "admin" ? "DP" : "Pendapatan",
+                      user?.role === "admin" ? "Pelunasan" : "",
+                      "Total",
+                      user?.role === "admin" ? "Aksi" : "",
+                    ]
+                      .filter(Boolean)
+                      .map((h) => (
+                        <th key={h} style={th}>{h}</th>
+                      ))}
+                  </tr>
+                </thead>
 
-                  <tbody>
-                    {(monthData?.rows || []).map((b) => {
-                      const total =
-                        user?.role === "admin"
-                          ? (Number(b.dp) || 0) + (Number(b.pelunasan) || 0)
-                          : b._myIncome || 0;
+                <tbody>
+                  {groupedData[selectedMonth].rows.map((b) => {
+                    const total =
+                      user?.role === "admin"
+                        ? (Number(b.dp) || 0) + (Number(b.pelunasan) || 0)
+                        : b._myIncome || 0;
 
-                      return (
-                        <tr key={b.id}>
-                          <td style={td}>{b.client_name}</td>
-                          <td style={td}>{b.phone}</td>
-                          <td style={td}>{b.acara}</td>
-                          <td style={td}>{b.date}</td>
-                          <td style={td}>{b.time}</td>
-                          <td style={td}>{b.location}</td>
+                    return (
+                      <tr key={b.id}>
+                        <td style={td}>{b.client_name}</td>
+                        <td style={td}>{b.phone}</td>
+                        <td style={td}>{b.acara}</td>
+                        <td style={td}>{b.date}</td>
+                        <td style={td}>{b.time}</td>
+                        <td style={td}>{b.location}</td>
 
-                          {user?.role === "admin" ? (
-                            <>
-                              <td style={td}>{formatRupiahDisplay(b.dp || 0)}</td>
-                              <td style={td}>{formatRupiahDisplay(b.pelunasan || 0)}</td>
-                            </>
-                          ) : (
-                            <td style={td}>{formatRupiahDisplay(b._myIncome || 0)}</td>
-                          )}
+                        {user?.role === "admin" ? (
+                          <>
+                            <td style={td}>{formatRupiahDisplay(b.dp || 0)}</td>
+                            <td style={td}>{formatRupiahDisplay(b.pelunasan || 0)}</td>
+                          </>
+                        ) : (
+                          <td style={td}>{formatRupiahDisplay(b._myIncome || 0)}</td>
+                        )}
 
-                          <td style={{ ...td, color: "#cba58a" }}>
-                            {formatRupiahDisplay(total)}
+                        <td style={{ ...td, color: "#cba58a" }}>
+                          {formatRupiahDisplay(total)}
+                        </td>
+
+                        {user?.role === "admin" && (
+                          <td style={td}>
+                            <button
+                              onClick={() => {
+                                const clone = JSON.parse(JSON.stringify({
+                                  ...b,
+                                  team_jobs: Array.isArray(b.team_jobs)
+                                    ? b.team_jobs
+                                    : [],
+                                }));
+                                setOriginalBooking(clone);
+                                setEditingBooking(clone);
+                              }}
+                            >
+                              Edit
+                            </button>
                           </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
 
-                          {user?.role === "admin" && (
-                            <td style={td}>
-                              <button
-                                onClick={() => {
-                                  const clone = JSON.parse(JSON.stringify({
-                                    ...b,
-                                    team_jobs: Array.isArray(b.team_jobs)
-                                      ? b.team_jobs
-                                      : [],
-                                  }));
-                                  setOriginalBooking(clone);
-                                  setEditingBooking(clone);
-                                }}
-                              >
-                                Edit
-                              </button>
-                            </td>
-                          )}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-
-                {/* TOTAL BULANAN FIX */}
-                <div
-                  style={{
-                    textAlign: "right",
-                    marginTop: 10,
-                    fontWeight: 600,
-                    color: "#cba58a",
-                  }}
-                >
-                  Total Bulan Ini:{" "}
-                  {formatRupiahDisplay(monthData?.total || 0)}
-                </div>
+              <div
+                style={{
+                  textAlign: "right",
+                  marginTop: 10,
+                  fontWeight: 600,
+                  color: "#cba58a",
+                }}
+              >
+                Total Bulan Ini:{" "}
+                {formatRupiahDisplay(groupedData[selectedMonth].total || 0)}
               </div>
             </div>
-          );
-        })}
+          </div>
+        )}
       </div>
 
       {/* ================= MODAL EDIT ================= */}
