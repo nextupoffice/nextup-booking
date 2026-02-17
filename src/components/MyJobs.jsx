@@ -5,6 +5,7 @@ import { formatRupiahDisplay } from "../utils/format";
 export default function MyJobs() {
   const user = JSON.parse(localStorage.getItem("user"));
   const [jobs, setJobs] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState(null);
 
   useEffect(() => {
     fetchJobs();
@@ -20,6 +21,13 @@ export default function MyJobs() {
 
     return () => supabase.removeChannel(channel);
   }, []);
+
+  useEffect(() => {
+    const months = Object.keys(grouped);
+    if (months.length > 0 && !selectedMonth) {
+      setSelectedMonth(months[months.length - 1]);
+    }
+  }, [jobs]);
 
   const fetchJobs = async () => {
     const { data, error } = await supabase
@@ -37,7 +45,6 @@ export default function MyJobs() {
     data.forEach((b) => {
       if (!Array.isArray(b.team_jobs)) return;
 
-      // ✅ FILTER KHUSUS JOB MILIK USER LOGIN
       const myTeamJobs = b.team_jobs.filter((t) => {
         if (t.user_id && user?.id) {
           return t.user_id === user.id;
@@ -72,9 +79,16 @@ export default function MyJobs() {
 
   // === GROUP PER BULAN ===
   const grouped = jobs.reduce((acc, job) => {
-    const month = job.date.slice(0, 7); // YYYY-MM
-    if (!acc[month]) acc[month] = [];
-    acc[month].push(job);
+    if (!job.date) return acc;
+
+    const monthKey = new Date(job.date).toLocaleString("id-ID", {
+      month: "long",
+      year: "numeric",
+    });
+
+    if (!acc[monthKey]) acc[monthKey] = [];
+    acc[monthKey].push(job);
+
     return acc;
   }, {});
 
@@ -82,94 +96,105 @@ export default function MyJobs() {
     <div className="card">
       <h3>My Jobs</h3>
 
-      {Object.entries(grouped).map(([month, items]) => {
-        const total = items.reduce(
-          (sum, i) => sum + (Number(i.income) || 0),
-          0
-        );
+      {/* ==== BUTTON BULAN ==== */}
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
+        {Object.keys(grouped).map((month) => (
+          <button
+            key={month}
+            onClick={() => setSelectedMonth(month)}
+            style={{
+              padding: "6px 14px",
+              borderRadius: 20,
+              border: "1px solid #333",
+              background: selectedMonth === month ? "#cba58a" : "#111",
+              color: selectedMonth === month ? "#000" : "#cba58a",
+              cursor: "pointer",
+            }}
+          >
+            {month}
+          </button>
+        ))}
+      </div>
 
-        return (
-          <div key={month} style={{ marginTop: 24 }}>
-            <h4 style={{ color: "#cba58a" }}>
-              {new Date(month + "-01").toLocaleString("id-ID", {
-                month: "long",
-                year: "numeric",
-              })}
-            </h4>
-
-            {items.map((job) => (
-              <div
-                key={job.id}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr auto",
-                  padding: "14px 0",
-                  borderBottom: "1px solid #222",
-                }}
-              >
-                {/* KIRI */}
-                <div>
-                  <strong>{job.acara}</strong>
-
-                  {job.client_name && (
-                    <div
-                      style={{
-                        fontSize: 13,
-                        color: "#cba58a",
-                        marginTop: 2,
-                      }}
-                    >
-                      Client: <strong>{job.client_name}</strong>
-                    </div>
-                  )}
-
-                  <div style={{ fontSize: 13, opacity: 0.8 }}>
-                    {job.phone}
-                  </div>
-
-                  <div style={{ fontSize: 13 }}>
-                    {job.date} • {job.time}
-                  </div>
-
-                  <div style={{ fontSize: 13 }}>{job.location}</div>
-
-                  <div
-                    style={{
-                      marginTop: 6,
-                      fontSize: 13,
-                      color: "#cba58a",
-                    }}
-                  >
-                    Jobdesk: {job.role}
-                  </div>
-                </div>
-
-                {/* KANAN */}
-                <div
-                  style={{
-                    alignSelf: "center",
-                    color: "#cba58a",
-                    fontWeight: 600,
-                  }}
-                >
-                  {formatRupiahDisplay(job.income)}
-                </div>
-              </div>
-            ))}
-
+      {/* ==== DATA BULAN TERPILIH ==== */}
+      {selectedMonth && grouped[selectedMonth] && (
+        <>
+          {grouped[selectedMonth].map((job) => (
             <div
+              key={job.id}
               style={{
-                textAlign: "right",
-                marginTop: 10,
-                fontWeight: 600,
-                color: "#cba58a",
+                display: "grid",
+                gridTemplateColumns: "1fr auto",
+                padding: "14px 0",
+                borderBottom: "1px solid #222",
               }}
             >
-              Total: {formatRupiahDisplay(total)}
+              <div>
+                <strong>{job.acara}</strong>
+
+                {job.client_name && (
+                  <div
+                    style={{
+                      fontSize: 13,
+                      color: "#cba58a",
+                      marginTop: 2,
+                    }}
+                  >
+                    Client: <strong>{job.client_name}</strong>
+                  </div>
+                )}
+
+                <div style={{ fontSize: 13, opacity: 0.8 }}>
+                  {job.phone}
+                </div>
+
+                <div style={{ fontSize: 13 }}>
+                  {job.date} • {job.time}
+                </div>
+
+                <div style={{ fontSize: 13 }}>{job.location}</div>
+
+                <div
+                  style={{
+                    marginTop: 6,
+                    fontSize: 13,
+                    color: "#cba58a",
+                  }}
+                >
+                  Jobdesk: {job.role}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  alignSelf: "center",
+                  color: "#cba58a",
+                  fontWeight: 600,
+                }}
+              >
+                {formatRupiahDisplay(job.income)}
+              </div>
             </div>
+          ))}
+
+          <div
+            style={{
+              textAlign: "right",
+              marginTop: 12,
+              fontWeight: 600,
+              color: "#cba58a",
+            }}
+          >
+            Total:{" "}
+            {formatRupiahDisplay(
+              grouped[selectedMonth].reduce(
+                (sum, i) => sum + (Number(i.income) || 0),
+                0
+              )
+            )}
           </div>
-        );
-      })}
+        </>
+      )}
     </div>
   );
 }
