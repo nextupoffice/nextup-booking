@@ -1,6 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "../supabase/client";
 import { formatRupiahDisplay } from "../utils/format";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function BookingTable() {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -146,6 +148,22 @@ export default function BookingTable() {
             >
               {month}
             </button>
+            {user?.role === "admin" && selectedMonth && (
+  <button
+    onClick={downloadPDF}
+    style={{
+      padding: "6px 14px",
+      borderRadius: 20,
+      border: "none",
+      background: "#cba58a",
+      color: "#000",
+      fontWeight: 600,
+      cursor: "pointer",
+    }}
+  >
+    Download PDF
+  </button>
+)}
           ))}
         </div>
 
@@ -369,6 +387,110 @@ export default function BookingTable() {
     </>
   );
 }
+
+/* ================= DOWNLOAD PDF ================= */
+const downloadPDF = () => {
+  if (!selectedMonth || !groupedData[selectedMonth]) return;
+
+  const doc = new jsPDF("p", "mm", "a4");
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  const rows = groupedData[selectedMonth].rows;
+  const totalIncome = groupedData[selectedMonth].total;
+
+  // Background hitam
+  doc.setFillColor(15, 15, 15);
+  doc.rect(0, 0, pageWidth, pageHeight, "F");
+
+  // Header
+  doc.setTextColor(203, 165, 138);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(20);
+  doc.text("NEXTUP STUDIO", 14, 20);
+
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "normal");
+  doc.text("Monthly Booking Report", 14, 27);
+
+  doc.setFontSize(11);
+  doc.text(selectedMonth, 14, 33);
+
+  doc.setDrawColor(203, 165, 138);
+  doc.line(14, 38, pageWidth - 14, 38);
+
+  autoTable(doc, {
+    startY: 45,
+    margin: { left: 14, right: 14 },
+    head: [
+      [
+        "Client",
+        "Acara",
+        "Tanggal",
+        "Waktu",
+        "Lokasi",
+        "Total",
+      ],
+    ],
+    body: rows.map((b) => {
+      const total =
+        user?.role === "admin"
+          ? (Number(b.dp) || 0) + (Number(b.pelunasan) || 0)
+          : b._myIncome || 0;
+
+      return [
+        b.client_name,
+        b.acara,
+        b.date,
+        b.time,
+        b.location,
+        formatRupiahDisplay(total),
+      ];
+    }),
+    styles: {
+      fontSize: 8,
+      textColor: [255, 255, 255],
+      fillColor: [25, 25, 25],
+      lineColor: [60, 60, 60],
+    },
+    headStyles: {
+      fillColor: [203, 165, 138],
+      textColor: [0, 0, 0],
+      fontStyle: "bold",
+    },
+    alternateRowStyles: {
+      fillColor: [30, 30, 30],
+    },
+    didDrawPage: () => {
+      const pageCount = doc.internal.getNumberOfPages();
+      const pageCurrent = doc.internal.getCurrentPageInfo().pageNumber;
+
+      doc.setFontSize(9);
+      doc.setTextColor(150, 150, 150);
+      doc.text(
+        `Page ${pageCurrent} of ${pageCount}`,
+        pageWidth - 40,
+        pageHeight - 10
+      );
+    },
+  });
+
+  const finalY = doc.lastAutoTable.finalY + 10;
+
+  doc.setDrawColor(203, 165, 138);
+  doc.line(14, finalY, pageWidth - 14, finalY);
+
+  doc.setFontSize(12);
+  doc.setTextColor(203, 165, 138);
+  doc.setFont("helvetica", "bold");
+  doc.text(
+    `Total Income: ${formatRupiahDisplay(totalIncome)}`,
+    14,
+    finalY + 8
+  );
+
+  doc.save(`NEXTUP-Booking-${selectedMonth}.pdf`);
+};
 
 /* ================= STYLE ================= */
 const th = { padding: 10, color: "#cba58a" };
