@@ -79,8 +79,8 @@ export default function DashboardPage() {
           </div>
 
           <BookingTable data={bookings} />
-          <TeamRevenue />
           <AdminTeamAdjustments />
+          <TeamRevenue />
         </div>
       )}
 
