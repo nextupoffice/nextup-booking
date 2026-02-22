@@ -26,10 +26,7 @@ export default function BookingTable() {
       .order("date", { ascending: true })
       .order("time", { ascending: true });
 
-    if (!data) {
-      setGroupedData({});
-      return;
-    }
+    if (!data) return setGroupedData({});
 
     const grouped = {};
 
@@ -46,7 +43,6 @@ export default function BookingTable() {
 
       grouped[monthKey].rows.push(b);
 
-      // TOTAL HANYA UNTUK ADMIN
       if (user?.role === "admin") {
         grouped[monthKey].total +=
           (Number(b.dp) || 0) + (Number(b.pelunasan) || 0);
@@ -63,9 +59,8 @@ export default function BookingTable() {
 
   useEffect(() => {
     const months = Object.keys(groupedData);
-    if (months.length > 0 && !selectedMonth) {
+    if (months.length > 0 && !selectedMonth)
       setSelectedMonth(months[months.length - 1]);
-    }
   }, [groupedData]);
 
   /* ================= PDF ================= */
@@ -76,11 +71,24 @@ export default function BookingTable() {
     const rows = groupedData[selectedMonth].rows;
 
     autoTable(doc, {
-      head: [["Client", "Acara", "Tanggal", "Total"]],
+      head: [[
+        "Nama",
+        "Acara",
+        "Tanggal",
+        "Waktu",
+        "Alamat",
+        "DP",
+        "Pelunasan",
+        "Total"
+      ]],
       body: rows.map((b) => [
         b.client_name,
         b.acara,
         b.date,
+        b.time,
+        b.location,
+        formatRupiahDisplay(b.dp),
+        formatRupiahDisplay(b.pelunasan),
         formatRupiahDisplay(
           (Number(b.dp) || 0) + (Number(b.pelunasan) || 0)
         ),
@@ -95,7 +103,7 @@ export default function BookingTable() {
     if (!editingBooking) return;
 
     const cleanedTeam =
-      editingBooking.team_detail?.map((t) => ({
+      editingBooking.team_jobs?.map((t) => ({
         name: t.name || "",
         role: t.role || "",
         nominal: Number(t.nominal) || 0,
@@ -105,14 +113,13 @@ export default function BookingTable() {
       .from("bookings")
       .update({
         client_name: editingBooking.client_name,
-        phone: editingBooking.phone,
         acara: editingBooking.acara,
         date: editingBooking.date,
         time: editingBooking.time,
         location: editingBooking.location,
         dp: Number(editingBooking.dp) || 0,
         pelunasan: Number(editingBooking.pelunasan) || 0,
-        team_detail: cleanedTeam,
+        team_jobs: cleanedTeam,
       })
       .eq("id", editingBooking.id);
 
@@ -122,14 +129,13 @@ export default function BookingTable() {
     }
 
     alert("Booking berhasil disimpan");
-
     setEditingBooking(null);
-    fetchData(); // SINKRON TOTAL & DATA ULANG
+    fetchData();
   };
 
   /* ================= TEAM CONTROL ================= */
   const updateTeamMember = (index, field, value) => {
-    const updated = [...editingBooking.team_detail];
+    const updated = [...editingBooking.team_jobs];
     updated[index] = {
       ...updated[index],
       [field]: field === "nominal" ? Number(value) : value,
@@ -137,30 +143,26 @@ export default function BookingTable() {
 
     setEditingBooking({
       ...editingBooking,
-      team_detail: updated,
+      team_jobs: updated,
     });
   };
 
   const addTeam = () => {
-    const updated = [
-      ...(editingBooking.team_detail || []),
-      { name: "", role: "", nominal: 0 },
-    ];
-
     setEditingBooking({
       ...editingBooking,
-      team_detail: updated,
+      team_jobs: [
+        ...(editingBooking.team_jobs || []),
+        { name: "", role: "", nominal: 0 },
+      ],
     });
   };
 
   const removeTeam = (index) => {
-    const updated = editingBooking.team_detail.filter(
-      (_, i) => i !== index
-    );
-
     setEditingBooking({
       ...editingBooking,
-      team_detail: updated,
+      team_jobs: editingBooking.team_jobs.filter(
+        (_, i) => i !== index
+      ),
     });
   };
 
@@ -169,7 +171,6 @@ export default function BookingTable() {
       <div className="card">
         <h3>Data Booking</h3>
 
-        {/* BULAN */}
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
           {Object.keys(groupedData).map((month) => (
             <button
@@ -194,15 +195,18 @@ export default function BookingTable() {
           )}
         </div>
 
-        {/* TABLE */}
         {selectedMonth && groupedData[selectedMonth] && (
           <>
             <table style={{ width: "100%" }}>
               <thead>
                 <tr>
-                  <th style={th}>Client</th>
+                  <th style={th}>Nama</th>
                   <th style={th}>Acara</th>
                   <th style={th}>Tanggal</th>
+                  <th style={th}>Waktu</th>
+                  <th style={th}>Alamat</th>
+                  <th style={th}>DP</th>
+                  <th style={th}>Pelunasan</th>
                   <th style={th}>Total</th>
                   <th style={th}>Aksi</th>
                 </tr>
@@ -213,6 +217,10 @@ export default function BookingTable() {
                     <td style={td}>{b.client_name}</td>
                     <td style={td}>{b.acara}</td>
                     <td style={td}>{b.date}</td>
+                    <td style={td}>{b.time}</td>
+                    <td style={td}>{b.location}</td>
+                    <td style={td}>{formatRupiahDisplay(b.dp)}</td>
+                    <td style={td}>{formatRupiahDisplay(b.pelunasan)}</td>
                     <td style={td}>
                       {formatRupiahDisplay(
                         (Number(b.dp) || 0) +
@@ -225,7 +233,7 @@ export default function BookingTable() {
                         onClick={() =>
                           setEditingBooking({
                             ...b,
-                            team_detail: b.team_detail || [],
+                            team_jobs: b.team_jobs || [],
                           })
                         }
                       >
@@ -249,7 +257,6 @@ export default function BookingTable() {
         )}
       </div>
 
-      {/* ================= MODAL EDIT ================= */}
       {editingBooking && (
         <div style={overlay}>
           <div style={modal}>
@@ -257,18 +264,17 @@ export default function BookingTable() {
 
             <div style={{ maxHeight: "70vh", overflowY: "auto", paddingRight: 10 }}>
 
-              <input style={input} value={editingBooking.client_name || ""} onChange={(e)=>setEditingBooking({...editingBooking, client_name:e.target.value})} placeholder="Client"/>
-              <input style={input} value={editingBooking.phone || ""} onChange={(e)=>setEditingBooking({...editingBooking, phone:e.target.value})} placeholder="No HP"/>
+              <input style={input} value={editingBooking.client_name || ""} onChange={(e)=>setEditingBooking({...editingBooking, client_name:e.target.value})} placeholder="Nama"/>
               <input style={input} value={editingBooking.acara || ""} onChange={(e)=>setEditingBooking({...editingBooking, acara:e.target.value})} placeholder="Acara"/>
               <input style={input} type="date" value={editingBooking.date || ""} onChange={(e)=>setEditingBooking({...editingBooking, date:e.target.value})}/>
               <input style={input} type="time" value={editingBooking.time || ""} onChange={(e)=>setEditingBooking({...editingBooking, time:e.target.value})}/>
-              <input style={input} value={editingBooking.location || ""} onChange={(e)=>setEditingBooking({...editingBooking, location:e.target.value})} placeholder="Lokasi"/>
+              <input style={input} value={editingBooking.location || ""} onChange={(e)=>setEditingBooking({...editingBooking, location:e.target.value})} placeholder="Alamat"/>
               <input style={input} type="number" value={editingBooking.dp || 0} onChange={(e)=>setEditingBooking({...editingBooking, dp:e.target.value})} placeholder="DP"/>
               <input style={input} type="number" value={editingBooking.pelunasan || 0} onChange={(e)=>setEditingBooking({...editingBooking, pelunasan:e.target.value})} placeholder="Pelunasan"/>
 
               <h4 style={{ marginTop:20 }}>Tim yang Turun</h4>
 
-              {editingBooking.team_detail?.map((t,i)=>(
+              {editingBooking.team_jobs?.map((t,i)=>(
                 <div key={i} style={teamBox}>
                   <select style={input} value={t.name} onChange={(e)=>updateTeamMember(i,"name",e.target.value)}>
                     <option value="">Pilih Nama</option>
@@ -278,7 +284,7 @@ export default function BookingTable() {
                   </select>
 
                   <input style={input} value={t.role} onChange={(e)=>updateTeamMember(i,"role",e.target.value)} placeholder="Role"/>
-                  <input style={input} type="number" value={t.nominal} onChange={(e)=>updateTeamMember(i,"nominal",e.target.value)} placeholder="Nominal"/>
+                  <input style={input} type="number" value={t.nominal || 0} onChange={(e)=>updateTeamMember(i,"nominal",e.target.value)} placeholder="Nominal"/>
 
                   <button style={cancelBtn} onClick={()=>removeTeam(i)}>Hapus</button>
                 </div>
@@ -302,17 +308,10 @@ export default function BookingTable() {
 
 const th = { padding:10, color:"#cba58a", textAlign:"left" };
 const td = { padding:10, borderBottom:"1px solid #222" };
-
 const editBtn = { padding:"6px 12px", borderRadius:6, border:"1px solid #cba58a", background:"transparent", color:"#cba58a", cursor:"pointer" };
-
 const teamBox = { border:"1px solid #222", padding:10, borderRadius:8, marginBottom:10, display:"flex", flexDirection:"column", gap:6 };
-
 const overlay = { position:"fixed", top:0, left:0, width:"100%", height:"100%", background:"rgba(0,0,0,0.6)", display:"flex", justifyContent:"center", alignItems:"center", zIndex:999 };
-
 const modal = { background:"#111", padding:30, borderRadius:12, width:520, color:"#fff", display:"flex", flexDirection:"column" };
-
 const input = { padding:8, borderRadius:6, border:"1px solid #333", background:"#1a1a1a", color:"#fff" };
-
 const saveBtn = { padding:"8px 16px", background:"#cba58a", border:"none", borderRadius:6, fontWeight:600, cursor:"pointer" };
-
 const cancelBtn = { padding:"6px 12px", background:"#333", border:"none", borderRadius:6, color:"#fff", cursor:"pointer" };
