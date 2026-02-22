@@ -106,7 +106,7 @@ export default function BookingTable() {
       editingBooking.team_jobs?.map((t) => ({
         name: t?.name?.trim() || "",
         role: t?.role?.trim() || "",
-        nominal: Number(t?.nominal) || 0,
+        income: Number(t?.income) || 0,
       })) || [];
 
     const { error } = await supabase
@@ -140,9 +140,9 @@ export default function BookingTable() {
     updated[index] = {
       ...updated[index],
       [field]:
-        field === "nominal"
+        field === "income"
           ? Number(value)
-          : String(value),
+          : value,
     };
 
     setEditingBooking({
@@ -156,7 +156,7 @@ export default function BookingTable() {
       ...editingBooking,
       team_jobs: [
         ...(editingBooking.team_jobs || []),
-        { name: "", role: "", nominal: 0 },
+        { name: "", role: "", income: 0 },
       ],
     });
   };
@@ -164,7 +164,7 @@ export default function BookingTable() {
   const removeTeam = (index) => {
     setEditingBooking({
       ...editingBooking,
-      team_jobs: (editingBooking.team_jobs || []).filter(
+      team_jobs: editingBooking.team_jobs.filter(
         (_, i) => i !== index
       ),
     });
@@ -191,14 +191,12 @@ export default function BookingTable() {
     const normalized = parsedTeam.map((t) => ({
       name: t?.name ? String(t.name).trim() : "",
       role: t?.role ? String(t.role).trim() : "",
-      nominal: Number(t?.nominal) || 0,
+      income: Number(t?.income ?? t?.nominal) || 0, // support data lama
     }));
 
     setEditingBooking({
       ...b,
-      team_jobs: normalized.length
-        ? normalized
-        : [{ name: "", role: "", nominal: 0 }],
+      team_jobs: normalized,
     });
   };
 
@@ -260,7 +258,7 @@ export default function BookingTable() {
                     <td style={td}>
                       {formatRupiahDisplay(
                         (Number(b.dp) || 0) +
-                          (Number(b.pelunasan) || 0)
+                        (Number(b.pelunasan) || 0)
                       )}
                     </td>
                     <td style={td}>
@@ -318,16 +316,29 @@ export default function BookingTable() {
                         {tm.name}
                       </option>
                     ))}
+                    <option value="Freelance">Freelance</option>
                   </select>
 
-                  <input style={input} value={t.role || ""} onChange={(e)=>updateTeamMember(i,"role",e.target.value)} placeholder="Role"/>
-                  <input style={input} type="number" value={t.nominal || 0} onChange={(e)=>updateTeamMember(i,"nominal",e.target.value)} placeholder="Nominal"/>
+                  <input
+                    style={input}
+                    value={t.role || ""}
+                    onChange={(e)=>updateTeamMember(i,"role",e.target.value)}
+                    placeholder="Role"
+                  />
+
+                  <input
+                    style={input}
+                    type="number"
+                    value={t.income || 0}
+                    onChange={(e)=>updateTeamMember(i,"income",e.target.value)}
+                    placeholder="Income"
+                  />
 
                   <button style={cancelBtn} onClick={()=>removeTeam(i)}>Hapus</button>
                 </div>
               ))}
 
-              <button style={editBtn} onClick={addTeam}>+ Tambah Tim</button>
+              <button style={editBtn} onClick={addTeam}>+ Tambah Tim / Freelance</button>
             </div>
 
             <div style={{ marginTop:15, display:"flex", gap:10 }}>
