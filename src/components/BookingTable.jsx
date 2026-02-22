@@ -26,7 +26,10 @@ export default function BookingTable() {
       .order("date", { ascending: true })
       .order("time", { ascending: true });
 
-    if (!data) return setGroupedData({});
+    if (!data) {
+      setGroupedData({});
+      return;
+    }
 
     const grouped = {};
 
@@ -43,10 +46,11 @@ export default function BookingTable() {
 
       grouped[monthKey].rows.push(b);
 
-      grouped[monthKey].total +=
-        user?.role === "admin"
-          ? (Number(b.dp) || 0) + (Number(b.pelunasan) || 0)
-          : 0;
+      // TOTAL HANYA UNTUK ADMIN
+      if (user?.role === "admin") {
+        grouped[monthKey].total +=
+          (Number(b.dp) || 0) + (Number(b.pelunasan) || 0);
+      }
     });
 
     setGroupedData(grouped);
@@ -59,8 +63,9 @@ export default function BookingTable() {
 
   useEffect(() => {
     const months = Object.keys(groupedData);
-    if (months.length > 0 && !selectedMonth)
+    if (months.length > 0 && !selectedMonth) {
       setSelectedMonth(months[months.length - 1]);
+    }
   }, [groupedData]);
 
   /* ================= PDF ================= */
@@ -89,7 +94,14 @@ export default function BookingTable() {
   const handleSave = async () => {
     if (!editingBooking) return;
 
-    await supabase
+    const cleanedTeam =
+      editingBooking.team_detail?.map((t) => ({
+        name: t.name || "",
+        role: t.role || "",
+        nominal: Number(t.nominal) || 0,
+      })) || [];
+
+    const { error } = await supabase
       .from("bookings")
       .update({
         client_name: editingBooking.client_name,
@@ -98,22 +110,35 @@ export default function BookingTable() {
         date: editingBooking.date,
         time: editingBooking.time,
         location: editingBooking.location,
-        dp: Number(editingBooking.dp),
-        pelunasan: Number(editingBooking.pelunasan),
-        team_detail: editingBooking.team_detail || [],
+        dp: Number(editingBooking.dp) || 0,
+        pelunasan: Number(editingBooking.pelunasan) || 0,
+        team_detail: cleanedTeam,
       })
       .eq("id", editingBooking.id);
 
+    if (error) {
+      alert("Gagal menyimpan booking");
+      return;
+    }
+
     alert("Booking berhasil disimpan");
+
     setEditingBooking(null);
-    fetchData();
+    fetchData(); // SINKRON TOTAL & DATA ULANG
   };
 
   /* ================= TEAM CONTROL ================= */
   const updateTeamMember = (index, field, value) => {
     const updated = [...editingBooking.team_detail];
-    updated[index][field] = value;
-    setEditingBooking({ ...editingBooking, team_detail: updated });
+    updated[index] = {
+      ...updated[index],
+      [field]: field === "nominal" ? Number(value) : value,
+    };
+
+    setEditingBooking({
+      ...editingBooking,
+      team_detail: updated,
+    });
   };
 
   const addTeam = () => {
@@ -121,14 +146,22 @@ export default function BookingTable() {
       ...(editingBooking.team_detail || []),
       { name: "", role: "", nominal: 0 },
     ];
-    setEditingBooking({ ...editingBooking, team_detail: updated });
+
+    setEditingBooking({
+      ...editingBooking,
+      team_detail: updated,
+    });
   };
 
   const removeTeam = (index) => {
     const updated = editingBooking.team_detail.filter(
       (_, i) => i !== index
     );
-    setEditingBooking({ ...editingBooking, team_detail: updated });
+
+    setEditingBooking({
+      ...editingBooking,
+      team_detail: updated,
+    });
   };
 
   return (
@@ -204,17 +237,19 @@ export default function BookingTable() {
               </tbody>
             </table>
 
-            <div style={{ textAlign: "right", marginTop: 10 }}>
-              Total Bulan Ini:{" "}
-              {formatRupiahDisplay(
-                groupedData[selectedMonth].total
-              )}
-            </div>
+            {user?.role === "admin" && (
+              <div style={{ textAlign: "right", marginTop: 10 }}>
+                Total Bulan Ini:{" "}
+                {formatRupiahDisplay(
+                  groupedData[selectedMonth].total
+                )}
+              </div>
+            )}
           </>
         )}
       </div>
 
-      {/* ================= MODAL EDIT FULL ================= */}
+      {/* ================= MODAL EDIT ================= */}
       {editingBooking && (
         <div style={overlay}>
           <div style={modal}>
@@ -222,7 +257,6 @@ export default function BookingTable() {
 
             <div style={{ maxHeight: "70vh", overflowY: "auto", paddingRight: 10 }}>
 
-              {/* DATA BOOKING */}
               <input style={input} value={editingBooking.client_name || ""} onChange={(e)=>setEditingBooking({...editingBooking, client_name:e.target.value})} placeholder="Client"/>
               <input style={input} value={editingBooking.phone || ""} onChange={(e)=>setEditingBooking({...editingBooking, phone:e.target.value})} placeholder="No HP"/>
               <input style={input} value={editingBooking.acara || ""} onChange={(e)=>setEditingBooking({...editingBooking, acara:e.target.value})} placeholder="Acara"/>
@@ -232,7 +266,6 @@ export default function BookingTable() {
               <input style={input} type="number" value={editingBooking.dp || 0} onChange={(e)=>setEditingBooking({...editingBooking, dp:e.target.value})} placeholder="DP"/>
               <input style={input} type="number" value={editingBooking.pelunasan || 0} onChange={(e)=>setEditingBooking({...editingBooking, pelunasan:e.target.value})} placeholder="Pelunasan"/>
 
-              {/* TEAM */}
               <h4 style={{ marginTop:20 }}>Tim yang Turun</h4>
 
               {editingBooking.team_detail?.map((t,i)=>(
