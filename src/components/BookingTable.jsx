@@ -31,6 +31,8 @@ export default function BookingTable() {
     const grouped = {};
 
     data.forEach((b) => {
+      if (!b.date) return;
+
       const monthKey = new Date(b.date).toLocaleString("id-ID", {
         month: "long",
         year: "numeric",
@@ -53,17 +55,6 @@ export default function BookingTable() {
   useEffect(() => {
     fetchData();
     fetchTeam();
-
-    const channel = supabase
-      .channel("booking-realtime")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "bookings" },
-        fetchData
-      )
-      .subscribe();
-
-    return () => supabase.removeChannel(channel);
   }, []);
 
   useEffect(() => {
@@ -104,9 +95,12 @@ export default function BookingTable() {
         client_name: editingBooking.client_name,
         phone: editingBooking.phone,
         acara: editingBooking.acara,
-        dp: editingBooking.dp,
-        pelunasan: editingBooking.pelunasan,
-        team_detail: editingBooking.team_detail,
+        date: editingBooking.date,
+        time: editingBooking.time,
+        location: editingBooking.location,
+        dp: Number(editingBooking.dp),
+        pelunasan: Number(editingBooking.pelunasan),
+        team_detail: editingBooking.team_detail || [],
       })
       .eq("id", editingBooking.id);
 
@@ -115,7 +109,7 @@ export default function BookingTable() {
     fetchData();
   };
 
-  /* ================= TEAM UPDATE ================= */
+  /* ================= TEAM CONTROL ================= */
   const updateTeamMember = (index, field, value) => {
     const updated = [...editingBooking.team_detail];
     updated[index][field] = value;
@@ -220,99 +214,49 @@ export default function BookingTable() {
         )}
       </div>
 
-      {/* MODAL EDIT */}
+      {/* ================= MODAL EDIT FULL ================= */}
       {editingBooking && (
         <div style={overlay}>
           <div style={modal}>
             <h3>Edit Booking</h3>
 
-            <div style={{ maxHeight: "70vh", overflowY: "auto" }}>
-              <input
-                style={input}
-                value={editingBooking.client_name || ""}
-                onChange={(e) =>
-                  setEditingBooking({
-                    ...editingBooking,
-                    client_name: e.target.value,
-                  })
-                }
-                placeholder="Client"
-              />
+            <div style={{ maxHeight: "70vh", overflowY: "auto", paddingRight: 10 }}>
 
-              <input
-                style={input}
-                value={editingBooking.acara || ""}
-                onChange={(e) =>
-                  setEditingBooking({
-                    ...editingBooking,
-                    acara: e.target.value,
-                  })
-                }
-                placeholder="Acara"
-              />
+              {/* DATA BOOKING */}
+              <input style={input} value={editingBooking.client_name || ""} onChange={(e)=>setEditingBooking({...editingBooking, client_name:e.target.value})} placeholder="Client"/>
+              <input style={input} value={editingBooking.phone || ""} onChange={(e)=>setEditingBooking({...editingBooking, phone:e.target.value})} placeholder="No HP"/>
+              <input style={input} value={editingBooking.acara || ""} onChange={(e)=>setEditingBooking({...editingBooking, acara:e.target.value})} placeholder="Acara"/>
+              <input style={input} type="date" value={editingBooking.date || ""} onChange={(e)=>setEditingBooking({...editingBooking, date:e.target.value})}/>
+              <input style={input} type="time" value={editingBooking.time || ""} onChange={(e)=>setEditingBooking({...editingBooking, time:e.target.value})}/>
+              <input style={input} value={editingBooking.location || ""} onChange={(e)=>setEditingBooking({...editingBooking, location:e.target.value})} placeholder="Lokasi"/>
+              <input style={input} type="number" value={editingBooking.dp || 0} onChange={(e)=>setEditingBooking({...editingBooking, dp:e.target.value})} placeholder="DP"/>
+              <input style={input} type="number" value={editingBooking.pelunasan || 0} onChange={(e)=>setEditingBooking({...editingBooking, pelunasan:e.target.value})} placeholder="Pelunasan"/>
 
-              <h4 style={{ marginTop: 20 }}>Tim</h4>
+              {/* TEAM */}
+              <h4 style={{ marginTop:20 }}>Tim yang Turun</h4>
 
-              {editingBooking.team_detail?.map((t, i) => (
+              {editingBooking.team_detail?.map((t,i)=>(
                 <div key={i} style={teamBox}>
-                  <select
-                    style={input}
-                    value={t.name}
-                    onChange={(e) =>
-                      updateTeamMember(i, "name", e.target.value)
-                    }
-                  >
+                  <select style={input} value={t.name} onChange={(e)=>updateTeamMember(i,"name",e.target.value)}>
                     <option value="">Pilih Nama</option>
-                    {teamList.map((tm) => (
-                      <option key={tm.id} value={tm.name}>
-                        {tm.name}
-                      </option>
+                    {teamList.map(tm=>(
+                      <option key={tm.id} value={tm.name}>{tm.name}</option>
                     ))}
                   </select>
 
-                  <input
-                    style={input}
-                    value={t.role}
-                    onChange={(e) =>
-                      updateTeamMember(i, "role", e.target.value)
-                    }
-                    placeholder="Role"
-                  />
+                  <input style={input} value={t.role} onChange={(e)=>updateTeamMember(i,"role",e.target.value)} placeholder="Role"/>
+                  <input style={input} type="number" value={t.nominal} onChange={(e)=>updateTeamMember(i,"nominal",e.target.value)} placeholder="Nominal"/>
 
-                  <input
-                    style={input}
-                    type="number"
-                    value={t.nominal}
-                    onChange={(e) =>
-                      updateTeamMember(i, "nominal", e.target.value)
-                    }
-                    placeholder="Nominal"
-                  />
-
-                  <button
-                    style={cancelBtn}
-                    onClick={() => removeTeam(i)}
-                  >
-                    Hapus
-                  </button>
+                  <button style={cancelBtn} onClick={()=>removeTeam(i)}>Hapus</button>
                 </div>
               ))}
 
-              <button style={editBtn} onClick={addTeam}>
-                + Tambah Tim
-              </button>
+              <button style={editBtn} onClick={addTeam}>+ Tambah Tim</button>
             </div>
 
-            <div style={{ marginTop: 15, display: "flex", gap: 10 }}>
-              <button style={saveBtn} onClick={handleSave}>
-                Save
-              </button>
-              <button
-                style={cancelBtn}
-                onClick={() => setEditingBooking(null)}
-              >
-                Cancel
-              </button>
+            <div style={{ marginTop:15, display:"flex", gap:10 }}>
+              <button style={saveBtn} onClick={handleSave}>Save</button>
+              <button style={cancelBtn} onClick={()=>setEditingBooking(null)}>Cancel</button>
             </div>
           </div>
         </div>
@@ -323,73 +267,19 @@ export default function BookingTable() {
 
 /* ================= STYLE ================= */
 
-const th = { padding: 10, color: "#cba58a", textAlign: "left" };
-const td = { padding: 10, borderBottom: "1px solid #222" };
+const th = { padding:10, color:"#cba58a", textAlign:"left" };
+const td = { padding:10, borderBottom:"1px solid #222" };
 
-const editBtn = {
-  padding: "6px 12px",
-  borderRadius: 6,
-  border: "1px solid #cba58a",
-  background: "transparent",
-  color: "#cba58a",
-  cursor: "pointer",
-};
+const editBtn = { padding:"6px 12px", borderRadius:6, border:"1px solid #cba58a", background:"transparent", color:"#cba58a", cursor:"pointer" };
 
-const teamBox = {
-  border: "1px solid #222",
-  padding: 10,
-  borderRadius: 8,
-  marginBottom: 10,
-  display: "flex",
-  flexDirection: "column",
-  gap: 6,
-};
+const teamBox = { border:"1px solid #222", padding:10, borderRadius:8, marginBottom:10, display:"flex", flexDirection:"column", gap:6 };
 
-const overlay = {
-  position: "fixed",
-  top: 0,
-  left: 0,
-  width: "100%",
-  height: "100%",
-  background: "rgba(0,0,0,0.6)",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  zIndex: 999,
-};
+const overlay = { position:"fixed", top:0, left:0, width:"100%", height:"100%", background:"rgba(0,0,0,0.6)", display:"flex", justifyContent:"center", alignItems:"center", zIndex:999 };
 
-const modal = {
-  background: "#111",
-  padding: 30,
-  borderRadius: 12,
-  width: 500,
-  color: "#fff",
-  display: "flex",
-  flexDirection: "column",
-};
+const modal = { background:"#111", padding:30, borderRadius:12, width:520, color:"#fff", display:"flex", flexDirection:"column" };
 
-const input = {
-  padding: 8,
-  borderRadius: 6,
-  border: "1px solid #333",
-  background: "#1a1a1a",
-  color: "#fff",
-};
+const input = { padding:8, borderRadius:6, border:"1px solid #333", background:"#1a1a1a", color:"#fff" };
 
-const saveBtn = {
-  padding: "8px 16px",
-  background: "#cba58a",
-  border: "none",
-  borderRadius: 6,
-  fontWeight: 600,
-  cursor: "pointer",
-};
+const saveBtn = { padding:"8px 16px", background:"#cba58a", border:"none", borderRadius:6, fontWeight:600, cursor:"pointer" };
 
-const cancelBtn = {
-  padding: "6px 12px",
-  background: "#333",
-  border: "none",
-  borderRadius: 6,
-  color: "#fff",
-  cursor: "pointer",
-};
+const cancelBtn = { padding:"6px 12px", background:"#333", border:"none", borderRadius:6, color:"#fff", cursor:"pointer" };
