@@ -63,14 +63,40 @@ export default function BookingTable() {
       setSelectedMonth(months[months.length - 1]);
   }, [groupedData]);
 
-  /* ================= TOTAL INCOME REALTIME ================= */
-  const totalTeamIncome = useMemo(() => {
-    if (!editingBooking?.team_jobs) return 0;
-    return editingBooking.team_jobs.reduce(
-      (acc, t) => acc + Number(t.income || 0),
-      0
-    );
-  }, [editingBooking]);
+  /* ================= PDF ================= */
+  const downloadPDF = () => {
+    if (!selectedMonth) return;
+
+    const doc = new jsPDF();
+    const rows = groupedData[selectedMonth].rows;
+
+    autoTable(doc, {
+      head: [[
+        "Nama",
+        "Acara",
+        "Tanggal",
+        "Waktu",
+        "Alamat",
+        "DP",
+        "Pelunasan",
+        "Total"
+      ]],
+      body: rows.map((b) => [
+        b.client_name,
+        b.acara,
+        b.date,
+        b.time,
+        b.location,
+        formatRupiahDisplay(b.dp),
+        formatRupiahDisplay(b.pelunasan),
+        formatRupiahDisplay(
+          (Number(b.dp) || 0) + (Number(b.pelunasan) || 0)
+        ),
+      ]),
+    });
+
+    doc.save(`Booking-${selectedMonth}.pdf`);
+  };
 
   /* ================= SAVE EDIT ================= */
   const handleSave = async () => {
@@ -135,7 +161,9 @@ export default function BookingTable() {
   const removeTeam = (index) => {
     setEditingBooking({
       ...editingBooking,
-      team_jobs: editingBooking.team_jobs.filter((_, i) => i !== index),
+      team_jobs: editingBooking.team_jobs.filter(
+        (_, i) => i !== index
+      ),
     });
   };
 
@@ -144,8 +172,9 @@ export default function BookingTable() {
     let parsedTeam = [];
 
     if (b.team_jobs) {
-      if (Array.isArray(b.team_jobs)) parsedTeam = b.team_jobs;
-      else {
+      if (Array.isArray(b.team_jobs)) {
+        parsedTeam = b.team_jobs;
+      } else if (typeof b.team_jobs === "string") {
         try {
           parsedTeam = JSON.parse(b.team_jobs);
         } catch {
@@ -162,114 +191,185 @@ export default function BookingTable() {
 
     setEditingBooking({
       ...b,
-      team_jobs: normalized.length
-        ? normalized
-        : [{ name: "", role: "", income: 0 }],
+      team_jobs: normalized,
     });
   };
 
-  /* ================= UNIQUE ROLE LIST ================= */
-  const uniqueRoles = [...new Set(teamList.map((t) => t.role))];
+  /* ================= TOTAL INCOME REALTIME ================= */
+  const totalTeamIncome = useMemo(() => {
+    if (!editingBooking?.team_jobs) return 0;
+    return editingBooking.team_jobs.reduce(
+      (total, t) => total + (Number(t.income) || 0),
+      0
+    );
+  }, [editingBooking]);
 
   return (
     <>
-      {/* ===== MODAL EDIT ===== */}
+      <div className="card">
+        <h3>Data Booking</h3>
+
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
+          {Object.keys(groupedData).map((month) => (
+            <button
+              key={month}
+              onClick={() => setSelectedMonth(month)}
+              style={{
+                padding: "6px 14px",
+                borderRadius: 20,
+                border: "1px solid #333",
+                background: selectedMonth === month ? "#cba58a" : "#111",
+                color: selectedMonth === month ? "#000" : "#cba58a",
+              }}
+            >
+              {month}
+            </button>
+          ))}
+
+          {user?.role === "admin" && selectedMonth && (
+            <button onClick={downloadPDF} style={saveBtn}>
+              Download PDF
+            </button>
+          )}
+        </div>
+
+        {selectedMonth && groupedData[selectedMonth] && (
+          <>
+            <table style={{ width: "100%" }}>
+              <thead>
+                <tr>
+                  <th style={th}>Nama</th>
+                  <th style={th}>Acara</th>
+                  <th style={th}>Tanggal</th>
+                  <th style={th}>Waktu</th>
+                  <th style={th}>Alamat</th>
+                  <th style={th}>DP</th>
+                  <th style={th}>Pelunasan</th>
+                  <th style={th}>Total</th>
+                  <th style={th}>Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {groupedData[selectedMonth].rows.map((b) => (
+                  <tr key={b.id}>
+                    <td style={td}>{b.client_name}</td>
+                    <td style={td}>{b.acara}</td>
+                    <td style={td}>{b.date}</td>
+                    <td style={td}>{b.time}</td>
+                    <td style={td}>{b.location}</td>
+                    <td style={td}>{formatRupiahDisplay(b.dp)}</td>
+                    <td style={td}>{formatRupiahDisplay(b.pelunasan)}</td>
+                    <td style={td}>
+                      {formatRupiahDisplay(
+                        (Number(b.dp) || 0) +
+                        (Number(b.pelunasan) || 0)
+                      )}
+                    </td>
+                    <td style={td}>
+                      <button
+                        style={editBtn}
+                        onClick={() => openEdit(b)}
+                      >
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {user?.role === "admin" && (
+              <div style={{ textAlign: "right", marginTop: 10 }}>
+                Total Bulan Ini:{" "}
+                {formatRupiahDisplay(
+                  groupedData[selectedMonth].total
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
       {editingBooking && (
         <div style={overlay}>
           <div style={modal}>
             <h3>Edit Booking</h3>
 
-            <div style={{ maxHeight: "70vh", overflowY: "auto" }}>
-              <h4>Tim yang Turun</h4>
+            <div style={{ maxHeight: "70vh", overflowY: "auto", paddingRight: 10 }}>
 
-              {editingBooking.team_jobs?.map((t, i) => (
+              <input style={input} value={editingBooking.client_name || ""} onChange={(e)=>setEditingBooking({...editingBooking, client_name:e.target.value})} placeholder="Nama"/>
+              <input style={input} value={editingBooking.acara || ""} onChange={(e)=>setEditingBooking({...editingBooking, acara:e.target.value})} placeholder="Acara"/>
+              <input style={input} type="date" value={editingBooking.date || ""} onChange={(e)=>setEditingBooking({...editingBooking, date:e.target.value})}/>
+              <input style={input} type="time" value={editingBooking.time || ""} onChange={(e)=>setEditingBooking({...editingBooking, time:e.target.value})}/>
+              <input style={input} value={editingBooking.location || ""} onChange={(e)=>setEditingBooking({...editingBooking, location:e.target.value})} placeholder="Alamat"/>
+              <input style={input} type="number" value={editingBooking.dp || 0} onChange={(e)=>setEditingBooking({...editingBooking, dp:e.target.value})} placeholder="DP"/>
+              <input style={input} type="number" value={editingBooking.pelunasan || 0} onChange={(e)=>setEditingBooking({...editingBooking, pelunasan:e.target.value})} placeholder="Pelunasan"/>
+
+              <h4 style={{ marginTop:20 }}>Tim yang Turun</h4>
+
+              {editingBooking.team_jobs?.map((t,i)=>(
                 <div key={i} style={teamBox}>
-                  
-                  {/* NAMA AUTOCOMPLETE */}
+
                   <input
                     style={input}
                     list={`team-list-${i}`}
                     value={t.name || ""}
-                    onChange={(e) => {
+                    onChange={(e)=>{
                       const selectedName = e.target.value;
-                      const found = teamList.find(
-                        (tm) => tm.name === selectedName
-                      );
-
-                      updateTeamMember(i, "name", selectedName);
-
-                      if (found) {
-                        updateTeamMember(i, "role", found.role || "");
+                      const found = teamList.find(tm => tm.name === selectedName);
+                      updateTeamMember(i,"name",selectedName);
+                      if(found){
+                        updateTeamMember(i,"role",found.role || "");
                       }
                     }}
                     placeholder="Ketik atau pilih nama"
                   />
+
                   <datalist id={`team-list-${i}`}>
-                    {teamList.map((tm) => (
+                    {teamList.map(tm=>(
                       <option key={tm.id} value={tm.name} />
                     ))}
                   </datalist>
 
-                  {/* ROLE AUTOCOMPLETE */}
                   <input
                     style={input}
                     list={`role-list-${i}`}
                     value={t.role || ""}
-                    onChange={(e) =>
-                      updateTeamMember(i, "role", e.target.value)
-                    }
+                    onChange={(e)=>updateTeamMember(i,"role",e.target.value)}
                     placeholder="Role"
                   />
+
                   <datalist id={`role-list-${i}`}>
-                    {uniqueRoles.map((role, idx) => (
+                    {[...new Set(teamList.map(tm=>tm.role))].map((role,idx)=>(
                       <option key={idx} value={role} />
                     ))}
                   </datalist>
 
-                  {/* INCOME */}
                   <input
                     style={input}
                     type="number"
                     value={t.income || 0}
-                    onChange={(e) =>
-                      updateTeamMember(i, "income", e.target.value)
-                    }
+                    onChange={(e)=>updateTeamMember(i,"income",e.target.value)}
                     placeholder="Income"
                   />
 
-                  <button style={cancelBtn} onClick={() => removeTeam(i)}>
-                    Hapus
-                  </button>
+                  <button style={cancelBtn} onClick={()=>removeTeam(i)}>Hapus</button>
                 </div>
               ))}
+
+              {/* TOTAL INCOME REALTIME */}
+              <div style={{ marginTop:10, fontWeight:600 }}>
+                Total Income Tim: {formatRupiahDisplay(totalTeamIncome)}
+              </div>
 
               <button style={editBtn} onClick={addTeam}>
                 + Tambah Tim / Freelance
               </button>
-
-              {/* TOTAL REALTIME */}
-              <div
-                style={{
-                  marginTop: 15,
-                  fontWeight: "bold",
-                  fontSize: 16,
-                  color: "#cba58a",
-                }}
-              >
-                Total Income Tim: {formatRupiahDisplay(totalTeamIncome)}
-              </div>
             </div>
 
-            <div style={{ marginTop: 15, display: "flex", gap: 10 }}>
-              <button style={saveBtn} onClick={handleSave}>
-                Save
-              </button>
-              <button
-                style={cancelBtn}
-                onClick={() => setEditingBooking(null)}
-              >
-                Cancel
-              </button>
+            <div style={{ marginTop:15, display:"flex", gap:10 }}>
+              <button style={saveBtn} onClick={handleSave}>Save</button>
+              <button style={cancelBtn} onClick={()=>setEditingBooking(null)}>Cancel</button>
             </div>
           </div>
         </div>
@@ -280,70 +380,12 @@ export default function BookingTable() {
 
 /* ================= STYLE ================= */
 
-const editBtn = {
-  padding: "6px 12px",
-  borderRadius: 6,
-  border: "1px solid #cba58a",
-  background: "transparent",
-  color: "#cba58a",
-  cursor: "pointer",
-};
-
-const teamBox = {
-  border: "1px solid #222",
-  padding: 10,
-  borderRadius: 8,
-  marginBottom: 10,
-  display: "flex",
-  flexDirection: "column",
-  gap: 6,
-};
-
-const overlay = {
-  position: "fixed",
-  top: 0,
-  left: 0,
-  width: "100%",
-  height: "100%",
-  background: "rgba(0,0,0,0.6)",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  zIndex: 999,
-};
-
-const modal = {
-  background: "#111",
-  padding: 30,
-  borderRadius: 12,
-  width: 520,
-  color: "#fff",
-  display: "flex",
-  flexDirection: "column",
-};
-
-const input = {
-  padding: 8,
-  borderRadius: 6,
-  border: "1px solid #333",
-  background: "#1a1a1a",
-  color: "#fff",
-};
-
-const saveBtn = {
-  padding: "8px 16px",
-  background: "#cba58a",
-  border: "none",
-  borderRadius: 6,
-  fontWeight: 600,
-  cursor: "pointer",
-};
-
-const cancelBtn = {
-  padding: "6px 12px",
-  background: "#333",
-  border: "none",
-  borderRadius: 6,
-  color: "#fff",
-  cursor: "pointer",
-};
+const th = { padding:10, color:"#cba58a", textAlign:"left" };
+const td = { padding:10, borderBottom:"1px solid #222" };
+const editBtn = { padding:"6px 12px", borderRadius:6, border:"1px solid #cba58a", background:"transparent", color:"#cba58a", cursor:"pointer" };
+const teamBox = { border:"1px solid #222", padding:10, borderRadius:8, marginBottom:10, display:"flex", flexDirection:"column", gap:6 };
+const overlay = { position:"fixed", top:0, left:0, width:"100%", height:"100%", background:"rgba(0,0,0,0.6)", display:"flex", justifyContent:"center", alignItems:"center", zIndex:999 };
+const modal = { background:"#111", padding:30, borderRadius:12, width:520, color:"#fff", display:"flex", flexDirection:"column" };
+const input = { padding:8, borderRadius:6, border:"1px solid #333", background:"#1a1a1a", color:"#fff" };
+const saveBtn = { padding:"8px 16px", background:"#cba58a", border:"none", borderRadius:6, fontWeight:600, cursor:"pointer" };
+const cancelBtn = { padding:"6px 12px", background:"#333", border:"none", borderRadius:6, color:"#fff", cursor:"pointer" };
