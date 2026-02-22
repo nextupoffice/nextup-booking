@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../supabase/client";
 import { formatRupiahDisplay } from "../utils/format";
 import jsPDF from "jspdf";
@@ -139,22 +139,15 @@ export default function BookingTable() {
         fontSize: 8,
         textColor: [255, 255, 255],
         fillColor: [25, 25, 25],
-        lineColor: [60, 60, 60],
       },
       headStyles: {
         fillColor: [203, 165, 138],
         textColor: [0, 0, 0],
         fontStyle: "bold",
       },
-      alternateRowStyles: {
-        fillColor: [30, 30, 30],
-      },
     });
 
     const finalY = doc.lastAutoTable.finalY + 10;
-
-    doc.setDrawColor(203, 165, 138);
-    doc.line(14, finalY, pageWidth - 14, finalY);
 
     doc.setFontSize(12);
     doc.setTextColor(203, 165, 138);
@@ -170,7 +163,7 @@ export default function BookingTable() {
 
   return (
     <>
-      <div className="card" style={{ width: "100%", overflow: "visible" }}>
+      <div className="card" style={{ width: "100%" }}>
         <h3>Data Booking</h3>
 
         {/* ==== BUTTON BULAN ==== */}
@@ -216,7 +209,7 @@ export default function BookingTable() {
             <h4>{selectedMonth}</h4>
 
             <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", minWidth: 900 }}>
+              <table style={{ width: "100%", minWidth: 1000 }}>
                 <thead>
                   <tr>
                     {[
@@ -263,9 +256,31 @@ export default function BookingTable() {
                           <td style={td}>{formatRupiahDisplay(b._myIncome || 0)}</td>
                         )}
 
-                        <td style={{ ...td, color: "#cba58a" }}>
+                        <td style={{ ...td, color: "#cba58a", fontWeight: 600 }}>
                           {formatRupiahDisplay(total)}
                         </td>
+
+                        {user?.role === "admin" && (
+                          <td style={td}>
+                            <button
+                              style={editBtn}
+                              onClick={() => {
+                                const clone = JSON.parse(
+                                  JSON.stringify({
+                                    ...b,
+                                    team_jobs: Array.isArray(b.team_jobs)
+                                      ? b.team_jobs
+                                      : [],
+                                  })
+                                );
+                                setOriginalBooking(clone);
+                                setEditingBooking(clone);
+                              }}
+                            >
+                              Edit
+                            </button>
+                          </td>
+                        )}
                       </tr>
                     );
                   })}
@@ -275,8 +290,8 @@ export default function BookingTable() {
               <div
                 style={{
                   textAlign: "right",
-                  marginTop: 10,
-                  fontWeight: 600,
+                  marginTop: 12,
+                  fontWeight: 700,
                   color: "#cba58a",
                 }}
               >
@@ -291,5 +306,15 @@ export default function BookingTable() {
   );
 }
 
-const th = { padding: 10, color: "#cba58a" };
+const th = { padding: 10, color: "#cba58a", textAlign: "left" };
 const td = { padding: 10, borderBottom: "1px solid #222" };
+
+const editBtn = {
+  padding: "6px 12px",
+  borderRadius: 6,
+  border: "1px solid #cba58a",
+  background: "transparent",
+  color: "#cba58a",
+  cursor: "pointer",
+  fontWeight: 600,
+};
