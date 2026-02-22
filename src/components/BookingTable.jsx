@@ -104,9 +104,9 @@ export default function BookingTable() {
 
     const cleanedTeam =
       editingBooking.team_jobs?.map((t) => ({
-        name: t.name || "",
-        role: t.role || "",
-        nominal: Number(t.nominal) || 0,
+        name: t?.name?.trim() || "",
+        role: t?.role?.trim() || "",
+        nominal: Number(t?.nominal) || 0,
       })) || [];
 
     const { error } = await supabase
@@ -136,9 +136,13 @@ export default function BookingTable() {
   /* ================= TEAM CONTROL ================= */
   const updateTeamMember = (index, field, value) => {
     const updated = [...(editingBooking.team_jobs || [])];
+
     updated[index] = {
       ...updated[index],
-      [field]: field === "nominal" ? Number(value) : value,
+      [field]:
+        field === "nominal"
+          ? Number(value)
+          : String(value),
     };
 
     setEditingBooking({
@@ -182,15 +186,19 @@ export default function BookingTable() {
       }
     }
 
+    if (!Array.isArray(parsedTeam)) parsedTeam = [];
+
     const normalized = parsedTeam.map((t) => ({
-      name: t.name || "",
-      role: t.role || "",
-      nominal: Number(t.nominal) || 0,
+      name: t?.name ? String(t.name).trim() : "",
+      role: t?.role ? String(t.role).trim() : "",
+      nominal: Number(t?.nominal) || 0,
     }));
 
     setEditingBooking({
       ...b,
-      team_jobs: normalized,
+      team_jobs: normalized.length
+        ? normalized
+        : [{ name: "", role: "", nominal: 0 }],
     });
   };
 
@@ -299,14 +307,20 @@ export default function BookingTable() {
 
               {editingBooking.team_jobs?.map((t,i)=>(
                 <div key={i} style={teamBox}>
-                  <select style={input} value={t.name} onChange={(e)=>updateTeamMember(i,"name",e.target.value)}>
+                  <select
+                    style={input}
+                    value={t.name || ""}
+                    onChange={(e)=>updateTeamMember(i,"name",e.target.value)}
+                  >
                     <option value="">Pilih Nama</option>
                     {teamList.map(tm=>(
-                      <option key={tm.id} value={tm.name}>{tm.name}</option>
+                      <option key={tm.id} value={tm.name}>
+                        {tm.name}
+                      </option>
                     ))}
                   </select>
 
-                  <input style={input} value={t.role} onChange={(e)=>updateTeamMember(i,"role",e.target.value)} placeholder="Role"/>
+                  <input style={input} value={t.role || ""} onChange={(e)=>updateTeamMember(i,"role",e.target.value)} placeholder="Role"/>
                   <input style={input} type="number" value={t.nominal || 0} onChange={(e)=>updateTeamMember(i,"nominal",e.target.value)} placeholder="Nominal"/>
 
                   <button style={cancelBtn} onClick={()=>removeTeam(i)}>Hapus</button>
