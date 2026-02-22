@@ -135,7 +135,7 @@ export default function BookingTable() {
 
   /* ================= TEAM CONTROL ================= */
   const updateTeamMember = (index, field, value) => {
-    const updated = [...editingBooking.team_jobs];
+    const updated = [...(editingBooking.team_jobs || [])];
     updated[index] = {
       ...updated[index],
       [field]: field === "nominal" ? Number(value) : value,
@@ -160,9 +160,37 @@ export default function BookingTable() {
   const removeTeam = (index) => {
     setEditingBooking({
       ...editingBooking,
-      team_jobs: editingBooking.team_jobs.filter(
+      team_jobs: (editingBooking.team_jobs || []).filter(
         (_, i) => i !== index
       ),
+    });
+  };
+
+  /* ================= NORMALIZE TEAM WHEN CLICK EDIT ================= */
+  const openEdit = (b) => {
+    let parsedTeam = [];
+
+    if (b.team_jobs) {
+      if (Array.isArray(b.team_jobs)) {
+        parsedTeam = b.team_jobs;
+      } else if (typeof b.team_jobs === "string") {
+        try {
+          parsedTeam = JSON.parse(b.team_jobs);
+        } catch {
+          parsedTeam = [];
+        }
+      }
+    }
+
+    const normalized = parsedTeam.map((t) => ({
+      name: t.name || "",
+      role: t.role || "",
+      nominal: Number(t.nominal) || 0,
+    }));
+
+    setEditingBooking({
+      ...b,
+      team_jobs: normalized,
     });
   };
 
@@ -230,12 +258,7 @@ export default function BookingTable() {
                     <td style={td}>
                       <button
                         style={editBtn}
-                        onClick={() =>
-                          setEditingBooking({
-                            ...b,
-                            team_jobs: b.team_jobs || [],
-                          })
-                        }
+                        onClick={() => openEdit(b)}
                       >
                         Edit
                       </button>
