@@ -71,14 +71,9 @@ export default function BookingTable() {
       month.rows.forEach((b) => {
         let parsed = [];
 
-        if (Array.isArray(b.team_jobs)) {
-          parsed = b.team_jobs;
-        } else if (typeof b.team_jobs === "string") {
-          try {
-            parsed = JSON.parse(b.team_jobs);
-          } catch {
-            parsed = [];
-          }
+        if (Array.isArray(b.team_jobs)) parsed = b.team_jobs;
+        else if (typeof b.team_jobs === "string") {
+          try { parsed = JSON.parse(b.team_jobs); } catch {}
         }
 
         parsed.forEach((t) => {
@@ -97,14 +92,9 @@ export default function BookingTable() {
       month.rows.forEach((b) => {
         let parsed = [];
 
-        if (Array.isArray(b.team_jobs)) {
-          parsed = b.team_jobs;
-        } else if (typeof b.team_jobs === "string") {
-          try {
-            parsed = JSON.parse(b.team_jobs);
-          } catch {
-            parsed = [];
-          }
+        if (Array.isArray(b.team_jobs)) parsed = b.team_jobs;
+        else if (typeof b.team_jobs === "string") {
+          try { parsed = JSON.parse(b.team_jobs); } catch {}
         }
 
         parsed.forEach((t) => {
@@ -125,14 +115,7 @@ export default function BookingTable() {
 
     autoTable(doc, {
       head: [[
-        "Nama",
-        "Acara",
-        "Tanggal",
-        "Waktu",
-        "Alamat",
-        "DP",
-        "Pelunasan",
-        "Total"
+        "Nama","Acara","Tanggal","Waktu","Alamat","DP","Pelunasan","Total"
       ]],
       body: rows.map((b) => [
         b.client_name,
@@ -176,10 +159,7 @@ export default function BookingTable() {
       })
       .eq("id", editingBooking.id);
 
-    if (error) {
-      alert("Gagal menyimpan booking");
-      return;
-    }
+    if (error) return alert("Gagal menyimpan booking");
 
     alert("Booking berhasil disimpan");
     setEditingBooking(null);
@@ -189,16 +169,11 @@ export default function BookingTable() {
   /* ================= TEAM CONTROL ================= */
   const updateTeamMember = (index, field, value) => {
     const updated = [...(editingBooking.team_jobs || [])];
-
     updated[index] = {
       ...updated[index],
       [field]: field === "income" ? Number(value) : value,
     };
-
-    setEditingBooking({
-      ...editingBooking,
-      team_jobs: updated,
-    });
+    setEditingBooking({ ...editingBooking, team_jobs: updated });
   };
 
   const addTeam = () => {
@@ -214,9 +189,7 @@ export default function BookingTable() {
   const removeTeam = (index) => {
     setEditingBooking({
       ...editingBooking,
-      team_jobs: editingBooking.team_jobs.filter(
-        (_, i) => i !== index
-      ),
+      team_jobs: editingBooking.team_jobs.filter((_, i) => i !== index),
     });
   };
 
@@ -225,14 +198,9 @@ export default function BookingTable() {
     let parsedTeam = [];
 
     if (b.team_jobs) {
-      if (Array.isArray(b.team_jobs)) {
-        parsedTeam = b.team_jobs;
-      } else if (typeof b.team_jobs === "string") {
-        try {
-          parsedTeam = JSON.parse(b.team_jobs);
-        } catch {
-          parsedTeam = [];
-        }
+      if (Array.isArray(b.team_jobs)) parsedTeam = b.team_jobs;
+      else if (typeof b.team_jobs === "string") {
+        try { parsedTeam = JSON.parse(b.team_jobs); } catch {}
       }
     }
 
@@ -242,13 +210,9 @@ export default function BookingTable() {
       income: Number(t?.income ?? t?.nominal) || 0,
     }));
 
-    setEditingBooking({
-      ...b,
-      team_jobs: normalized,
-    });
+    setEditingBooking({ ...b, team_jobs: normalized });
   };
 
-  /* ================= TOTAL INCOME REALTIME ================= */
   const totalTeamIncome = useMemo(() => {
     if (!editingBooking?.team_jobs) return 0;
     return editingBooking.team_jobs.reduce(
@@ -261,7 +225,79 @@ export default function BookingTable() {
     <>
       <div className="card">
         <h3>Data Booking</h3>
-        {/* === UI TIDAK DIUBAH === */}
+
+        <div style={{ display:"flex", gap:10, flexWrap:"wrap", marginBottom:20 }}>
+          {Object.keys(groupedData).map((month) => (
+            <button
+              key={month}
+              onClick={() => setSelectedMonth(month)}
+              style={{
+                padding:"6px 14px",
+                borderRadius:20,
+                border:"1px solid #333",
+                background:selectedMonth===month?"#cba58a":"#111",
+                color:selectedMonth===month?"#000":"#cba58a",
+              }}
+            >
+              {month}
+            </button>
+          ))}
+
+          {user?.role==="admin" && selectedMonth && (
+            <button onClick={downloadPDF} style={saveBtn}>
+              Download PDF
+            </button>
+          )}
+        </div>
+
+        {selectedMonth && groupedData[selectedMonth] && (
+          <>
+            <table style={{ width:"100%" }}>
+              <thead>
+                <tr>
+                  <th style={th}>Nama</th>
+                  <th style={th}>Acara</th>
+                  <th style={th}>Tanggal</th>
+                  <th style={th}>Waktu</th>
+                  <th style={th}>Alamat</th>
+                  <th style={th}>DP</th>
+                  <th style={th}>Pelunasan</th>
+                  <th style={th}>Total</th>
+                  <th style={th}>Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {groupedData[selectedMonth].rows.map((b)=>(
+                  <tr key={b.id}>
+                    <td style={td}>{b.client_name}</td>
+                    <td style={td}>{b.acara}</td>
+                    <td style={td}>{b.date}</td>
+                    <td style={td}>{b.time}</td>
+                    <td style={td}>{b.location}</td>
+                    <td style={td}>{formatRupiahDisplay(b.dp)}</td>
+                    <td style={td}>{formatRupiahDisplay(b.pelunasan)}</td>
+                    <td style={td}>
+                      {formatRupiahDisplay(
+                        (Number(b.dp)||0)+(Number(b.pelunasan)||0)
+                      )}
+                    </td>
+                    <td style={td}>
+                      <button style={editBtn} onClick={()=>openEdit(b)}>
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {user?.role==="admin" && (
+              <div style={{ textAlign:"right", marginTop:10 }}>
+                Total Bulan Ini: {formatRupiahDisplay(groupedData[selectedMonth].total)}
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {editingBooking && (
@@ -269,12 +305,11 @@ export default function BookingTable() {
           <div style={modal}>
             <h3>Edit Booking</h3>
 
-            <div style={{ maxHeight: "70vh", overflowY: "auto", paddingRight: 10 }}>
+            <div style={{ maxHeight:"70vh", overflowY:"auto", paddingRight:10 }}>
               <h4 style={{ marginTop:20 }}>Tim yang Turun</h4>
 
               {editingBooking.team_jobs?.map((t,i)=>(
                 <div key={i} style={teamBox}>
-
                   <input
                     style={input}
                     list="team-name-options"
