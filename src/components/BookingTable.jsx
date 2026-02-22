@@ -9,7 +9,6 @@ export default function BookingTable() {
   const [groupedData, setGroupedData] = useState({});
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [editingBooking, setEditingBooking] = useState(null);
-  const [originalBooking, setOriginalBooking] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -60,28 +59,12 @@ export default function BookingTable() {
         grouped[monthKey] = { rows: [], total: 0 };
       }
 
-      const teamJobs = Array.isArray(b.team_jobs) ? b.team_jobs : [];
-
-      const myJobs = teamJobs.filter((j) => {
-        if (j.user_id && user?.id) return j.user_id === user.id;
-        return j.name?.toLowerCase() === user?.username?.toLowerCase();
-      });
-
-      const myIncome = myJobs.reduce(
-        (sum, j) => sum + (Number(j.income) || 0),
-        0
-      );
-
-      grouped[monthKey].rows.push({
-        ...b,
-        team_jobs: teamJobs,
-        _myIncome: myIncome,
-      });
+      grouped[monthKey].rows.push(b);
 
       grouped[monthKey].total +=
         user?.role === "admin"
           ? (Number(b.dp) || 0) + (Number(b.pelunasan) || 0)
-          : myIncome;
+          : 0;
     });
 
     setGroupedData(grouped);
@@ -92,73 +75,47 @@ export default function BookingTable() {
     if (!selectedMonth || !groupedData[selectedMonth]) return;
 
     const doc = new jsPDF("p", "mm", "a4");
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-
     const rows = groupedData[selectedMonth].rows;
     const totalIncome = groupedData[selectedMonth].total;
 
-    doc.setFillColor(15, 15, 15);
-    doc.rect(0, 0, pageWidth, pageHeight, "F");
-
-    doc.setTextColor(203, 165, 138);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(20);
-    doc.text("NEXTUP STUDIO", 14, 20);
-
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.text("Monthly Booking Report", 14, 27);
-
-    doc.setFontSize(11);
-    doc.text(selectedMonth, 14, 33);
-
-    doc.setDrawColor(203, 165, 138);
-    doc.line(14, 38, pageWidth - 14, 38);
-
     autoTable(doc, {
-      startY: 45,
-      margin: { left: 14, right: 14 },
       head: [["Client","Acara","Tanggal","Waktu","Lokasi","Total"]],
-      body: rows.map((b) => {
-        const total =
-          user?.role === "admin"
-            ? (Number(b.dp) || 0) + (Number(b.pelunasan) || 0)
-            : b._myIncome || 0;
-
-        return [
-          b.client_name,
-          b.acara,
-          b.date,
-          b.time,
-          b.location,
-          formatRupiahDisplay(total),
-        ];
-      }),
-      styles: {
-        fontSize: 8,
-        textColor: [255, 255, 255],
-        fillColor: [25, 25, 25],
-      },
-      headStyles: {
-        fillColor: [203, 165, 138],
-        textColor: [0, 0, 0],
-        fontStyle: "bold",
-      },
+      body: rows.map((b) => [
+        b.client_name,
+        b.acara,
+        b.date,
+        b.time,
+        b.location,
+        formatRupiahDisplay(
+          (Number(b.dp) || 0) + (Number(b.pelunasan) || 0)
+        ),
+      ]),
     });
 
-    const finalY = doc.lastAutoTable.finalY + 10;
-
-    doc.setFontSize(12);
-    doc.setTextColor(203, 165, 138);
-    doc.setFont("helvetica", "bold");
     doc.text(
       `Total Income: ${formatRupiahDisplay(totalIncome)}`,
       14,
-      finalY + 8
+      doc.lastAutoTable.finalY + 10
     );
 
-    doc.save(`NEXTUP-Booking-${selectedMonth}.pdf`);
+    doc.save(`Booking-${selectedMonth}.pdf`);
+  };
+
+  /* ================= SAVE EDIT ================= */
+  const handleSave = async () => {
+    await supabase
+      .from("bookings")
+      .update({
+        client_name: editingBooking.client_name,
+        phone: editingBooking.phone,
+        acara: editingBooking.acara,
+        dp: editingBooking.dp,
+        pelunasan: editingBooking.pelunasan,
+      })
+      .eq("id", editingBooking.id);
+
+    setEditingBooking(null);
+    fetchData();
   };
 
   return (
@@ -166,7 +123,7 @@ export default function BookingTable() {
       <div className="card" style={{ width: "100%" }}>
         <h3>Data Booking</h3>
 
-        {/* ==== BUTTON BULAN ==== */}
+        {/* BUTTON BULAN */}
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
           {Object.keys(groupedData).map((month) => (
             <button
@@ -203,109 +160,158 @@ export default function BookingTable() {
           )}
         </div>
 
-        {/* ==== TABLE ==== */}
+        {/* TABLE */}
         {selectedMonth && groupedData[selectedMonth] && (
-          <div style={{ marginTop: 24 }}>
-            <h4>{selectedMonth}</h4>
+          <div>
+            <table style={{ width: "100%", minWidth: 1000 }}>
+              <thead>
+                <tr>
+                  {[
+                    "Client",
+                    "No HP",
+                    "Acara",
+                    "Tanggal",
+                    "Waktu",
+                    "Lokasi",
+                    "DP",
+                    "Pelunasan",
+                    "Total",
+                    "Aksi",
+                  ].map((h) => (
+                    <th key={h} style={th}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
 
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", minWidth: 1000 }}>
-                <thead>
-                  <tr>
-                    {[
-                      "Client",
-                      "No HP",
-                      "Acara",
-                      "Tanggal",
-                      "Waktu",
-                      "Lokasi",
-                      user?.role === "admin" ? "DP" : "Pendapatan",
-                      user?.role === "admin" ? "Pelunasan" : "",
-                      "Total",
-                      user?.role === "admin" ? "Aksi" : "",
-                    ]
-                      .filter(Boolean)
-                      .map((h) => (
-                        <th key={h} style={th}>{h}</th>
-                      ))}
-                  </tr>
-                </thead>
+              <tbody>
+                {groupedData[selectedMonth].rows.map((b) => {
+                  const total =
+                    (Number(b.dp) || 0) + (Number(b.pelunasan) || 0);
 
-                <tbody>
-                  {groupedData[selectedMonth].rows.map((b) => {
-                    const total =
-                      user?.role === "admin"
-                        ? (Number(b.dp) || 0) + (Number(b.pelunasan) || 0)
-                        : b._myIncome || 0;
+                  return (
+                    <tr key={b.id}>
+                      <td style={td}>{b.client_name}</td>
+                      <td style={td}>{b.phone}</td>
+                      <td style={td}>{b.acara}</td>
+                      <td style={td}>{b.date}</td>
+                      <td style={td}>{b.time}</td>
+                      <td style={td}>{b.location}</td>
+                      <td style={td}>{formatRupiahDisplay(b.dp || 0)}</td>
+                      <td style={td}>{formatRupiahDisplay(b.pelunasan || 0)}</td>
+                      <td style={{ ...td, color: "#cba58a", fontWeight: 600 }}>
+                        {formatRupiahDisplay(total)}
+                      </td>
+                      <td style={td}>
+                        <button
+                          style={editBtn}
+                          onClick={() => setEditingBooking({ ...b })}
+                        >
+                          Edit
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
 
-                    return (
-                      <tr key={b.id}>
-                        <td style={td}>{b.client_name}</td>
-                        <td style={td}>{b.phone}</td>
-                        <td style={td}>{b.acara}</td>
-                        <td style={td}>{b.date}</td>
-                        <td style={td}>{b.time}</td>
-                        <td style={td}>{b.location}</td>
-
-                        {user?.role === "admin" ? (
-                          <>
-                            <td style={td}>{formatRupiahDisplay(b.dp || 0)}</td>
-                            <td style={td}>{formatRupiahDisplay(b.pelunasan || 0)}</td>
-                          </>
-                        ) : (
-                          <td style={td}>{formatRupiahDisplay(b._myIncome || 0)}</td>
-                        )}
-
-                        <td style={{ ...td, color: "#cba58a", fontWeight: 600 }}>
-                          {formatRupiahDisplay(total)}
-                        </td>
-
-                        {user?.role === "admin" && (
-                          <td style={td}>
-                            <button
-                              style={editBtn}
-                              onClick={() => {
-                                const clone = JSON.parse(
-                                  JSON.stringify({
-                                    ...b,
-                                    team_jobs: Array.isArray(b.team_jobs)
-                                      ? b.team_jobs
-                                      : [],
-                                  })
-                                );
-                                setOriginalBooking(clone);
-                                setEditingBooking(clone);
-                              }}
-                            >
-                              Edit
-                            </button>
-                          </td>
-                        )}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-
-              <div
-                style={{
-                  textAlign: "right",
-                  marginTop: 12,
-                  fontWeight: 700,
-                  color: "#cba58a",
-                }}
-              >
-                Total Bulan Ini:{" "}
-                {formatRupiahDisplay(groupedData[selectedMonth].total || 0)}
-              </div>
+            <div style={{
+              textAlign: "right",
+              marginTop: 12,
+              fontWeight: 700,
+              color: "#cba58a",
+            }}>
+              Total Bulan Ini:{" "}
+              {formatRupiahDisplay(groupedData[selectedMonth].total || 0)}
             </div>
           </div>
         )}
       </div>
+
+      {/* MODAL EDIT */}
+      {editingBooking && (
+        <div style={overlay}>
+          <div style={modal}>
+            <h3>Edit Booking</h3>
+
+            <input
+              style={input}
+              value={editingBooking.client_name || ""}
+              onChange={(e) =>
+                setEditingBooking({
+                  ...editingBooking,
+                  client_name: e.target.value,
+                })
+              }
+              placeholder="Client Name"
+            />
+
+            <input
+              style={input}
+              value={editingBooking.phone || ""}
+              onChange={(e) =>
+                setEditingBooking({
+                  ...editingBooking,
+                  phone: e.target.value,
+                })
+              }
+              placeholder="Phone"
+            />
+
+            <input
+              style={input}
+              value={editingBooking.acara || ""}
+              onChange={(e) =>
+                setEditingBooking({
+                  ...editingBooking,
+                  acara: e.target.value,
+                })
+              }
+              placeholder="Acara"
+            />
+
+            <input
+              style={input}
+              type="number"
+              value={editingBooking.dp || 0}
+              onChange={(e) =>
+                setEditingBooking({
+                  ...editingBooking,
+                  dp: e.target.value,
+                })
+              }
+              placeholder="DP"
+            />
+
+            <input
+              style={input}
+              type="number"
+              value={editingBooking.pelunasan || 0}
+              onChange={(e) =>
+                setEditingBooking({
+                  ...editingBooking,
+                  pelunasan: e.target.value,
+                })
+              }
+              placeholder="Pelunasan"
+            />
+
+            <div style={{ marginTop: 15, display: "flex", gap: 10 }}>
+              <button style={saveBtn} onClick={handleSave}>
+                Save
+              </button>
+              <button style={cancelBtn} onClick={() => setEditingBooking(null)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
 
+/* STYLES */
 const th = { padding: 10, color: "#cba58a", textAlign: "left" };
 const td = { padding: 10, borderBottom: "1px solid #222" };
 
@@ -316,5 +322,54 @@ const editBtn = {
   background: "transparent",
   color: "#cba58a",
   cursor: "pointer",
+};
+
+const overlay = {
+  position: "fixed",
+  top: 0,
+  left: 0,
+  width: "100%",
+  height: "100%",
+  background: "rgba(0,0,0,0.6)",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  zIndex: 999,
+};
+
+const modal = {
+  background: "#111",
+  padding: 30,
+  borderRadius: 12,
+  width: 400,
+  color: "#fff",
+  display: "flex",
+  flexDirection: "column",
+  gap: 10,
+};
+
+const input = {
+  padding: 8,
+  borderRadius: 6,
+  border: "1px solid #333",
+  background: "#1a1a1a",
+  color: "#fff",
+};
+
+const saveBtn = {
+  padding: "8px 16px",
+  background: "#cba58a",
+  border: "none",
+  borderRadius: 6,
   fontWeight: 600,
+  cursor: "pointer",
+};
+
+const cancelBtn = {
+  padding: "8px 16px",
+  background: "#333",
+  border: "none",
+  borderRadius: 6,
+  color: "#fff",
+  cursor: "pointer",
 };
