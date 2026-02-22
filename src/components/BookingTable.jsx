@@ -139,10 +139,7 @@ export default function BookingTable() {
 
     updated[index] = {
       ...updated[index],
-      [field]:
-        field === "income"
-          ? Number(value)
-          : value,
+      [field]: field === "income" ? Number(value) : value,
     };
 
     setEditingBooking({
@@ -170,7 +167,7 @@ export default function BookingTable() {
     });
   };
 
-  /* ================= NORMALIZE TEAM WHEN CLICK EDIT ================= */
+  /* ================= NORMALIZE TEAM ================= */
   const openEdit = (b) => {
     let parsedTeam = [];
 
@@ -186,12 +183,10 @@ export default function BookingTable() {
       }
     }
 
-    if (!Array.isArray(parsedTeam)) parsedTeam = [];
-
     const normalized = parsedTeam.map((t) => ({
-      name: t?.name ? String(t.name).trim() : "",
-      role: t?.role ? String(t.role).trim() : "",
-      income: Number(t?.income ?? t?.nominal) || 0, // support data lama
+      name: t?.name || "",
+      role: t?.role || "",
+      income: Number(t?.income ?? t?.nominal) || 0,
     }));
 
     setEditingBooking({
@@ -305,26 +300,45 @@ export default function BookingTable() {
 
               {editingBooking.team_jobs?.map((t,i)=>(
                 <div key={i} style={teamBox}>
-                  <select
-                    style={input}
-                    value={t.name || ""}
-                    onChange={(e)=>updateTeamMember(i,"name",e.target.value)}
-                  >
-                    <option value="">Pilih Nama</option>
-                    {teamList.map(tm=>(
-                      <option key={tm.id} value={tm.name}>
-                        {tm.name}
-                      </option>
-                    ))}
-                    <option value="Freelance">Freelance</option>
-                  </select>
 
+                  {/* NAMA AUTO SUGGEST */}
                   <input
                     style={input}
+                    list={`team-list-${i}`}
+                    value={t.name || ""}
+                    onChange={(e)=>{
+                      const selectedName = e.target.value;
+                      const found = teamList.find(tm => tm.name === selectedName);
+
+                      updateTeamMember(i,"name",selectedName);
+
+                      if(found){
+                        updateTeamMember(i,"role",found.role || "");
+                      }
+                    }}
+                    placeholder="Ketik atau pilih nama"
+                  />
+
+                  <datalist id={`team-list-${i}`}>
+                    {teamList.map(tm=>(
+                      <option key={tm.id} value={tm.name} />
+                    ))}
+                  </datalist>
+
+                  {/* ROLE AUTO SUGGEST */}
+                  <input
+                    style={input}
+                    list={`role-list-${i}`}
                     value={t.role || ""}
                     onChange={(e)=>updateTeamMember(i,"role",e.target.value)}
                     placeholder="Role"
                   />
+
+                  <datalist id={`role-list-${i}`}>
+                    {[...new Set(teamList.map(tm=>tm.role))].map((role,idx)=>(
+                      <option key={idx} value={role} />
+                    ))}
+                  </datalist>
 
                   <input
                     style={input}
@@ -338,7 +352,9 @@ export default function BookingTable() {
                 </div>
               ))}
 
-              <button style={editBtn} onClick={addTeam}>+ Tambah Tim / Freelance</button>
+              <button style={editBtn} onClick={addTeam}>
+                + Tambah Tim / Freelance
+              </button>
             </div>
 
             <div style={{ marginTop:15, display:"flex", gap:10 }}>
