@@ -7,7 +7,7 @@ import TeamRevenue from "../components/TeamRevenue";
 import BookingTable from "../components/BookingTable";
 import MyJobs from "../components/MyJobs";
 import CalendarBooking from "../pages/CalendarBooking"; // ✅ TAMBAHAN
-import AdminTeamAdjustments from "./AdminTeamAdjustments";
+import AdminTeamAdjustments from "../components/AdminTeamAdjustments";
 
 import { supabase } from "../supabase/client";
 import { exportBookingToExcel } from "../utils/exportBooking";
