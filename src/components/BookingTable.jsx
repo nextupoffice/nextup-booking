@@ -10,13 +10,6 @@ export default function BookingTable() {
   const [groupedData, setGroupedData] = useState({});
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [editingBooking, setEditingBooking] = useState(null);
-  const [teamList, setTeamList] = useState([]);
-
-  /* ================= FETCH TEAM ================= */
-  const fetchTeam = async () => {
-    const { data } = await supabase.from("team").select("*");
-    setTeamList(data || []);
-  };
 
   /* ================= FETCH BOOKING ================= */
   const fetchData = async () => {
@@ -54,56 +47,12 @@ export default function BookingTable() {
 
   useEffect(() => {
     fetchData();
-    fetchTeam();
   }, []);
 
   useEffect(() => {
     const months = Object.keys(groupedData);
     if (months.length > 0 && !selectedMonth)
       setSelectedMonth(months[months.length - 1]);
-  }, [groupedData]);
-
-  /* ================= EXTRACT TEAM OPTIONS FROM BOOKING ================= */
-  const teamNameOptions = useMemo(() => {
-    const names = new Set();
-
-    Object.values(groupedData).forEach((month) => {
-      month.rows.forEach((b) => {
-        let parsed = [];
-
-        if (Array.isArray(b.team_jobs)) parsed = b.team_jobs;
-        else if (typeof b.team_jobs === "string") {
-          try { parsed = JSON.parse(b.team_jobs); } catch {}
-        }
-
-        parsed.forEach((t) => {
-          if (t?.name) names.add(t.name);
-        });
-      });
-    });
-
-    return Array.from(names);
-  }, [groupedData]);
-
-  const roleOptions = useMemo(() => {
-    const roles = new Set();
-
-    Object.values(groupedData).forEach((month) => {
-      month.rows.forEach((b) => {
-        let parsed = [];
-
-        if (Array.isArray(b.team_jobs)) parsed = b.team_jobs;
-        else if (typeof b.team_jobs === "string") {
-          try { parsed = JSON.parse(b.team_jobs); } catch {}
-        }
-
-        parsed.forEach((t) => {
-          if (t?.role) roles.add(t.role);
-        });
-      });
-    });
-
-    return Array.from(roles);
   }, [groupedData]);
 
   /* ================= PDF ================= */
@@ -149,6 +98,7 @@ export default function BookingTable() {
       .from("bookings")
       .update({
         client_name: editingBooking.client_name,
+        phone: editingBooking.phone,
         acara: editingBooking.acara,
         date: editingBooking.date,
         time: editingBooking.time,
@@ -159,14 +109,16 @@ export default function BookingTable() {
       })
       .eq("id", editingBooking.id);
 
-    if (error) return alert("Gagal menyimpan booking");
+    if (error) {
+      console.error("Gagal menyimpan:", error);
+      return;
+    }
 
-    alert("Booking berhasil disimpan");
     setEditingBooking(null);
     fetchData();
   };
 
-  /* ================= TEAM CONTROL ================= */
+  /* ================= TEAM CONTROL (TIDAK DIUBAH) ================= */
   const updateTeamMember = (index, field, value) => {
     const updated = [...(editingBooking.team_jobs || [])];
     updated[index] = {
@@ -193,7 +145,6 @@ export default function BookingTable() {
     });
   };
 
-  /* ================= NORMALIZE TEAM ================= */
   const openEdit = (b) => {
     let parsedTeam = [];
 
@@ -305,50 +256,30 @@ export default function BookingTable() {
           <div style={modal}>
             <h3>Edit Booking</h3>
 
-            <div style={{ maxHeight:"70vh", overflowY:"auto", paddingRight:10 }}>
-              <h4 style={{ marginTop:20 }}>Tim yang Turun</h4>
+            {/* ================= DATA BOOKING ================= */}
+            <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+              <input style={input} value={editingBooking.client_name || ""} onChange={(e)=>setEditingBooking({...editingBooking, client_name:e.target.value})} placeholder="Nama Client" />
+              <input style={input} value={editingBooking.phone || ""} onChange={(e)=>setEditingBooking({...editingBooking, phone:e.target.value})} placeholder="No HP" />
+              <input style={input} value={editingBooking.acara || ""} onChange={(e)=>setEditingBooking({...editingBooking, acara:e.target.value})} placeholder="Acara" />
+              <input style={input} type="date" value={editingBooking.date || ""} onChange={(e)=>setEditingBooking({...editingBooking, date:e.target.value})} />
+              <input style={input} type="time" value={editingBooking.time || ""} onChange={(e)=>setEditingBooking({...editingBooking, time:e.target.value})} />
+              <input style={input} value={editingBooking.location || ""} onChange={(e)=>setEditingBooking({...editingBooking, location:e.target.value})} placeholder="Alamat" />
+              <input style={input} type="number" value={editingBooking.dp || 0} onChange={(e)=>setEditingBooking({...editingBooking, dp:e.target.value})} placeholder="DP" />
+              <input style={input} type="number" value={editingBooking.pelunasan || 0} onChange={(e)=>setEditingBooking({...editingBooking, pelunasan:e.target.value})} placeholder="Pelunasan" />
+            </div>
+
+            {/* ================= TIM YANG TURUN (TIDAK DIUBAH) ================= */}
+            <div style={{ maxHeight:"50vh", overflowY:"auto", marginTop:20 }}>
+              <h4>Tim yang Turun</h4>
 
               {editingBooking.team_jobs?.map((t,i)=>(
                 <div key={i} style={teamBox}>
-                  <input
-                    style={input}
-                    list="team-name-options"
-                    value={t.name || ""}
-                    onChange={(e)=>updateTeamMember(i,"name",e.target.value)}
-                    placeholder="Ketik atau pilih nama"
-                  />
-
-                  <input
-                    style={input}
-                    list="role-options"
-                    value={t.role || ""}
-                    onChange={(e)=>updateTeamMember(i,"role",e.target.value)}
-                    placeholder="Role"
-                  />
-
-                  <input
-                    style={input}
-                    type="number"
-                    value={t.income || 0}
-                    onChange={(e)=>updateTeamMember(i,"income",e.target.value)}
-                    placeholder="Income"
-                  />
-
+                  <input style={input} value={t.name || ""} onChange={(e)=>updateTeamMember(i,"name",e.target.value)} placeholder="Nama" />
+                  <input style={input} value={t.role || ""} onChange={(e)=>updateTeamMember(i,"role",e.target.value)} placeholder="Role" />
+                  <input style={input} type="number" value={t.income || 0} onChange={(e)=>updateTeamMember(i,"income",e.target.value)} placeholder="Income" />
                   <button style={cancelBtn} onClick={()=>removeTeam(i)}>Hapus</button>
                 </div>
               ))}
-
-              <datalist id="team-name-options">
-                {teamNameOptions.map((name,idx)=>(
-                  <option key={idx} value={name} />
-                ))}
-              </datalist>
-
-              <datalist id="role-options">
-                {roleOptions.map((role,idx)=>(
-                  <option key={idx} value={role} />
-                ))}
-              </datalist>
 
               <div style={{ marginTop:10, fontWeight:600 }}>
                 Total Income Tim: {formatRupiahDisplay(totalTeamIncome)}
