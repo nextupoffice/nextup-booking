@@ -16,16 +16,26 @@ export default function AdminTeamAdjustments() {
     fetchAdjustments();
   }, []);
 
-  const fetchTeams = async () => {
+const fetchTeams = async () => {
   const { data, error } = await supabase
-    .from("users")
-    .select("name")
-    .eq("role", "tim")
-    .order("name");
+    .from("bookings")
+    .select("team_jobs");
 
   if (!error && data) {
-    const names = data.map((user) => user.name);
-    setTeams(names);
+    let names = [];
+
+    data.forEach((booking) => {
+      if (booking.team_jobs) {
+        booking.team_jobs.forEach((member) => {
+          if (member.name) {
+            names.push(member.name);
+          }
+        });
+      }
+    });
+
+    const uniqueNames = [...new Set(names)];
+    setTeams(uniqueNames);
   }
 };
 
@@ -140,3 +150,16 @@ export default function AdminTeamAdjustments() {
   );
 }
 
+/* ================= STYLE ================= */
+
+const thStyle = {
+  borderBottom: "1px solid #ddd",
+  padding: 8,
+  textAlign: "left",
+  background: "#f5f5f5",
+};
+
+const tdStyle = {
+  borderBottom: "1px solid #eee",
+  padding: 8,
+};
