@@ -305,7 +305,7 @@ export default function BookingTable() {
           <div style={modal}>
             <h3>Edit Booking</h3>
 
-            <div style={{ maxHeight:"75vh", overflowY:"auto", paddingRight:10 }}>
+            <div style={{ maxHeight:"70vh", overflowY:"auto", paddingRight:10 }}>
               <h4 style={{ marginTop:20 }}>Tim yang Turun</h4>
 
               {editingBooking.team_jobs?.map((t,i)=>(
@@ -376,32 +376,8 @@ const th = { padding:10, color:"#cba58a", textAlign:"left" };
 const td = { padding:10, borderBottom:"1px solid #222" };
 const editBtn = { padding:"6px 12px", borderRadius:6, border:"1px solid #cba58a", background:"transparent", color:"#cba58a", cursor:"pointer" };
 const teamBox = { border:"1px solid #222", padding:10, borderRadius:8, marginBottom:10, display:"flex", flexDirection:"column", gap:6 };
-
-/* ✅ FIX SCROLL PWA */
-const overlay = { 
-  position:"fixed",
-  inset:0,
-  background:"rgba(0,0,0,0.6)",
-  display:"flex",
-  justifyContent:"center",
-  alignItems:"flex-start",
-  overflowY:"auto",
-  padding:"40px 15px",
-  zIndex:999
-};
-
-const modal = { 
-  background:"#111",
-  padding:30,
-  borderRadius:12,
-  width:"100%",
-  maxWidth:520,
-  maxHeight:"90vh",
-  color:"#fff",
-  display:"flex",
-  flexDirection:"column"
-};
-
+const overlay = { position:"fixed", top:0, left:0, width:"100%", height:"100%", background:"rgba(0,0,0,0.6)", display:"flex", justifyContent:"center", alignItems:"center", zIndex:999 };
+const modal = { background:"#111", padding:30, borderRadius:12, width:520, color:"#fff", display:"flex", flexDirection:"column" };
 const input = { padding:8, borderRadius:6, border:"1px solid #333", background:"#1a1a1a", color:"#fff" };
 const saveBtn = { padding:"8px 16px", background:"#cba58a", border:"none", borderRadius:6, fontWeight:600, cursor:"pointer" };
 const cancelBtn = { padding:"6px 12px", background:"#333", border:"none", borderRadius:6, color:"#fff", cursor:"pointer" };
