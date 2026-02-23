@@ -10,6 +10,13 @@ export default function BookingTable() {
   const [groupedData, setGroupedData] = useState({});
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [editingBooking, setEditingBooking] = useState(null);
+  const [teamList, setTeamList] = useState([]);
+
+  /* ================= FETCH TEAM ================= */
+  const fetchTeam = async () => {
+    const { data } = await supabase.from("team").select("*");
+    setTeamList(data || []);
+  };
 
   /* ================= FETCH BOOKING ================= */
   const fetchData = async () => {
@@ -47,12 +54,56 @@ export default function BookingTable() {
 
   useEffect(() => {
     fetchData();
+    fetchTeam();
   }, []);
 
   useEffect(() => {
     const months = Object.keys(groupedData);
     if (months.length > 0 && !selectedMonth)
       setSelectedMonth(months[months.length - 1]);
+  }, [groupedData]);
+
+  /* ================= EXTRACT TEAM OPTIONS FROM BOOKING ================= */
+  const teamNameOptions = useMemo(() => {
+    const names = new Set();
+
+    Object.values(groupedData).forEach((month) => {
+      month.rows.forEach((b) => {
+        let parsed = [];
+
+        if (Array.isArray(b.team_jobs)) parsed = b.team_jobs;
+        else if (typeof b.team_jobs === "string") {
+          try { parsed = JSON.parse(b.team_jobs); } catch {}
+        }
+
+        parsed.forEach((t) => {
+          if (t?.name) names.add(t.name);
+        });
+      });
+    });
+
+    return Array.from(names);
+  }, [groupedData]);
+
+  const roleOptions = useMemo(() => {
+    const roles = new Set();
+
+    Object.values(groupedData).forEach((month) => {
+      month.rows.forEach((b) => {
+        let parsed = [];
+
+        if (Array.isArray(b.team_jobs)) parsed = b.team_jobs;
+        else if (typeof b.team_jobs === "string") {
+          try { parsed = JSON.parse(b.team_jobs); } catch {}
+        }
+
+        parsed.forEach((t) => {
+          if (t?.role) roles.add(t.role);
+        });
+      });
+    });
+
+    return Array.from(roles);
   }, [groupedData]);
 
   /* ================= PDF ================= */
@@ -98,7 +149,6 @@ export default function BookingTable() {
       .from("bookings")
       .update({
         client_name: editingBooking.client_name,
-        phone: editingBooking.phone,
         acara: editingBooking.acara,
         date: editingBooking.date,
         time: editingBooking.time,
@@ -109,11 +159,9 @@ export default function BookingTable() {
       })
       .eq("id", editingBooking.id);
 
-    if (error) {
-      console.error("Gagal menyimpan:", error);
-      return;
-    }
+    if (error) return alert("Gagal menyimpan booking");
 
+    alert("Booking berhasil disimpan");
     setEditingBooking(null);
     fetchData();
   };
@@ -145,6 +193,7 @@ export default function BookingTable() {
     });
   };
 
+  /* ================= NORMALIZE TEAM ================= */
   const openEdit = (b) => {
     let parsedTeam = [];
 
@@ -201,49 +250,122 @@ export default function BookingTable() {
           )}
         </div>
 
-        {editingBooking && (
-          <div style={overlay}>
-            <div style={modal}>
-              <h3>Edit Booking</h3>
-
-              <div style={modalContent}>
-                <input style={input} value={editingBooking.client_name || ""} onChange={(e)=>setEditingBooking({...editingBooking, client_name:e.target.value})} placeholder="Nama Client" />
-                <input style={input} value={editingBooking.phone || ""} onChange={(e)=>setEditingBooking({...editingBooking, phone:e.target.value})} placeholder="No HP" />
-                <input style={input} value={editingBooking.acara || ""} onChange={(e)=>setEditingBooking({...editingBooking, acara:e.target.value})} placeholder="Acara" />
-                <input style={input} type="date" value={editingBooking.date || ""} onChange={(e)=>setEditingBooking({...editingBooking, date:e.target.value})} />
-                <input style={input} type="time" value={editingBooking.time || ""} onChange={(e)=>setEditingBooking({...editingBooking, time:e.target.value})} />
-                <input style={input} value={editingBooking.location || ""} onChange={(e)=>setEditingBooking({...editingBooking, location:e.target.value})} placeholder="Alamat" />
-                <input style={input} type="number" value={editingBooking.dp || 0} onChange={(e)=>setEditingBooking({...editingBooking, dp:e.target.value})} placeholder="DP" />
-                <input style={input} type="number" value={editingBooking.pelunasan || 0} onChange={(e)=>setEditingBooking({...editingBooking, pelunasan:e.target.value})} placeholder="Pelunasan" />
-
-                <h4 style={{ marginTop:20 }}>Tim yang Turun</h4>
-
-                {editingBooking.team_jobs?.map((t,i)=>(
-                  <div key={i} style={teamBox}>
-                    <input style={input} value={t.name || ""} onChange={(e)=>updateTeamMember(i,"name",e.target.value)} placeholder="Nama" />
-                    <input style={input} value={t.role || ""} onChange={(e)=>updateTeamMember(i,"role",e.target.value)} placeholder="Role" />
-                    <input style={input} type="number" value={t.income || 0} onChange={(e)=>updateTeamMember(i,"income",e.target.value)} placeholder="Income" />
-                    <button style={cancelBtn} onClick={()=>removeTeam(i)}>Hapus</button>
-                  </div>
+        {selectedMonth && groupedData[selectedMonth] && (
+          <>
+            <table style={{ width:"100%" }}>
+              <thead>
+                <tr>
+                  <th style={th}>Nama</th>
+                  <th style={th}>Acara</th>
+                  <th style={th}>Tanggal</th>
+                  <th style={th}>Waktu</th>
+                  <th style={th}>Alamat</th>
+                  <th style={th}>DP</th>
+                  <th style={th}>Pelunasan</th>
+                  <th style={th}>Total</th>
+                  <th style={th}>Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {groupedData[selectedMonth].rows.map((b)=>(
+                  <tr key={b.id}>
+                    <td style={td}>{b.client_name}</td>
+                    <td style={td}>{b.acara}</td>
+                    <td style={td}>{b.date}</td>
+                    <td style={td}>{b.time}</td>
+                    <td style={td}>{b.location}</td>
+                    <td style={td}>{formatRupiahDisplay(b.dp)}</td>
+                    <td style={td}>{formatRupiahDisplay(b.pelunasan)}</td>
+                    <td style={td}>
+                      {formatRupiahDisplay(
+                        (Number(b.dp)||0)+(Number(b.pelunasan)||0)
+                      )}
+                    </td>
+                    <td style={td}>
+                      <button style={editBtn} onClick={()=>openEdit(b)}>
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
                 ))}
+              </tbody>
+            </table>
 
-                <div style={{ marginTop:10, fontWeight:600 }}>
-                  Total Income Tim: {formatRupiahDisplay(totalTeamIncome)}
-                </div>
-
-                <button style={editBtn} onClick={addTeam}>
-                  + Tambah Tim / Freelance
-                </button>
+            {user?.role==="admin" && (
+              <div style={{ textAlign:"right", marginTop:10 }}>
+                Total Bulan Ini: {formatRupiahDisplay(groupedData[selectedMonth].total)}
               </div>
-
-              <div style={modalFooter}>
-                <button style={saveBtn} onClick={handleSave}>Save</button>
-                <button style={cancelBtn} onClick={()=>setEditingBooking(null)}>Cancel</button>
-              </div>
-            </div>
-          </div>
+            )}
+          </>
         )}
       </div>
+
+      {editingBooking && (
+        <div style={overlay}>
+          <div style={modal}>
+            <h3>Edit Booking</h3>
+
+            <div style={{ maxHeight:"75vh", overflowY:"auto", paddingRight:10 }}>
+              <h4 style={{ marginTop:20 }}>Tim yang Turun</h4>
+
+              {editingBooking.team_jobs?.map((t,i)=>(
+                <div key={i} style={teamBox}>
+                  <input
+                    style={input}
+                    list="team-name-options"
+                    value={t.name || ""}
+                    onChange={(e)=>updateTeamMember(i,"name",e.target.value)}
+                    placeholder="Ketik atau pilih nama"
+                  />
+
+                  <input
+                    style={input}
+                    list="role-options"
+                    value={t.role || ""}
+                    onChange={(e)=>updateTeamMember(i,"role",e.target.value)}
+                    placeholder="Role"
+                  />
+
+                  <input
+                    style={input}
+                    type="number"
+                    value={t.income || 0}
+                    onChange={(e)=>updateTeamMember(i,"income",e.target.value)}
+                    placeholder="Income"
+                  />
+
+                  <button style={cancelBtn} onClick={()=>removeTeam(i)}>Hapus</button>
+                </div>
+              ))}
+
+              <datalist id="team-name-options">
+                {teamNameOptions.map((name,idx)=>(
+                  <option key={idx} value={name} />
+                ))}
+              </datalist>
+
+              <datalist id="role-options">
+                {roleOptions.map((role,idx)=>(
+                  <option key={idx} value={role} />
+                ))}
+              </datalist>
+
+              <div style={{ marginTop:10, fontWeight:600 }}>
+                Total Income Tim: {formatRupiahDisplay(totalTeamIncome)}
+              </div>
+
+              <button style={editBtn} onClick={addTeam}>
+                + Tambah Tim / Freelance
+              </button>
+            </div>
+
+            <div style={{ marginTop:15, display:"flex", gap:10 }}>
+              <button style={saveBtn} onClick={handleSave}>Save</button>
+              <button style={cancelBtn} onClick={()=>setEditingBooking(null)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
@@ -255,6 +377,7 @@ const td = { padding:10, borderBottom:"1px solid #222" };
 const editBtn = { padding:"6px 12px", borderRadius:6, border:"1px solid #cba58a", background:"transparent", color:"#cba58a", cursor:"pointer" };
 const teamBox = { border:"1px solid #222", padding:10, borderRadius:8, marginBottom:10, display:"flex", flexDirection:"column", gap:6 };
 
+/* ✅ FIX SCROLL PWA */
 const overlay = { 
   position:"fixed",
   inset:0,
@@ -269,31 +392,14 @@ const overlay = {
 
 const modal = { 
   background:"#111",
-  borderRadius:16,
+  padding:30,
+  borderRadius:12,
   width:"100%",
   maxWidth:520,
   maxHeight:"90vh",
+  color:"#fff",
   display:"flex",
-  flexDirection:"column",
-  color:"#fff"
-};
-
-const modalContent = {
-  padding:24,
-  overflowY:"auto",
-  flex:1,
-  display:"flex",
-  flexDirection:"column",
-  gap:8
-};
-
-const modalFooter = {
-  padding:16,
-  borderTop:"1px solid #222",
-  display:"flex",
-  gap:10,
-  justifyContent:"flex-end",
-  background:"#111"
+  flexDirection:"column"
 };
 
 const input = { padding:8, borderRadius:6, border:"1px solid #333", background:"#1a1a1a", color:"#fff" };
