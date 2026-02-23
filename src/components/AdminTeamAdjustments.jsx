@@ -9,9 +9,9 @@ export default function AdminTeamAdjustments() {
   const [potongan, setPotongan] = useState("");
   const [editingId, setEditingId] = useState(null);
 
-  /* ================= FORMAT RUPIAH ================= */
-  const formatRupiah = (value) => {
-    const numberString = value.replace(/[^,\d]/g, "");
+  /* ================= FORMAT RUPIAH (AMAN) ================= */
+  const formatRupiah = (value = "") => {
+    const numberString = String(value).replace(/[^,\d]/g, "");
     const sisa = numberString.length % 3;
     let rupiah = numberString.substr(0, sisa);
     const ribuan = numberString.substr(sisa).match(/\d{3}/g);
@@ -24,8 +24,8 @@ export default function AdminTeamAdjustments() {
     return rupiah;
   };
 
-  const parseNumber = (val) =>
-    Number(val.replace(/\./g, "")) || 0;
+  const parseNumber = (val = "") =>
+    Number(String(val).replace(/\./g, "")) || 0;
 
   /* ================= INIT ================= */
   useEffect(() => {
@@ -35,16 +35,21 @@ export default function AdminTeamAdjustments() {
 
   /* ================= FETCH TEAM ================= */
   const fetchTeams = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("bookings")
       .select("team_jobs");
+
+    if (error) {
+      console.error(error);
+      return;
+    }
 
     if (data) {
       let names = [];
 
       data.forEach((booking) => {
         booking.team_jobs?.forEach((member) => {
-          if (member.name) names.push(member.name);
+          if (member?.name) names.push(member.name);
         });
       });
 
@@ -54,17 +59,22 @@ export default function AdminTeamAdjustments() {
 
   /* ================= FETCH ADJUSTMENTS ================= */
   const fetchAdjustments = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("team_adjustments")
       .select("*")
       .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error(error);
+      return;
+    }
 
     setAdjustments(data || []);
   };
 
   /* ================= SAVE / UPDATE ================= */
   const handleSave = async () => {
-    if (!selectedName) return alert("Pilih nama tim dulu");
+    if (!selectedName) return;
 
     const payload = {
       team_name: selectedName,
@@ -90,38 +100,27 @@ export default function AdminTeamAdjustments() {
     }
 
     if (!error) {
-      alert("Data berhasil disimpan ✅");
-
       setSelectedName("");
       setBonus("");
       setPotongan("");
       setEditingId(null);
-
       fetchAdjustments();
     } else {
-      alert("Gagal menyimpan ❌");
-      console.error(error);
+      console.error("Gagal menyimpan:", error);
     }
   };
 
-  /* ================= DELETE ================= */
+  /* ================= DELETE (AMAN PWA) ================= */
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm(
-      "Yakin ingin menghapus data ini?"
-    );
-    if (!confirmDelete) return;
-
     const { error } = await supabase
       .from("team_adjustments")
       .delete()
       .eq("id", id);
 
     if (!error) {
-      alert("Data berhasil dihapus ✅");
       fetchAdjustments();
     } else {
-      alert("Gagal menghapus ❌");
-      console.error(error);
+      console.error("Gagal menghapus:", error);
     }
   };
 
@@ -129,8 +128,8 @@ export default function AdminTeamAdjustments() {
   const handleEdit = (item) => {
     setEditingId(item.id);
     setSelectedName(item.team_name);
-    setBonus(formatRupiah(String(item.bonus || "")));
-    setPotongan(formatRupiah(String(item.potongan || "")));
+    setBonus(formatRupiah(item.bonus));
+    setPotongan(formatRupiah(item.potongan));
   };
 
   return (
@@ -204,15 +203,15 @@ export default function AdminTeamAdjustments() {
               <tr key={item.id}>
                 <td style={tdStyle}>{item.team_name}</td>
                 <td style={tdStyle}>
-                  Rp {item.bonus?.toLocaleString()}
+                  Rp {(Number(item.bonus) || 0).toLocaleString()}
                 </td>
                 <td style={tdStyle}>
-                  Rp {item.potongan?.toLocaleString()}
+                  Rp {(Number(item.potongan) || 0).toLocaleString()}
                 </td>
                 <td style={tdStyle}>
-                  {new Date(
-                    item.created_at
-                  ).toLocaleDateString()}
+                  {item.created_at
+                    ? new Date(item.created_at).toLocaleDateString()
+                    : "-"}
                 </td>
                 <td style={tdStyle}>
                   <button
@@ -223,7 +222,13 @@ export default function AdminTeamAdjustments() {
                   </button>
                   <button
                     onClick={() => handleDelete(item.id)}
-                    style={{ background: "#b00020", color: "#fff" }}
+                    style={{
+                      background: "#b00020",
+                      color: "#fff",
+                      border: "none",
+                      padding: "4px 8px",
+                      cursor: "pointer",
+                    }}
                   >
                     Hapus
                   </button>
