@@ -1,172 +1,155 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../supabase/client";
-import { formatRupiahDisplay } from "../utils/format";
 
 export default function AdminTeamAdjustments() {
-  const [data, setData] = useState([]);
-  const [newRow, setNewRow] = useState({
-    team_name: "",
-    bonus: 0,
-    potongan: 0,
-  });
+  const [teams, setTeams] = useState([]);
+  const [adjustments, setAdjustments] = useState([]);
+  const [selectedName, setSelectedName] = useState("");
+  const [bonus, setBonus] = useState("");
+  const [potongan, setPotongan] = useState("");
 
-  const fetchData = async () => {
-    const { data } = await supabase
-      .from("team_adjustments")
-      .select("*")
-      .order("team_name", { ascending: true });
-
-    setData(data || []);
-  };
-
+  /* =========================
+     FETCH TEAM (UNTUK DROPDOWN)
+     ========================= */
   useEffect(() => {
-    fetchData();
+    fetchTeams();
+    fetchAdjustments();
   }, []);
 
-  const handleSave = async () => {
-    if (!newRow.team_name) return alert("Nama tim wajib diisi");
+  const fetchTeams = async () => {
+    const { data, error } = await supabase
+      .from("team_jobs")
+      .select("name")
+      .order("name");
 
-    const { error } = await supabase
-      .from("team_adjustments")
-      .upsert({
-        team_name: newRow.team_name,
-        bonus: Number(newRow.bonus) || 0,
-        potongan: Number(newRow.potongan) || 0,
-      }, { onConflict: "team_name" });
-
-    if (error) return alert("Gagal menyimpan");
-
-    setNewRow({ team_name: "", bonus: 0, potongan: 0 });
-    fetchData();
+    if (!error) {
+      // ambil unique name saja
+      const unique = [...new Set(data.map((t) => t.name))];
+      setTeams(unique);
+    }
   };
 
-  const handleUpdate = async (row) => {
-    await supabase
+  const fetchAdjustments = async () => {
+    const { data, error } = await supabase
       .from("team_adjustments")
-      .update({
-        bonus: Number(row.bonus) || 0,
-        potongan: Number(row.potongan) || 0,
-      })
-      .eq("id", row.id);
+      .select("*")
+      .order("created_at", { ascending: false });
 
-    fetchData();
+    if (!error) {
+      setAdjustments(data || []);
+    }
+  };
+
+  /* =========================
+     SAVE DATA
+     ========================= */
+  const handleSave = async () => {
+    if (!selectedName) return alert("Pilih nama tim dulu");
+
+    const { error } = await supabase.from("team_adjustments").insert([
+      {
+        name: selectedName,
+        bonus: Number(bonus) || 0,
+        potongan: Number(potongan) || 0,
+      },
+    ]);
+
+    if (!error) {
+      setSelectedName("");
+      setBonus("");
+      setPotongan("");
+      fetchAdjustments();
+    }
   };
 
   return (
-    <div className="card">
+    <div style={{ marginTop: 40 }}>
       <h3>Bonus & Potongan Global Tim</h3>
 
-      <table style={{ width: "100%", marginBottom: 20 }}>
+      {/* ================= FORM ================= */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1.5fr 1fr 1fr auto",
+          gap: 12,
+          alignItems: "center",
+          marginBottom: 20,
+        }}
+      >
+        {/* NAMA (DROPDOWN) */}
+        <select
+          value={selectedName}
+          onChange={(e) => setSelectedName(e.target.value)}
+        >
+          <option value="">Pilih Nama Tim</option>
+          {teams.map((name, index) => (
+            <option key={index} value={name}>
+              {name}
+            </option>
+          ))}
+        </select>
+
+        {/* BONUS */}
+        <input
+          type="number"
+          placeholder="Bonus"
+          value={bonus}
+          onChange={(e) => setBonus(e.target.value)}
+        />
+
+        {/* POTONGAN */}
+        <input
+          type="number"
+          placeholder="Potongan"
+          value={potongan}
+          onChange={(e) => setPotongan(e.target.value)}
+        />
+
+        <button onClick={handleSave}>Simpan</button>
+      </div>
+
+      {/* ================= TABLE ================= */}
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+        }}
+      >
         <thead>
           <tr>
-            <th style={th}>Nama Tim</th>
-            <th style={th}>Bonus</th>
-            <th style={th}>Potongan</th>
-            <th style={th}>Aksi</th>
+            <th style={thStyle}>Nama</th>
+            <th style={thStyle}>Bonus</th>
+            <th style={thStyle}>Potongan</th>
+            <th style={thStyle}>Tanggal</th>
           </tr>
         </thead>
         <tbody>
-          {data.map((row) => (
-            <tr key={row.id}>
-              <td style={td}>{row.team_name}</td>
-
-              <td style={td}>
-                <input
-                  type="number"
-                  value={row.bonus}
-                  onChange={(e) =>
-                    setData((prev) =>
-                      prev.map((d) =>
-                        d.id === row.id
-                          ? { ...d, bonus: e.target.value }
-                          : d
-                      )
-                    )
-                  }
-                  style={input}
-                />
-              </td>
-
-              <td style={td}>
-                <input
-                  type="number"
-                  value={row.potongan}
-                  onChange={(e) =>
-                    setData((prev) =>
-                      prev.map((d) =>
-                        d.id === row.id
-                          ? { ...d, potongan: e.target.value }
-                          : d
-                      )
-                    )
-                  }
-                  style={input}
-                />
-              </td>
-
-              <td style={td}>
-                <button style={saveBtn} onClick={() => handleUpdate(row)}>
-                  Save
-                </button>
+          {adjustments.map((item) => (
+            <tr key={item.id}>
+              <td style={tdStyle}>{item.name}</td>
+              <td style={tdStyle}>Rp {item.bonus?.toLocaleString()}</td>
+              <td style={tdStyle}>Rp {item.potongan?.toLocaleString()}</td>
+              <td style={tdStyle}>
+                {new Date(item.created_at).toLocaleDateString()}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
-
-      <h4>Tambah / Update Tim</h4>
-
-      <div style={{ display: "flex", gap: 10 }}>
-        <input
-          style={input}
-          placeholder="Nama Tim"
-          value={newRow.team_name}
-          onChange={(e) =>
-            setNewRow({ ...newRow, team_name: e.target.value })
-          }
-        />
-        <input
-          style={input}
-          type="number"
-          placeholder="Bonus"
-          value={newRow.bonus}
-          onChange={(e) =>
-            setNewRow({ ...newRow, bonus: e.target.value })
-          }
-        />
-        <input
-          style={input}
-          type="number"
-          placeholder="Potongan"
-          value={newRow.potongan}
-          onChange={(e) =>
-            setNewRow({ ...newRow, potongan: e.target.value })
-          }
-        />
-        <button style={saveBtn} onClick={handleSave}>
-          Simpan
-        </button>
-      </div>
     </div>
   );
 }
 
-/* ===== STYLE ===== */
+/* ================= STYLE ================= */
 
-const th = { padding: 10, textAlign: "left", color: "#cba58a" };
-const td = { padding: 10, borderBottom: "1px solid #222" };
-const input = {
-  padding: 6,
-  borderRadius: 6,
-  border: "1px solid #333",
-  background: "#1a1a1a",
-  color: "#fff",
+const thStyle = {
+  borderBottom: "1px solid #ddd",
+  padding: 8,
+  textAlign: "left",
+  background: "#f5f5f5",
 };
-const saveBtn = {
-  padding: "6px 12px",
-  background: "#cba58a",
-  border: "none",
-  borderRadius: 6,
-  cursor: "pointer",
-  fontWeight: 600,
+
+const tdStyle = {
+  borderBottom: "1px solid #eee",
+  padding: 8,
 };
