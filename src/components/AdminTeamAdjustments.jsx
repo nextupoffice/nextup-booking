@@ -140,16 +140,3 @@ export default function AdminTeamAdjustments() {
   );
 }
 
-/* ================= STYLE ================= */
-
-const thStyle = {
-  borderBottom: "1px solid #ddd",
-  padding: 8,
-  textAlign: "left",
-  background: "#f5f5f5",
-};
-
-const tdStyle = {
-  borderBottom: "1px solid #eee",
-  padding: 8,
-};
