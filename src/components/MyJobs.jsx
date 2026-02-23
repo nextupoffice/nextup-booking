@@ -82,7 +82,7 @@ export default function MyJobs() {
     const { data } = await supabase
       .from("team_adjustments")
       .select("*")
-      .eq("name", user.username);
+      .eq("team_name", user.username); // ✅ FIXED
 
     setAdjustments(data || []);
   };
