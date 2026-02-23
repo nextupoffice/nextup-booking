@@ -9,6 +9,24 @@ export default function AdminTeamAdjustments() {
   const [potongan, setPotongan] = useState("");
 
   /* =========================
+     FORMAT RUPIAH
+     ========================= */
+  const formatRupiah = (value) => {
+    const numberString = value.replace(/[^,\d]/g, "");
+    const split = numberString.split(",");
+    const sisa = split[0].length % 3;
+    let rupiah = split[0].substr(0, sisa);
+    const ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+    if (ribuan) {
+      const separator = sisa ? "." : "";
+      rupiah += separator + ribuan.join(".");
+    }
+
+    return rupiah;
+  };
+
+  /* =========================
      FETCH TEAM (UNTUK DROPDOWN)
      ========================= */
   useEffect(() => {
@@ -16,28 +34,28 @@ export default function AdminTeamAdjustments() {
     fetchAdjustments();
   }, []);
 
-const fetchTeams = async () => {
-  const { data, error } = await supabase
-    .from("bookings")
-    .select("team_jobs");
+  const fetchTeams = async () => {
+    const { data, error } = await supabase
+      .from("bookings")
+      .select("team_jobs");
 
-  if (!error && data) {
-    let names = [];
+    if (!error && data) {
+      let names = [];
 
-    data.forEach((booking) => {
-      if (booking.team_jobs) {
-        booking.team_jobs.forEach((member) => {
-          if (member.name) {
-            names.push(member.name);
-          }
-        });
-      }
-    });
+      data.forEach((booking) => {
+        if (booking.team_jobs) {
+          booking.team_jobs.forEach((member) => {
+            if (member.name) {
+              names.push(member.name);
+            }
+          });
+        }
+      });
 
-    const uniqueNames = [...new Set(names)];
-    setTeams(uniqueNames);
-  }
-};
+      const uniqueNames = [...new Set(names)];
+      setTeams(uniqueNames);
+    }
+  };
 
   const fetchAdjustments = async () => {
     const { data, error } = await supabase
@@ -59,8 +77,8 @@ const fetchTeams = async () => {
     const { error } = await supabase.from("team_adjustments").insert([
       {
         name: selectedName,
-        bonus: Number(bonus) || 0,
-        potongan: Number(potongan) || 0,
+        bonus: Number(bonus.replace(/\./g, "")) || 0,
+        potongan: Number(potongan.replace(/\./g, "")) || 0,
       },
     ]);
 
@@ -101,51 +119,57 @@ const fetchTeams = async () => {
 
         {/* BONUS */}
         <input
-          type="number"
+          type="text"
           placeholder="Bonus"
           value={bonus}
-          onChange={(e) => setBonus(e.target.value)}
+          onChange={(e) => setBonus(formatRupiah(e.target.value))}
         />
 
         {/* POTONGAN */}
         <input
-          type="number"
+          type="text"
           placeholder="Potongan"
           value={potongan}
-          onChange={(e) => setPotongan(e.target.value)}
+          onChange={(e) => setPotongan(formatRupiah(e.target.value))}
         />
 
         <button onClick={handleSave}>Simpan</button>
       </div>
 
       {/* ================= TABLE ================= */}
-      <table
-        style={{
-          width: "100%",
-          borderCollapse: "collapse",
-        }}
-      >
-        <thead>
-          <tr>
-            <th style={thStyle}>Nama</th>
-            <th style={thStyle}>Bonus</th>
-            <th style={thStyle}>Potongan</th>
-            <th style={thStyle}>Tanggal</th>
-          </tr>
-        </thead>
-        <tbody>
-          {adjustments.map((item) => (
-            <tr key={item.id}>
-              <td style={tdStyle}>{item.name}</td>
-              <td style={tdStyle}>Rp {item.bonus?.toLocaleString()}</td>
-              <td style={tdStyle}>Rp {item.potongan?.toLocaleString()}</td>
-              <td style={tdStyle}>
-                {new Date(item.created_at).toLocaleDateString()}
-              </td>
+      {adjustments.length > 0 && (
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+          }}
+        >
+          <thead>
+            <tr>
+              <th style={thStyle}>Nama</th>
+              <th style={thStyle}>Bonus</th>
+              <th style={thStyle}>Potongan</th>
+              <th style={thStyle}>Tanggal</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {adjustments.map((item) => (
+              <tr key={item.id}>
+                <td style={tdStyle}>{item.name}</td>
+                <td style={tdStyle}>
+                  Rp {item.bonus?.toLocaleString()}
+                </td>
+                <td style={tdStyle}>
+                  Rp {item.potongan?.toLocaleString()}
+                </td>
+                <td style={tdStyle}>
+                  {new Date(item.created_at).toLocaleDateString()}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }
