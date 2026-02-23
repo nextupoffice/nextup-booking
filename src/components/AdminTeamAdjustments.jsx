@@ -7,16 +7,14 @@ export default function AdminTeamAdjustments() {
   const [selectedName, setSelectedName] = useState("");
   const [bonus, setBonus] = useState("");
   const [potongan, setPotongan] = useState("");
+  const [editingId, setEditingId] = useState(null);
 
-  /* =========================
-     FORMAT RUPIAH
-     ========================= */
+  /* ================= FORMAT RUPIAH ================= */
   const formatRupiah = (value) => {
     const numberString = value.replace(/[^,\d]/g, "");
-    const split = numberString.split(",");
-    const sisa = split[0].length % 3;
-    let rupiah = split[0].substr(0, sisa);
-    const ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+    const sisa = numberString.length % 3;
+    let rupiah = numberString.substr(0, sisa);
+    const ribuan = numberString.substr(sisa).match(/\d{3}/g);
 
     if (ribuan) {
       const separator = sisa ? "." : "";
@@ -26,68 +24,92 @@ export default function AdminTeamAdjustments() {
     return rupiah;
   };
 
-  /* =========================
-     FETCH TEAM (UNTUK DROPDOWN)
-     ========================= */
+  const parseNumber = (val) =>
+    Number(val.replace(/\./g, "")) || 0;
+
+  /* ================= INIT ================= */
   useEffect(() => {
     fetchTeams();
     fetchAdjustments();
   }, []);
 
+  /* ================= FETCH TEAM ================= */
   const fetchTeams = async () => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("bookings")
       .select("team_jobs");
 
-    if (!error && data) {
+    if (data) {
       let names = [];
 
       data.forEach((booking) => {
-        if (booking.team_jobs) {
-          booking.team_jobs.forEach((member) => {
-            if (member.name) {
-              names.push(member.name);
-            }
-          });
-        }
+        booking.team_jobs?.forEach((member) => {
+          if (member.name) names.push(member.name);
+        });
       });
 
-      const uniqueNames = [...new Set(names)];
-      setTeams(uniqueNames);
+      setTeams([...new Set(names)]);
     }
   };
 
+  /* ================= FETCH ADJUSTMENTS ================= */
   const fetchAdjustments = async () => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("team_adjustments")
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (!error) {
-      setAdjustments(data || []);
-    }
+    setAdjustments(data || []);
   };
 
-  /* =========================
-     SAVE DATA
-     ========================= */
+  /* ================= SAVE / UPDATE ================= */
   const handleSave = async () => {
     if (!selectedName) return alert("Pilih nama tim dulu");
 
-    const { error } = await supabase.from("team_adjustments").insert([
-      {
-        name: selectedName,
-        bonus: Number(bonus.replace(/\./g, "")) || 0,
-        potongan: Number(potongan.replace(/\./g, "")) || 0,
-      },
-    ]);
+    const payload = {
+      name: selectedName,
+      bonus: parseNumber(bonus),
+      potongan: parseNumber(potongan),
+    };
+
+    let error;
+
+    if (editingId) {
+      const { error: updateError } = await supabase
+        .from("team_adjustments")
+        .update(payload)
+        .eq("id", editingId);
+
+      error = updateError;
+    } else {
+      const { error: insertError } = await supabase
+        .from("team_adjustments")
+        .insert([payload]);
+
+      error = insertError;
+    }
 
     if (!error) {
+      alert("Data berhasil disimpan ✅");
+
       setSelectedName("");
       setBonus("");
       setPotongan("");
+      setEditingId(null);
+
       fetchAdjustments();
+    } else {
+      alert("Gagal menyimpan ❌");
+      console.error(error);
     }
+  };
+
+  /* ================= EDIT ================= */
+  const handleEdit = (item) => {
+    setEditingId(item.id);
+    setSelectedName(item.name);
+    setBonus(formatRupiah(String(item.bonus || "")));
+    setPotongan(formatRupiah(String(item.potongan || "")));
   };
 
   return (
@@ -104,7 +126,6 @@ export default function AdminTeamAdjustments() {
           marginBottom: 20,
         }}
       >
-        {/* NAMA (DROPDOWN) */}
         <select
           value={selectedName}
           onChange={(e) => setSelectedName(e.target.value)}
@@ -117,23 +138,27 @@ export default function AdminTeamAdjustments() {
           ))}
         </select>
 
-        {/* BONUS */}
         <input
           type="text"
           placeholder="Bonus"
           value={bonus}
-          onChange={(e) => setBonus(formatRupiah(e.target.value))}
+          onChange={(e) =>
+            setBonus(formatRupiah(e.target.value))
+          }
         />
 
-        {/* POTONGAN */}
         <input
           type="text"
           placeholder="Potongan"
           value={potongan}
-          onChange={(e) => setPotongan(formatRupiah(e.target.value))}
+          onChange={(e) =>
+            setPotongan(formatRupiah(e.target.value))
+          }
         />
 
-        <button onClick={handleSave}>Simpan</button>
+        <button onClick={handleSave}>
+          {editingId ? "Update" : "Simpan"}
+        </button>
       </div>
 
       {/* ================= TABLE ================= */}
@@ -150,6 +175,7 @@ export default function AdminTeamAdjustments() {
               <th style={thStyle}>Bonus</th>
               <th style={thStyle}>Potongan</th>
               <th style={thStyle}>Tanggal</th>
+              <th style={thStyle}>Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -163,7 +189,16 @@ export default function AdminTeamAdjustments() {
                   Rp {item.potongan?.toLocaleString()}
                 </td>
                 <td style={tdStyle}>
-                  {new Date(item.created_at).toLocaleDateString()}
+                  {new Date(
+                    item.created_at
+                  ).toLocaleDateString()}
+                </td>
+                <td style={tdStyle}>
+                  <button
+                    onClick={() => handleEdit(item)}
+                  >
+                    Edit
+                  </button>
                 </td>
               </tr>
             ))}
