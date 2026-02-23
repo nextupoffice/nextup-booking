@@ -301,71 +301,137 @@ export default function BookingTable() {
       </div>
 
       {editingBooking && (
-        <div style={overlay}>
-          <div style={modal}>
-            <h3>Edit Booking</h3>
+  <div style={overlay}>
+    <div style={modal}>
+      <h3 style={{ marginBottom: 10 }}>Edit Booking</h3>
 
-            <div style={{ maxHeight:"70vh", overflowY:"auto", paddingRight:10 }}>
-              <h4 style={{ marginTop:20 }}>Tim yang Turun</h4>
+      {/* ===== SCROLL AREA ===== */}
+      <div style={modalBody}>
 
-              {editingBooking.team_jobs?.map((t,i)=>(
-                <div key={i} style={teamBox}>
-                  <input
-                    style={input}
-                    list="team-name-options"
-                    value={t.name || ""}
-                    onChange={(e)=>updateTeamMember(i,"name",e.target.value)}
-                    placeholder="Ketik atau pilih nama"
-                  />
+        {/* ================= DATA BOOKING ================= */}
+        <h4>Informasi Booking</h4>
 
-                  <input
-                    style={input}
-                    list="role-options"
-                    value={t.role || ""}
-                    onChange={(e)=>updateTeamMember(i,"role",e.target.value)}
-                    placeholder="Role"
-                  />
+        <input
+          style={input}
+          value={editingBooking.client_name || ""}
+          onChange={(e)=>setEditingBooking({...editingBooking, client_name:e.target.value})}
+          placeholder="Nama Client"
+        />
 
-                  <input
-                    style={input}
-                    type="number"
-                    value={t.income || 0}
-                    onChange={(e)=>updateTeamMember(i,"income",e.target.value)}
-                    placeholder="Income"
-                  />
+        <input
+          style={input}
+          value={editingBooking.phone || ""}
+          onChange={(e)=>setEditingBooking({...editingBooking, phone:e.target.value})}
+          placeholder="No HP"
+        />
 
-                  <button style={cancelBtn} onClick={()=>removeTeam(i)}>Hapus</button>
-                </div>
-              ))}
+        <input
+          style={input}
+          value={editingBooking.acara || ""}
+          onChange={(e)=>setEditingBooking({...editingBooking, acara:e.target.value})}
+          placeholder="Acara"
+        />
 
-              <datalist id="team-name-options">
-                {teamNameOptions.map((name,idx)=>(
-                  <option key={idx} value={name} />
-                ))}
-              </datalist>
+        <input
+          style={input}
+          type="date"
+          value={editingBooking.date || ""}
+          onChange={(e)=>setEditingBooking({...editingBooking, date:e.target.value})}
+        />
 
-              <datalist id="role-options">
-                {roleOptions.map((role,idx)=>(
-                  <option key={idx} value={role} />
-                ))}
-              </datalist>
+        <input
+          style={input}
+          type="time"
+          value={editingBooking.time || ""}
+          onChange={(e)=>setEditingBooking({...editingBooking, time:e.target.value})}
+        />
 
-              <div style={{ marginTop:10, fontWeight:600 }}>
-                Total Income Tim: {formatRupiahDisplay(totalTeamIncome)}
-              </div>
+        <textarea
+          style={{ ...input, minHeight:80 }}
+          value={editingBooking.location || ""}
+          onChange={(e)=>setEditingBooking({...editingBooking, location:e.target.value})}
+          placeholder="Alamat"
+        />
 
-              <button style={editBtn} onClick={addTeam}>
-                + Tambah Tim / Freelance
-              </button>
-            </div>
+        <input
+          style={input}
+          type="number"
+          value={editingBooking.dp || 0}
+          onChange={(e)=>setEditingBooking({...editingBooking, dp:e.target.value})}
+          placeholder="DP"
+        />
 
-            <div style={{ marginTop:15, display:"flex", gap:10 }}>
-              <button style={saveBtn} onClick={handleSave}>Save</button>
-              <button style={cancelBtn} onClick={()=>setEditingBooking(null)}>Cancel</button>
-            </div>
+        <input
+          style={input}
+          type="number"
+          value={editingBooking.pelunasan || 0}
+          onChange={(e)=>setEditingBooking({...editingBooking, pelunasan:e.target.value})}
+          placeholder="Pelunasan"
+        />
+
+        {/* ================= TEAM SECTION (TIDAK DIUBAH) ================= */}
+        <h4 style={{ marginTop:30 }}>Tim yang Turun</h4>
+
+        {editingBooking.team_jobs?.map((t,i)=>(
+          <div key={i} style={teamBox}>
+            <input
+              style={input}
+              list="team-name-options"
+              value={t.name || ""}
+              onChange={(e)=>updateTeamMember(i,"name",e.target.value)}
+              placeholder="Ketik atau pilih nama"
+            />
+
+            <input
+              style={input}
+              list="role-options"
+              value={t.role || ""}
+              onChange={(e)=>updateTeamMember(i,"role",e.target.value)}
+              placeholder="Role"
+            />
+
+            <input
+              style={input}
+              type="number"
+              value={t.income || 0}
+              onChange={(e)=>updateTeamMember(i,"income",e.target.value)}
+              placeholder="Income"
+            />
+
+            <button style={cancelBtn} onClick={()=>removeTeam(i)}>Hapus</button>
           </div>
+        ))}
+
+        <datalist id="team-name-options">
+          {teamNameOptions.map((name,idx)=>(
+            <option key={idx} value={name} />
+          ))}
+        </datalist>
+
+        <datalist id="role-options">
+          {roleOptions.map((role,idx)=>(
+            <option key={idx} value={role} />
+          ))}
+        </datalist>
+
+        <div style={{ marginTop:10, fontWeight:600 }}>
+          Total Income Tim: {formatRupiahDisplay(totalTeamIncome)}
         </div>
-      )}
+
+        <button style={editBtn} onClick={addTeam}>
+          + Tambah Tim / Freelance
+        </button>
+
+      </div>
+
+      {/* ===== FIXED FOOTER ===== */}
+      <div style={modalFooter}>
+        <button style={saveBtn} onClick={handleSave}>Save</button>
+        <button style={cancelBtn} onClick={()=>setEditingBooking(null)}>Cancel</button>
+      </div>
+    </div>
+  </div>
+)}
     </>
   );
 }
@@ -377,7 +443,32 @@ const td = { padding:10, borderBottom:"1px solid #222" };
 const editBtn = { padding:"6px 12px", borderRadius:6, border:"1px solid #cba58a", background:"transparent", color:"#cba58a", cursor:"pointer" };
 const teamBox = { border:"1px solid #222", padding:10, borderRadius:8, marginBottom:10, display:"flex", flexDirection:"column", gap:6 };
 const overlay = { position:"fixed", top:0, left:0, width:"100%", height:"100%", background:"rgba(0,0,0,0.6)", display:"flex", justifyContent:"center", alignItems:"center", zIndex:999 };
-const modal = { background:"#111", padding:30, borderRadius:12, width:520, color:"#fff", display:"flex", flexDirection:"column" };
+const modal = {
+  background:"#111",
+  borderRadius:12,
+  width:"90%",
+  maxWidth:600,
+  height:"90vh",
+  display:"flex",
+  flexDirection:"column",
+  color:"#fff",
+};
+
+const modalBody = {
+  flex:1,
+  overflowY:"auto",
+  padding:25,
+  display:"flex",
+  flexDirection:"column",
+  gap:10,
+};
+
+const modalFooter = {
+  padding:20,
+  borderTop:"1px solid #222",
+  display:"flex",
+  gap:10,
+};
 const input = { padding:8, borderRadius:6, border:"1px solid #333", background:"#1a1a1a", color:"#fff" };
 const saveBtn = { padding:"8px 16px", background:"#cba58a", border:"none", borderRadius:6, fontWeight:600, cursor:"pointer" };
 const cancelBtn = { padding:"6px 12px", background:"#333", border:"none", borderRadius:6, color:"#fff", cursor:"pointer" };
