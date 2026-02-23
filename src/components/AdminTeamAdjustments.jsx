@@ -17,17 +17,17 @@ export default function AdminTeamAdjustments() {
   }, []);
 
   const fetchTeams = async () => {
-    const { data, error } = await supabase
-      .from("team_jobs")
-      .select("name")
-      .order("name");
+  const { data, error } = await supabase
+    .from("users")
+    .select("name")
+    .eq("role", "tim")
+    .order("name");
 
-    if (!error) {
-      // ambil unique name saja
-      const unique = [...new Set(data.map((t) => t.name))];
-      setTeams(unique);
-    }
-  };
+  if (!error && data) {
+    const names = data.map((user) => user.name);
+    setTeams(names);
+  }
+};
 
   const fetchAdjustments = async () => {
     const { data, error } = await supabase
