@@ -221,6 +221,18 @@ export default function BookingTable() {
     );
   }, [editingBooking]);
 
+/* ================= RUPIAH INPUT FORMAT ================= */
+const formatRupiahInput = (value) => {
+  if (!value) return "";
+  const number = value.toString().replace(/\D/g, "");
+  return new Intl.NumberFormat("id-ID").format(number);
+};
+
+const parseRupiahToNumber = (value) => {
+  if (!value) return 0;
+  return Number(value.toString().replace(/\D/g, ""));
+};
+
   return (
     <>
       <div className="card">
@@ -355,17 +367,25 @@ export default function BookingTable() {
 
         <input
           style={input}
-          type="number"
-          value={editingBooking.dp || 0}
-          onChange={(e)=>setEditingBooking({...editingBooking, dp:e.target.value})}
+          value={formatRupiahInput(editingBooking.dp)}
+          onChange={(e)=>
+            setEditingBooking({
+              ...editingBooking,
+              dp: parseRupiahToNumber(e.target.value),
+            })
+          }
           placeholder="DP"
         />
 
         <input
           style={input}
-          type="number"
-          value={editingBooking.pelunasan || 0}
-          onChange={(e)=>setEditingBooking({...editingBooking, pelunasan:e.target.value})}
+          value={formatRupiahInput(editingBooking.pelunasan)}
+          onChange={(e)=>
+            setEditingBooking({
+              ...editingBooking,
+              pelunasan: parseRupiahToNumber(e.target.value),
+            })
+          }
           placeholder="Pelunasan"
         />
 
@@ -392,9 +412,14 @@ export default function BookingTable() {
 
             <input
               style={input}
-              type="number"
-              value={t.income || 0}
-              onChange={(e)=>updateTeamMember(i,"income",e.target.value)}
+              value={formatRupiahInput(t.income)}
+              onChange={(e)=>
+                updateTeamMember(
+                  i,
+                  "income",
+                  parseRupiahToNumber(e.target.value)
+                )
+              }
               placeholder="Income"
             />
 
