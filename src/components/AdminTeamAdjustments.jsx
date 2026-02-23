@@ -245,10 +245,10 @@ export default function AdminTeamAdjustments() {
 /* ================= STYLE ================= */
 
 const thStyle = {
-  borderBottom: "1px solid #ddd",
+  borderBottom: "1px solid #31281c",
   padding: 8,
   textAlign: "left",
-  background: "#f5f5f5",
+  background: "#000000",
 };
 
 const tdStyle = {
