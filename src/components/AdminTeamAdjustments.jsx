@@ -67,7 +67,7 @@ export default function AdminTeamAdjustments() {
     if (!selectedName) return alert("Pilih nama tim dulu");
 
     const payload = {
-      name: selectedName,
+      team_name: selectedName, // ✅ FIXED (sesuai database)
       bonus: parseNumber(bonus),
       potongan: parseNumber(potongan),
     };
@@ -107,7 +107,7 @@ export default function AdminTeamAdjustments() {
   /* ================= EDIT ================= */
   const handleEdit = (item) => {
     setEditingId(item.id);
-    setSelectedName(item.name);
+    setSelectedName(item.team_name); // ✅ FIXED
     setBonus(formatRupiah(String(item.bonus || "")));
     setPotongan(formatRupiah(String(item.potongan || "")));
   };
@@ -181,7 +181,7 @@ export default function AdminTeamAdjustments() {
           <tbody>
             {adjustments.map((item) => (
               <tr key={item.id}>
-                <td style={tdStyle}>{item.name}</td>
+                <td style={tdStyle}>{item.team_name}</td> {/* ✅ FIXED */}
                 <td style={tdStyle}>
                   Rp {item.bonus?.toLocaleString()}
                 </td>
