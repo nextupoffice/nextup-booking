@@ -67,7 +67,7 @@ export default function AdminTeamAdjustments() {
     if (!selectedName) return alert("Pilih nama tim dulu");
 
     const payload = {
-      team_name: selectedName, // ✅ FIXED (sesuai database)
+      team_name: selectedName,
       bonus: parseNumber(bonus),
       potongan: parseNumber(potongan),
     };
@@ -104,10 +104,31 @@ export default function AdminTeamAdjustments() {
     }
   };
 
+  /* ================= DELETE ================= */
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm(
+      "Yakin ingin menghapus data ini?"
+    );
+    if (!confirmDelete) return;
+
+    const { error } = await supabase
+      .from("team_adjustments")
+      .delete()
+      .eq("id", id);
+
+    if (!error) {
+      alert("Data berhasil dihapus ✅");
+      fetchAdjustments();
+    } else {
+      alert("Gagal menghapus ❌");
+      console.error(error);
+    }
+  };
+
   /* ================= EDIT ================= */
   const handleEdit = (item) => {
     setEditingId(item.id);
-    setSelectedName(item.team_name); // ✅ FIXED
+    setSelectedName(item.team_name);
     setBonus(formatRupiah(String(item.bonus || "")));
     setPotongan(formatRupiah(String(item.potongan || "")));
   };
@@ -181,7 +202,7 @@ export default function AdminTeamAdjustments() {
           <tbody>
             {adjustments.map((item) => (
               <tr key={item.id}>
-                <td style={tdStyle}>{item.team_name}</td> {/* ✅ FIXED */}
+                <td style={tdStyle}>{item.team_name}</td>
                 <td style={tdStyle}>
                   Rp {item.bonus?.toLocaleString()}
                 </td>
@@ -196,8 +217,15 @@ export default function AdminTeamAdjustments() {
                 <td style={tdStyle}>
                   <button
                     onClick={() => handleEdit(item)}
+                    style={{ marginRight: 8 }}
                   >
                     Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(item.id)}
+                    style={{ background: "#b00020", color: "#fff" }}
+                  >
+                    Hapus
                   </button>
                 </td>
               </tr>
