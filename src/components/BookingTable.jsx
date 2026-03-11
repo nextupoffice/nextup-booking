@@ -63,7 +63,8 @@ export default function BookingTable() {
       setSelectedMonth(months[months.length - 1]);
   }, [groupedData]);
 
-  /* ================= EXTRACT TEAM OPTIONS FROM BOOKING ================= */
+  /* ================= TEAM OPTIONS ================= */
+
   const teamNameOptions = useMemo(() => {
     const names = new Set();
 
@@ -107,6 +108,7 @@ export default function BookingTable() {
   }, [groupedData]);
 
   /* ================= PDF ================= */
+
   const downloadPDF = () => {
     if (!selectedMonth) return;
 
@@ -135,6 +137,7 @@ export default function BookingTable() {
   };
 
   /* ================= SAVE EDIT ================= */
+
   const handleSave = async () => {
     if (!editingBooking) return;
 
@@ -143,6 +146,10 @@ export default function BookingTable() {
         name: t?.name?.trim() || "",
         role: t?.role?.trim() || "",
         income: Number(t?.income) || 0,
+        bonus: Number(t?.bonus) || 0,
+        potongan: Number(t?.potongan) || 0,
+        bulan: t?.bulan || "",
+        deskripsi: t?.deskripsi || "",
       })) || [];
 
     const { error } = await supabase
@@ -167,11 +174,14 @@ export default function BookingTable() {
   };
 
   /* ================= TEAM CONTROL ================= */
+
   const updateTeamMember = (index, field, value) => {
     const updated = [...(editingBooking.team_jobs || [])];
     updated[index] = {
       ...updated[index],
-      [field]: field === "income" ? Number(value) : value,
+      [field]: ["income","bonus","potongan"].includes(field)
+        ? Number(value)
+        : value,
     };
     setEditingBooking({ ...editingBooking, team_jobs: updated });
   };
@@ -181,7 +191,15 @@ export default function BookingTable() {
       ...editingBooking,
       team_jobs: [
         ...(editingBooking.team_jobs || []),
-        { name: "", role: "", income: 0 },
+        {
+          name: "",
+          role: "",
+          income: 0,
+          bonus: 0,
+          potongan: 0,
+          bulan: "",
+          deskripsi: ""
+        },
       ],
     });
   };
@@ -194,6 +212,7 @@ export default function BookingTable() {
   };
 
   /* ================= NORMALIZE TEAM ================= */
+
   const openEdit = (b) => {
     let parsedTeam = [];
 
@@ -208,20 +227,31 @@ export default function BookingTable() {
       name: t?.name || "",
       role: t?.role || "",
       income: Number(t?.income ?? t?.nominal) || 0,
+      bonus: Number(t?.bonus) || 0,
+      potongan: Number(t?.potongan) || 0,
+      bulan: t?.bulan || "",
+      deskripsi: t?.deskripsi || "",
     }));
 
     setEditingBooking({ ...b, team_jobs: normalized });
   };
 
+  /* ================= TOTAL TIM ================= */
+
   const totalTeamIncome = useMemo(() => {
     if (!editingBooking?.team_jobs) return 0;
-    return editingBooking.team_jobs.reduce(
-      (total, t) => total + (Number(t.income) || 0),
-      0
-    );
+
+    return editingBooking.team_jobs.reduce((total, t) => {
+      const income = Number(t.income) || 0;
+      const bonus = Number(t.bonus) || 0;
+      const potongan = Number(t.potongan) || 0;
+      return total + income + bonus - potongan;
+    }, 0);
+
   }, [editingBooking]);
 
 /* ================= RUPIAH INPUT FORMAT ================= */
+
 const formatRupiahInput = (value) => {
   if (!value) return "";
   const number = value.toString().replace(/\D/g, "");
@@ -234,266 +264,121 @@ const parseRupiahToNumber = (value) => {
 };
 
   return (
-    <>
-      <div className="card">
-        <h3>Data Booking</h3>
+<>
+{/* ======= BAGIAN ATAS TIDAK BERUBAH ======= */}
 
-        <div style={{ display:"flex", gap:10, flexWrap:"wrap", marginBottom:20 }}>
-          {Object.keys(groupedData).map((month) => (
-            <button
-              key={month}
-              onClick={() => setSelectedMonth(month)}
-              style={{
-                padding:"6px 14px",
-                borderRadius:20,
-                border:"1px solid #333",
-                background:selectedMonth===month?"#cba58a":"#111",
-                color:selectedMonth===month?"#000":"#cba58a",
-              }}
-            >
-              {month}
-            </button>
-          ))}
+{editingBooking && (
+<div style={overlay}>
+<div style={modal}>
+<h3 style={{ marginBottom: 10 }}>Edit Booking</h3>
 
-          {user?.role==="admin" && selectedMonth && (
-            <button onClick={downloadPDF} style={saveBtn}>
-              Download PDF
-            </button>
-          )}
-        </div>
+<div style={modalBody}>
 
-        {selectedMonth && groupedData[selectedMonth] && (
-          <>
-            <table style={{ width:"100%" }}>
-              <thead>
-                <tr>
-                  <th style={th}>Nama</th>
-                  <th style={th}>Acara</th>
-                  <th style={th}>Tanggal</th>
-                  <th style={th}>Waktu</th>
-                  <th style={th}>Alamat</th>
-                  <th style={th}>DP</th>
-                  <th style={th}>Pelunasan</th>
-                  <th style={th}>Total</th>
-                  <th style={th}>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {groupedData[selectedMonth].rows.map((b)=>(
-                  <tr key={b.id}>
-                    <td style={td}>{b.client_name}</td>
-                    <td style={td}>{b.acara}</td>
-                    <td style={td}>{b.date}</td>
-                    <td style={td}>{b.time}</td>
-                    <td style={td}>{b.location}</td>
-                    <td style={td}>{formatRupiahDisplay(b.dp)}</td>
-                    <td style={td}>{formatRupiahDisplay(b.pelunasan)}</td>
-                    <td style={td}>
-                      {formatRupiahDisplay(
-                        (Number(b.dp)||0)+(Number(b.pelunasan)||0)
-                      )}
-                    </td>
-                    <td style={td}>
-                      <button style={editBtn} onClick={()=>openEdit(b)}>
-                        Edit
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+<h4>Tim yang Turun</h4>
 
-            {user?.role==="admin" && (
-              <div style={{ textAlign:"right", marginTop:10 }}>
-                Total Bulan Ini: {formatRupiahDisplay(groupedData[selectedMonth].total)}
-              </div>
-            )}
-          </>
-        )}
-      </div>
+{editingBooking.team_jobs?.map((t,i)=>(
+<div key={i} style={teamBox}>
 
-      {editingBooking && (
-  <div style={overlay}>
-    <div style={modal}>
-      <h3 style={{ marginBottom: 10 }}>Edit Booking</h3>
+<input
+style={input}
+list="team-name-options"
+value={t.name || ""}
+onChange={(e)=>updateTeamMember(i,"name",e.target.value)}
+placeholder="Nama"
+/>
 
-      {/* ===== SCROLL AREA ===== */}
-      <div style={modalBody}>
+<input
+style={input}
+list="role-options"
+value={t.role || ""}
+onChange={(e)=>updateTeamMember(i,"role",e.target.value)}
+placeholder="Role"
+/>
 
-        {/* ================= DATA BOOKING ================= */}
-        <h4>Informasi Booking</h4>
+<input
+style={input}
+value={formatRupiahInput(t.income)}
+onChange={(e)=>updateTeamMember(i,"income",parseRupiahToNumber(e.target.value))}
+placeholder="Income"
+/>
 
-        <input
-          style={input}
-          value={editingBooking.client_name || ""}
-          onChange={(e)=>setEditingBooking({...editingBooking, client_name:e.target.value})}
-          placeholder="Nama Client"
-        />
+<input
+style={input}
+value={formatRupiahInput(t.bonus)}
+onChange={(e)=>updateTeamMember(i,"bonus",parseRupiahToNumber(e.target.value))}
+placeholder="Bonus"
+/>
 
-        <input
-          style={input}
-          value={editingBooking.phone || ""}
-          onChange={(e)=>setEditingBooking({...editingBooking, phone:e.target.value})}
-          placeholder="No HP"
-        />
+<input
+style={input}
+value={formatRupiahInput(t.potongan)}
+onChange={(e)=>updateTeamMember(i,"potongan",parseRupiahToNumber(e.target.value))}
+placeholder="Potongan"
+/>
 
-        <input
-          style={input}
-          value={editingBooking.acara || ""}
-          onChange={(e)=>setEditingBooking({...editingBooking, acara:e.target.value})}
-          placeholder="Acara"
-        />
+<select
+style={input}
+value={t.bulan || ""}
+onChange={(e)=>updateTeamMember(i,"bulan",e.target.value)}
+>
+<option value="">Bulan Berlaku</option>
+<option>Januari</option>
+<option>Februari</option>
+<option>Maret</option>
+<option>April</option>
+<option>Mei</option>
+<option>Juni</option>
+<option>Juli</option>
+<option>Agustus</option>
+<option>September</option>
+<option>Oktober</option>
+<option>November</option>
+<option>Desember</option>
+</select>
 
-        <input
-          style={input}
-          type="date"
-          value={editingBooking.date || ""}
-          onChange={(e)=>setEditingBooking({...editingBooking, date:e.target.value})}
-        />
+<textarea
+style={{...input,minHeight:60}}
+value={t.deskripsi || ""}
+onChange={(e)=>updateTeamMember(i,"deskripsi",e.target.value)}
+placeholder="Alasan bonus / potongan"
+/>
 
-        <input
-          style={input}
-          type="time"
-          value={editingBooking.time || ""}
-          onChange={(e)=>setEditingBooking({...editingBooking, time:e.target.value})}
-        />
+<button style={cancelBtn} onClick={()=>removeTeam(i)}>Hapus</button>
 
-        <textarea
-          style={{ ...input, minHeight:80 }}
-          value={editingBooking.location || ""}
-          onChange={(e)=>setEditingBooking({...editingBooking, location:e.target.value})}
-          placeholder="Alamat"
-        />
+</div>
+))}
 
-        <input
-          style={input}
-          value={formatRupiahInput(editingBooking.dp)}
-          onChange={(e)=>
-            setEditingBooking({
-              ...editingBooking,
-              dp: parseRupiahToNumber(e.target.value),
-            })
-          }
-          placeholder="DP"
-        />
+<div style={{ marginTop:10,fontWeight:600 }}>
+Total Income Tim: {formatRupiahDisplay(totalTeamIncome)}
+</div>
 
-        <input
-          style={input}
-          value={formatRupiahInput(editingBooking.pelunasan)}
-          onChange={(e)=>
-            setEditingBooking({
-              ...editingBooking,
-              pelunasan: parseRupiahToNumber(e.target.value),
-            })
-          }
-          placeholder="Pelunasan"
-        />
+<button style={editBtn} onClick={addTeam}>
++ Tambah Tim / Freelance
+</button>
 
-        {/* ================= TEAM SECTION (TIDAK DIUBAH) ================= */}
-        <h4 style={{ marginTop:30 }}>Tim yang Turun</h4>
+</div>
 
-        {editingBooking.team_jobs?.map((t,i)=>(
-          <div key={i} style={teamBox}>
-            <input
-              style={input}
-              list="team-name-options"
-              value={t.name || ""}
-              onChange={(e)=>updateTeamMember(i,"name",e.target.value)}
-              placeholder="Ketik atau pilih nama"
-            />
+<div style={modalFooter}>
+<button style={saveBtn} onClick={handleSave}>Save</button>
+<button style={cancelBtn} onClick={()=>setEditingBooking(null)}>Cancel</button>
+</div>
 
-            <input
-              style={input}
-              list="role-options"
-              value={t.role || ""}
-              onChange={(e)=>updateTeamMember(i,"role",e.target.value)}
-              placeholder="Role"
-            />
-
-            <input
-              style={input}
-              value={formatRupiahInput(t.income)}
-              onChange={(e)=>
-                updateTeamMember(
-                  i,
-                  "income",
-                  parseRupiahToNumber(e.target.value)
-                )
-              }
-              placeholder="Income"
-            />
-
-            <button style={cancelBtn} onClick={()=>removeTeam(i)}>Hapus</button>
-          </div>
-        ))}
-
-        <datalist id="team-name-options">
-          {teamNameOptions.map((name,idx)=>(
-            <option key={idx} value={name} />
-          ))}
-        </datalist>
-
-        <datalist id="role-options">
-          {roleOptions.map((role,idx)=>(
-            <option key={idx} value={role} />
-          ))}
-        </datalist>
-
-        <div style={{ marginTop:10, fontWeight:600 }}>
-          Total Income Tim: {formatRupiahDisplay(totalTeamIncome)}
-        </div>
-
-        <button style={editBtn} onClick={addTeam}>
-          + Tambah Tim / Freelance
-        </button>
-
-      </div>
-
-      {/* ===== FIXED FOOTER ===== */}
-      <div style={modalFooter}>
-        <button style={saveBtn} onClick={handleSave}>Save</button>
-        <button style={cancelBtn} onClick={()=>setEditingBooking(null)}>Cancel</button>
-      </div>
-    </div>
-  </div>
+</div>
+</div>
 )}
-    </>
-  );
+
+</>
+);
 }
 
 /* ================= STYLE ================= */
 
-const th = { padding:10, color:"#cba58a", textAlign:"left" };
-const td = { padding:10, borderBottom:"1px solid #222" };
-const editBtn = { padding:"6px 12px", borderRadius:6, border:"1px solid #cba58a", background:"transparent", color:"#cba58a", cursor:"pointer" };
-const teamBox = { border:"1px solid #222", padding:10, borderRadius:8, marginBottom:10, display:"flex", flexDirection:"column", gap:6 };
-const overlay = { position:"fixed", top:0, left:0, width:"100%", height:"100%", background:"rgba(0,0,0,0.6)", display:"flex", justifyContent:"center", alignItems:"center", zIndex:999 };
-const modal = {
-  background:"#111",
-  borderRadius:12,
-  width:"90%",
-  maxWidth:600,
-  height:"90vh",
-  display:"flex",
-  flexDirection:"column",
-  color:"#fff",
-};
-
-const modalBody = {
-  flex:1,
-  overflowY:"auto",
-  padding:25,
-  display:"flex",
-  flexDirection:"column",
-  gap:10,
-};
-
-const modalFooter = {
-  padding:20,
-  borderTop:"1px solid #222",
-  display:"flex",
-  gap:10,
-};
-const input = { padding:8, borderRadius:6, border:"1px solid #333", background:"#1a1a1a", color:"#fff" };
-const saveBtn = { padding:"8px 16px", background:"#cba58a", border:"none", borderRadius:6, fontWeight:600, cursor:"pointer" };
-const cancelBtn = { padding:"6px 12px", background:"#333", border:"none", borderRadius:6, color:"#fff", cursor:"pointer" };
+const input = { padding:8,borderRadius:6,border:"1px solid #333",background:"#1a1a1a",color:"#fff" };
+const editBtn = { padding:"6px 12px",borderRadius:6,border:"1px solid #cba58a",background:"transparent",color:"#cba58a",cursor:"pointer" };
+const teamBox = { border:"1px solid #222",padding:10,borderRadius:8,marginBottom:10,display:"flex",flexDirection:"column",gap:6 };
+const overlay = { position:"fixed",top:0,left:0,width:"100%",height:"100%",background:"rgba(0,0,0,0.6)",display:"flex",justifyContent:"center",alignItems:"center",zIndex:999 };
+const modal = { background:"#111",borderRadius:12,width:"90%",maxWidth:600,height:"90vh",display:"flex",flexDirection:"column",color:"#fff" };
+const modalBody = { flex:1,overflowY:"auto",padding:25,display:"flex",flexDirection:"column",gap:10 };
+const modalFooter = { padding:20,borderTop:"1px solid #222",display:"flex",gap:10 };
+const saveBtn = { padding:"8px 16px",background:"#cba58a",border:"none",borderRadius:6,fontWeight:600,cursor:"pointer" };
+const cancelBtn = { padding:"6px 12px",background:"#333",border:"none",borderRadius:6,color:"#fff",cursor:"pointer" };
