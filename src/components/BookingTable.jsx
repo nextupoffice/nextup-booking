@@ -141,7 +141,7 @@ const monthLabel = d.toLocaleString("id-ID", {
   }, [groupedData]);
 
   /* ================= PDF ================= */
-  const downloadPDF = () => {
+const downloadPDF = () => {
   if (!selectedMonth) return;
 
   const doc = new jsPDF({
@@ -155,55 +155,95 @@ const monthLabel = d.toLocaleString("id-ID", {
 
   const rows = groupedData[selectedMonth].rows;
 
+  /* ================= COLOR PALETTE ================= */
+
+  const gold = [200,169,106];
+  const dark = [20,20,20];
+  const gray = [120,120,120];
+
+  /* ================= WATERMARK ================= */
+
+  doc.setGState(new doc.GState({opacity:0.05}));
+  doc.addImage(logo,"PNG",55,90,100,60);
+  doc.setGState(new doc.GState({opacity:1}));
+
   /* ================= HEADER ================= */
 
-  doc.addImage(logo, "PNG", margin, 12, 28, 14);
+  doc.setFillColor(...dark);
+  doc.rect(0,0,210,32,"F");
 
-  doc.setFont("helvetica", "bold");
+  doc.addImage(logo,"PNG",margin,10,28,14);
+
+  doc.setFont("helvetica","bold");
   doc.setFontSize(18);
-  doc.setTextColor(0,0,0);
-  doc.text("NEXTUP STUDIO", margin + 35, 18);
+  doc.setTextColor(255,255,255);
+  doc.text("NEXTUP STUDIO",margin+35,18);
 
-  doc.setFontSize(11);
-  doc.setFont("helvetica","normal");
-  doc.text("Laporan Booking Studio", margin + 35, 24);
+  doc.setFontSize(10);
+  doc.setTextColor(220,220,220);
+  doc.text("Laporan Booking Studio",margin+35,24);
 
   doc.text(
     `Periode : ${groupedData[selectedMonth].label}`,
-    margin + 35,
-    30
+    margin+35,
+    29
   );
 
-  /* ================= GARIS HEADER ================= */
+  y = 40;
 
-  y = 36;
-
-  doc.setDrawColor(180);
-  doc.setLineWidth(0.6);
-  doc.line(margin, y, 190, y);
-
-  /* ================= HITUNG TOTAL BOOKING ================= */
+  /* ================= HITUNG BOOKING ================= */
 
   let totalDP = 0;
   let totalPelunasan = 0;
 
-  rows.forEach((b) => {
+  rows.forEach((b)=>{
     totalDP += Number(b.dp) || 0;
     totalPelunasan += Number(b.pelunasan) || 0;
   });
 
   const totalOmzet = totalDP + totalPelunasan;
 
+  /* ================= SUMMARY BOX ================= */
+
+  doc.setDrawColor(...gold);
+  doc.setLineWidth(0.7);
+
+  doc.roundedRect(margin,y,170,22,3,3);
+
+  doc.setFont("helvetica","bold");
+  doc.setFontSize(11);
+  doc.setTextColor(0);
+
+  doc.text(
+    `Total DP : ${formatRupiahDisplay(totalDP)}`,
+    margin+8,
+    y+8
+  );
+
+  doc.text(
+    `Total Pelunasan : ${formatRupiahDisplay(totalPelunasan)}`,
+    margin+8,
+    y+15
+  );
+
+  doc.text(
+    `Total Omzet : ${formatRupiahDisplay(totalOmzet)}`,
+    190,
+    y+12,
+    {align:"right"}
+  );
+
   /* ================= TABEL BOOKING ================= */
 
-  autoTable(doc, {
-    startY: y + 6,
+  autoTable(doc,{
 
-    head: [[
+    startY: y + 30,
+
+    head:[[
       "Nama","Acara","Tanggal","Waktu","Alamat","DP","Pelunasan","Total"
     ]],
 
-    body: rows.map((b) => [
+    body: rows.map((b)=>[
       b.client_name,
       b.acara,
       b.date,
@@ -212,92 +252,58 @@ const monthLabel = d.toLocaleString("id-ID", {
       formatRupiahDisplay(b.dp),
       formatRupiahDisplay(b.pelunasan),
       formatRupiahDisplay(
-        (Number(b.dp) || 0) + (Number(b.pelunasan) || 0)
-      ),
+        (Number(b.dp)||0)+(Number(b.pelunasan)||0)
+      )
     ]),
 
-    theme: "grid",
+    theme:"grid",
 
-    styles: {
-      fontSize: 9,
-      cellPadding: 3,
+    styles:{
+      fontSize:9,
+      cellPadding:3
     },
 
-    headStyles: {
-      fillColor: [230,230,230],
-      textColor: 0,
-      halign: "center"
+    headStyles:{
+      fillColor:gold,
+      textColor:0,
+      halign:"center"
     },
 
-    columnStyles: {
-      5: { halign: "right" },
-      6: { halign: "right" },
-      7: { halign: "right" },
+    columnStyles:{
+      5:{halign:"right"},
+      6:{halign:"right"},
+      7:{halign:"right"}
     }
+
   });
 
-  let finalY = doc.lastAutoTable.finalY + 10;
+  let finalY = doc.lastAutoTable.finalY + 12;
 
-  /* ================= GARIS ================= */
-
-  doc.setDrawColor(180);
-  doc.line(margin, finalY - 4, 190, finalY - 4);
-
-  /* ================= TOTAL BOOKING ================= */
-
-  doc.setFontSize(11);
-
-  doc.text(
-    `Total DP : ${formatRupiahDisplay(totalDP)}`,
-    margin,
-    finalY
-  );
-
-  finalY += 6;
-
-  doc.text(
-    `Total Pelunasan : ${formatRupiahDisplay(totalPelunasan)}`,
-    margin,
-    finalY
-  );
-
-  finalY += 6;
-
-  doc.setFont("helvetica","bold");
-
-  doc.text(
-    `Total Omzet : ${formatRupiahDisplay(totalOmzet)}`,
-    margin,
-    finalY
-  );
-
-  finalY += 12;
-
-  /* ================= HITUNG GAJI TIM ================= */
+  /* ================= GAJI TIM ================= */
 
   const teamPayroll = {};
 
-  rows.forEach((b) => {
-    let team = [];
+  rows.forEach((b)=>{
 
-    if (Array.isArray(b.team_jobs)) team = b.team_jobs;
-    else if (typeof b.team_jobs === "string") {
-      try { team = JSON.parse(b.team_jobs); } catch {}
+    let team=[];
+
+    if(Array.isArray(b.team_jobs)) team=b.team_jobs;
+    else if(typeof b.team_jobs==="string"){
+      try{team=JSON.parse(b.team_jobs)}catch{}
     }
 
-    team.forEach((t) => {
+    team.forEach((t)=>{
 
       const name = t?.name || "Tanpa Nama";
       const income = Number(t?.income) || 0;
 
-      if (!teamPayroll[name]) teamPayroll[name] = 0;
+      if(!teamPayroll[name]) teamPayroll[name]=0;
 
-      teamPayroll[name] += income;
+      teamPayroll[name]+=income;
 
     });
-  });
 
-  let totalGajiTim = 0;
+  });
 
   doc.setFont("helvetica","bold");
   doc.setFontSize(13);
@@ -306,25 +312,23 @@ const monthLabel = d.toLocaleString("id-ID", {
 
   finalY += 8;
 
+  let totalGajiTim = 0;
+
   doc.setFontSize(11);
 
-  Object.entries(teamPayroll).forEach(([name, salary]) => {
+  Object.entries(teamPayroll).forEach(([name,salary])=>{
 
     totalGajiTim += salary;
 
     doc.setFont("helvetica","normal");
 
-    doc.text(
-      `${name}`,
-      margin,
-      finalY
-    );
+    doc.text(name,margin,finalY);
 
     doc.text(
-      `${formatRupiahDisplay(salary)}`,
+      formatRupiahDisplay(salary),
       190,
       finalY,
-      { align:"right" }
+      {align:"right"}
     );
 
     finalY += 6;
@@ -333,22 +337,18 @@ const monthLabel = d.toLocaleString("id-ID", {
 
   doc.setFont("helvetica","bold");
 
-  doc.text(
-    `Total Gaji Tim`,
-    margin,
-    finalY
-  );
+  doc.text("Total Gaji Tim",margin,finalY);
 
   doc.text(
-    `${formatRupiahDisplay(totalGajiTim)}`,
+    formatRupiahDisplay(totalGajiTim),
     190,
     finalY,
-    { align:"right" }
+    {align:"right"}
   );
 
-  finalY += 12;
+  finalY += 14;
 
-  /* ================= BONUS & POTONGAN ================= */
+  /* ================= BONUS POTONGAN ================= */
 
   doc.setFont("helvetica","bold");
   doc.setFontSize(13);
@@ -358,30 +358,30 @@ const monthLabel = d.toLocaleString("id-ID", {
   finalY += 8;
 
   const monthAdjustments = adjustments.filter(
-    (a) => a.bulan === groupedData[selectedMonth].label
+    (a)=>a.bulan===groupedData[selectedMonth].label
   );
 
   doc.setFont("helvetica","normal");
   doc.setFontSize(10);
 
-  if (monthAdjustments.length === 0) {
+  if(monthAdjustments.length===0){
 
     doc.text("Tidak ada penyesuaian.",margin,finalY);
 
-  } else {
+  }else{
 
-    monthAdjustments.forEach((adj) => {
+    monthAdjustments.forEach((adj)=>{
 
       let text = `${adj.team_name} : `;
 
-      if (adj.bonus > 0)
-        text += `Bonus ${formatRupiahDisplay(adj.bonus)} `;
+      if(adj.bonus>0)
+        text+=`Bonus ${formatRupiahDisplay(adj.bonus)} `;
 
-      if (adj.potongan > 0)
-        text += `Potongan ${formatRupiahDisplay(adj.potongan)} `;
+      if(adj.potongan>0)
+        text+=`Potongan ${formatRupiahDisplay(adj.potongan)} `;
 
-      if (adj.description)
-        text += `- ${adj.description}`;
+      if(adj.description)
+        text+=`- ${adj.description}`;
 
       doc.text(text,margin,finalY);
 
@@ -394,16 +394,17 @@ const monthLabel = d.toLocaleString("id-ID", {
   /* ================= FOOTER ================= */
 
   doc.setFontSize(9);
-  doc.setTextColor(120);
+  doc.setTextColor(...gray);
 
   doc.text(
     "Generated by NextUp Booking System",
     105,
     285,
-    { align:"center" }
+    {align:"center"}
   );
 
   doc.save(`Booking-${selectedMonth}.pdf`);
+
 };
   /* ================= SAVE EDIT ================= */
   const handleSave = async () => {
