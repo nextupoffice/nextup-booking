@@ -3,6 +3,7 @@ import { supabase } from "../supabase/client";
 import { formatRupiahDisplay } from "../utils/format";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import logo from "../assets/logo.png";
 
 export default function BookingTable() {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -11,9 +12,22 @@ export default function BookingTable() {
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [editingBooking, setEditingBooking] = useState(null);
   const [teamList, setTeamList] = useState([]);
+  const [adjustments, setAdjustments] = useState([]);
 
   /* ================= FETCH TEAM ================= */
   const fetchTeam = async () => {
+    const fetchAdjustments = async () => {
+  const { data, error } = await supabase
+    .from("team_adjustments")
+    .select("*");
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  setAdjustments(data || []);
+};
     const { data } = await supabase.from("team").select("*");
     setTeamList(data || []);
   };
@@ -59,9 +73,10 @@ const monthLabel = d.toLocaleString("id-ID", {
   };
 
   useEffect(() => {
-    fetchData();
-    fetchTeam();
-  }, []);
+  fetchData();
+  fetchTeam();
+  fetchAdjustments();
+}, []);
 
   useEffect(() => {
     const months = Object.keys(groupedData);
@@ -114,70 +129,183 @@ const monthLabel = d.toLocaleString("id-ID", {
 
   /* ================= PDF ================= */
   const downloadPDF = () => {
-    if (!selectedMonth) return;
+  if (!selectedMonth) return;
 
-    const doc = new jsPDF();
-    const rows = groupedData[selectedMonth].rows;
-/* ================= TOTAL ================= */
+  const doc = new jsPDF();
 
-let totalDP = 0;
-let totalPelunasan = 0;
+  const rows = groupedData[selectedMonth].rows;
 
-rows.forEach((b) => {
-  totalDP += Number(b.dp) || 0;
-  totalPelunasan += Number(b.pelunasan) || 0;
-});
+  /* ================= LOGO ================= */
 
-const totalOmzet = totalDP + totalPelunasan;
-    autoTable(doc, {
-  head: [[
-    "Nama","Acara","Tanggal","Waktu","Alamat","DP","Pelunasan","Total"
-  ]],
-  body: rows.map((b) => [
-    b.client_name,
-    b.acara,
-    b.date,
-    b.time,
-    b.location,
-    formatRupiahDisplay(b.dp),
-    formatRupiahDisplay(b.pelunasan),
-    formatRupiahDisplay(
-      (Number(b.dp) || 0) + (Number(b.pelunasan) || 0)
-    ),
-  ]),
-});
+  doc.addImage(logo, "PNG", 14, 10, 30, 15);
 
-/* ================= TAMPILKAN TOTAL ================= */
+  doc.setFontSize(16);
+  doc.text("Laporan Booking Studio", 50, 18);
 
-let finalY = doc.lastAutoTable.finalY + 10;
+  doc.setFontSize(11);
+  doc.text(
+    `Periode: ${groupedData[selectedMonth].label}`,
+    50,
+    25
+  );
 
-doc.setFontSize(11);
-doc.text(
-  `Total DP : ${formatRupiahDisplay(totalDP)}`,
-  14,
-  finalY
-);
+  /* ================= HITUNG TOTAL BOOKING ================= */
 
-finalY += 6;
+  let totalDP = 0;
+  let totalPelunasan = 0;
 
-doc.text(
-  `Total Pelunasan : ${formatRupiahDisplay(totalPelunasan)}`,
-  14,
-  finalY
-);
+  rows.forEach((b) => {
+    totalDP += Number(b.dp) || 0;
+    totalPelunasan += Number(b.pelunasan) || 0;
+  });
 
-finalY += 6;
+  const totalOmzet = totalDP + totalPelunasan;
 
-doc.setFont("helvetica", "bold");
-doc.setFontSize(12);
+  /* ================= TABEL BOOKING ================= */
 
-doc.text(
-  `Total Omzet : ${formatRupiahDisplay(totalOmzet)}`,
-  14,
-  finalY
-);
-    doc.save(`Booking-${selectedMonth}.pdf`);
-  };
+  autoTable(doc, {
+    startY: 35,
+    head: [[
+      "Nama","Acara","Tanggal","Waktu","Alamat","DP","Pelunasan","Total"
+    ]],
+    body: rows.map((b) => [
+      b.client_name,
+      b.acara,
+      b.date,
+      b.time,
+      b.location,
+      formatRupiahDisplay(b.dp),
+      formatRupiahDisplay(b.pelunasan),
+      formatRupiahDisplay(
+        (Number(b.dp) || 0) + (Number(b.pelunasan) || 0)
+      ),
+    ]),
+  });
+
+  let finalY = doc.lastAutoTable.finalY + 10;
+
+  /* ================= TOTAL BOOKING ================= */
+
+  doc.setFontSize(11);
+
+  doc.text(
+    `Total DP : ${formatRupiahDisplay(totalDP)}`,
+    14,
+    finalY
+  );
+
+  finalY += 6;
+
+  doc.text(
+    `Total Pelunasan : ${formatRupiahDisplay(totalPelunasan)}`,
+    14,
+    finalY
+  );
+
+  finalY += 6;
+
+  doc.setFont("helvetica", "bold");
+  doc.text(
+    `Total Omzet : ${formatRupiahDisplay(totalOmzet)}`,
+    14,
+    finalY
+  );
+
+  finalY += 12;
+
+  /* ================= HITUNG GAJI TIM ================= */
+
+  const teamPayroll = {};
+
+  rows.forEach((b) => {
+    let team = [];
+
+    if (Array.isArray(b.team_jobs)) team = b.team_jobs;
+    else if (typeof b.team_jobs === "string") {
+      try { team = JSON.parse(b.team_jobs); } catch {}
+    }
+
+    team.forEach((t) => {
+      const name = t?.name || "Tanpa Nama";
+      const income = Number(t?.income) || 0;
+
+      if (!teamPayroll[name]) {
+        teamPayroll[name] = 0;
+      }
+
+      teamPayroll[name] += income;
+    });
+  });
+
+  let totalGajiTim = 0;
+
+  doc.setFont("helvetica","bold");
+  doc.text("Gaji Tim",14,finalY);
+
+  finalY += 6;
+
+  Object.entries(teamPayroll).forEach(([name, salary]) => {
+
+    totalGajiTim += salary;
+
+    doc.setFont("helvetica","normal");
+
+    doc.text(
+      `${name} : ${formatRupiahDisplay(salary)}`,
+      14,
+      finalY
+    );
+
+    finalY += 6;
+  });
+
+  doc.setFont("helvetica","bold");
+
+  doc.text(
+    `Total Gaji Tim : ${formatRupiahDisplay(totalGajiTim)}`,
+    14,
+    finalY
+  );
+
+  finalY += 12;
+
+  /* ================= BONUS & POTONGAN ================= */
+
+  doc.setFont("helvetica","bold");
+  doc.text("Catatan Bonus & Potongan",14,finalY);
+
+  finalY += 6;
+
+  const monthAdjustments = adjustments.filter(
+    (a) => a.bulan === groupedData[selectedMonth].label
+  );
+
+  if (monthAdjustments.length === 0) {
+    doc.setFont("helvetica","normal");
+    doc.text("Tidak ada penyesuaian.",14,finalY);
+  } else {
+    monthAdjustments.forEach((adj) => {
+
+      let text = `${adj.team_name} : `;
+
+      if (adj.bonus > 0)
+        text += `Bonus ${formatRupiahDisplay(adj.bonus)} `;
+
+      if (adj.potongan > 0)
+        text += `Potongan ${formatRupiahDisplay(adj.potongan)} `;
+
+      if (adj.description)
+        text += `- ${adj.description}`;
+
+      doc.setFont("helvetica","normal");
+      doc.text(text,14,finalY);
+
+      finalY += 6;
+    });
+  }
+
+  doc.save(`Booking-${selectedMonth}.pdf`);
+};
 
   /* ================= SAVE EDIT ================= */
   const handleSave = async () => {
