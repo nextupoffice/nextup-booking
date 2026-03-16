@@ -118,25 +118,64 @@ const monthLabel = d.toLocaleString("id-ID", {
 
     const doc = new jsPDF();
     const rows = groupedData[selectedMonth].rows;
+/* ================= TOTAL ================= */
 
+let totalDP = 0;
+let totalPelunasan = 0;
+
+rows.forEach((b) => {
+  totalDP += Number(b.dp) || 0;
+  totalPelunasan += Number(b.pelunasan) || 0;
+});
+
+const totalOmzet = totalDP + totalPelunasan;
     autoTable(doc, {
-      head: [[
-        "Nama","Acara","Tanggal","Waktu","Alamat","DP","Pelunasan","Total"
-      ]],
-      body: rows.map((b) => [
-        b.client_name,
-        b.acara,
-        b.date,
-        b.time,
-        b.location,
-        formatRupiahDisplay(b.dp),
-        formatRupiahDisplay(b.pelunasan),
-        formatRupiahDisplay(
-          (Number(b.dp) || 0) + (Number(b.pelunasan) || 0)
-        ),
-      ]),
-    });
+  head: [[
+    "Nama","Acara","Tanggal","Waktu","Alamat","DP","Pelunasan","Total"
+  ]],
+  body: rows.map((b) => [
+    b.client_name,
+    b.acara,
+    b.date,
+    b.time,
+    b.location,
+    formatRupiahDisplay(b.dp),
+    formatRupiahDisplay(b.pelunasan),
+    formatRupiahDisplay(
+      (Number(b.dp) || 0) + (Number(b.pelunasan) || 0)
+    ),
+  ]),
+});
 
+/* ================= TAMPILKAN TOTAL ================= */
+
+let finalY = doc.lastAutoTable.finalY + 10;
+
+doc.setFontSize(11);
+doc.text(
+  `Total DP : ${formatRupiahDisplay(totalDP)}`,
+  14,
+  finalY
+);
+
+finalY += 6;
+
+doc.text(
+  `Total Pelunasan : ${formatRupiahDisplay(totalPelunasan)}`,
+  14,
+  finalY
+);
+
+finalY += 6;
+
+doc.setFont("helvetica", "bold");
+doc.setFontSize(12);
+
+doc.text(
+  `Total Omzet : ${formatRupiahDisplay(totalOmzet)}`,
+  14,
+  finalY
+);
     doc.save(`Booking-${selectedMonth}.pdf`);
   };
 
