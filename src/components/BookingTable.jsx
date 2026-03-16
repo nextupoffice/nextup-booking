@@ -72,6 +72,19 @@ const monthLabel = d.toLocaleString("id-ID", {
     setGroupedData(grouped);
   };
 
+  const fetchAdjustments = async () => {
+  const { data, error } = await supabase
+    .from("team_adjustments")
+    .select("*");
+
+  if (error) {
+    console.error("Adjustment error:", error);
+    return;
+  }
+
+  setAdjustments(data || []);
+};
+
   useEffect(() => {
   fetchData();
   fetchTeam();
