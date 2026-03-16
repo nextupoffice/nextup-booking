@@ -109,7 +109,7 @@ export default function MyJobs() {
     }
   }, [jobs]);
 
-  /* ================= HITUNG BONUS POTONGAN SESUAI BULAN ================= */
+  /* ================= BONUS & POTONGAN BERDASARKAN BULAN ================= */
   const getMonthAdjustment = () => {
     if (!selectedMonth) return { bonus: 0, potongan: 0 };
 
@@ -117,14 +117,7 @@ export default function MyJobs() {
     let potongan = 0;
 
     adjustments.forEach((adj) => {
-      if (!adj.created_at) return;
-
-      const adjMonth = new Date(adj.created_at).toLocaleString("id-ID", {
-        month: "long",
-        year: "numeric",
-      });
-
-      if (adjMonth === selectedMonth) {
+      if (adj.bulan === selectedMonth) {
         bonus += Number(adj.bonus) || 0;
         potongan += Number(adj.potongan) || 0;
       }
@@ -195,26 +188,10 @@ export default function MyJobs() {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
 
-    doc.text(
-      `Income: ${formatRupiahDisplay(incomeTotal)}`,
-      14,
-      finalY
-    );
-    doc.text(
-      `Bonus: ${formatRupiahDisplay(bonus)}`,
-      14,
-      finalY + 6
-    );
-    doc.text(
-      `Potongan: ${formatRupiahDisplay(potongan)}`,
-      14,
-      finalY + 12
-    );
-    doc.text(
-      `Final Total: ${formatRupiahDisplay(finalTotal)}`,
-      14,
-      finalY + 20
-    );
+    doc.text(`Income: ${formatRupiahDisplay(incomeTotal)}`, 14, finalY);
+    doc.text(`Bonus: ${formatRupiahDisplay(bonus)}`, 14, finalY + 6);
+    doc.text(`Potongan: ${formatRupiahDisplay(potongan)}`, 14, finalY + 12);
+    doc.text(`Final Total: ${formatRupiahDisplay(finalTotal)}`, 14, finalY + 20);
 
     doc.save(`NEXTUP-Report-${selectedMonth}.pdf`);
   };
