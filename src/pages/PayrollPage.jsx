@@ -67,13 +67,20 @@ export default function PayrollPage() {
 
     });
 
-    /* ================= APPLY ADJUSTMENTS ================= */
+    /* ================= APPLY ADJUSTMENTS (DIPERBAIKI) ================= */
 
     adjustments?.forEach((adj) => {
 
+      if (!adj.created_at) return;
+
+      const adjMonth = new Date(adj.created_at).toLocaleString("id-ID", {
+        month: "long",
+        year: "numeric",
+      });
+
       Object.values(payrollMap).forEach((p) => {
 
-        if (p.name === adj.team_name) {
+        if (p.name === adj.team_name && p.month === adjMonth) {
           p.bonus += Number(adj.bonus) || 0;
           p.potongan += Number(adj.potongan) || 0;
         }
