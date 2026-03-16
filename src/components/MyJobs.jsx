@@ -82,7 +82,7 @@ export default function MyJobs() {
     const { data } = await supabase
       .from("team_adjustments")
       .select("*")
-      .eq("team_name", user.username); // ✅ FIXED
+      .ilike("team_name", user.username);
 
     setAdjustments(data || []);
   };
@@ -109,19 +109,26 @@ export default function MyJobs() {
     }
   }, [jobs]);
 
-  /* ================= HITUNG TOTAL ================= */
+  /* ================= HITUNG BONUS POTONGAN SESUAI BULAN ================= */
   const getMonthAdjustment = () => {
     if (!selectedMonth) return { bonus: 0, potongan: 0 };
 
-    const bonus = adjustments.reduce(
-      (sum, a) => sum + (Number(a.bonus) || 0),
-      0
-    );
+    let bonus = 0;
+    let potongan = 0;
 
-    const potongan = adjustments.reduce(
-      (sum, a) => sum + (Number(a.potongan) || 0),
-      0
-    );
+    adjustments.forEach((adj) => {
+      if (!adj.created_at) return;
+
+      const adjMonth = new Date(adj.created_at).toLocaleString("id-ID", {
+        month: "long",
+        year: "numeric",
+      });
+
+      if (adjMonth === selectedMonth) {
+        bonus += Number(adj.bonus) || 0;
+        potongan += Number(adj.potongan) || 0;
+      }
+    });
 
     return { bonus, potongan };
   };
