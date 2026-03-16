@@ -144,23 +144,43 @@ const monthLabel = d.toLocaleString("id-ID", {
   const downloadPDF = () => {
   if (!selectedMonth) return;
 
-  const doc = new jsPDF();
+  const doc = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4"
+  });
+
+  const margin = 20;
+  let y = 20;
 
   const rows = groupedData[selectedMonth].rows;
 
-  /* ================= LOGO ================= */
+  /* ================= HEADER ================= */
 
-  doc.addImage(logo, "PNG", 14, 10, 30, 15);
+  doc.addImage(logo, "PNG", margin, 12, 28, 14);
 
-  doc.setFontSize(16);
-  doc.text("Laporan Booking Studio", 50, 18);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.setTextColor(0,0,0);
+  doc.text("NEXTUP STUDIO", margin + 35, 18);
 
   doc.setFontSize(11);
+  doc.setFont("helvetica","normal");
+  doc.text("Laporan Booking Studio", margin + 35, 24);
+
   doc.text(
-    `Periode: ${groupedData[selectedMonth].label}`,
-    50,
-    25
+    `Periode : ${groupedData[selectedMonth].label}`,
+    margin + 35,
+    30
   );
+
+  /* ================= GARIS HEADER ================= */
+
+  y = 36;
+
+  doc.setDrawColor(180);
+  doc.setLineWidth(0.6);
+  doc.line(margin, y, 190, y);
 
   /* ================= HITUNG TOTAL BOOKING ================= */
 
@@ -177,10 +197,12 @@ const monthLabel = d.toLocaleString("id-ID", {
   /* ================= TABEL BOOKING ================= */
 
   autoTable(doc, {
-    startY: 35,
+    startY: y + 6,
+
     head: [[
       "Nama","Acara","Tanggal","Waktu","Alamat","DP","Pelunasan","Total"
     ]],
+
     body: rows.map((b) => [
       b.client_name,
       b.acara,
@@ -193,9 +215,33 @@ const monthLabel = d.toLocaleString("id-ID", {
         (Number(b.dp) || 0) + (Number(b.pelunasan) || 0)
       ),
     ]),
+
+    theme: "grid",
+
+    styles: {
+      fontSize: 9,
+      cellPadding: 3,
+    },
+
+    headStyles: {
+      fillColor: [230,230,230],
+      textColor: 0,
+      halign: "center"
+    },
+
+    columnStyles: {
+      5: { halign: "right" },
+      6: { halign: "right" },
+      7: { halign: "right" },
+    }
   });
 
   let finalY = doc.lastAutoTable.finalY + 10;
+
+  /* ================= GARIS ================= */
+
+  doc.setDrawColor(180);
+  doc.line(margin, finalY - 4, 190, finalY - 4);
 
   /* ================= TOTAL BOOKING ================= */
 
@@ -203,7 +249,7 @@ const monthLabel = d.toLocaleString("id-ID", {
 
   doc.text(
     `Total DP : ${formatRupiahDisplay(totalDP)}`,
-    14,
+    margin,
     finalY
   );
 
@@ -211,16 +257,17 @@ const monthLabel = d.toLocaleString("id-ID", {
 
   doc.text(
     `Total Pelunasan : ${formatRupiahDisplay(totalPelunasan)}`,
-    14,
+    margin,
     finalY
   );
 
   finalY += 6;
 
-  doc.setFont("helvetica", "bold");
+  doc.setFont("helvetica","bold");
+
   doc.text(
     `Total Omzet : ${formatRupiahDisplay(totalOmzet)}`,
-    14,
+    margin,
     finalY
   );
 
@@ -239,23 +286,27 @@ const monthLabel = d.toLocaleString("id-ID", {
     }
 
     team.forEach((t) => {
+
       const name = t?.name || "Tanpa Nama";
       const income = Number(t?.income) || 0;
 
-      if (!teamPayroll[name]) {
-        teamPayroll[name] = 0;
-      }
+      if (!teamPayroll[name]) teamPayroll[name] = 0;
 
       teamPayroll[name] += income;
+
     });
   });
 
   let totalGajiTim = 0;
 
   doc.setFont("helvetica","bold");
-  doc.text("Gaji Tim",14,finalY);
+  doc.setFontSize(13);
 
-  finalY += 6;
+  doc.text("Gaji Tim",margin,finalY);
+
+  finalY += 8;
+
+  doc.setFontSize(11);
 
   Object.entries(teamPayroll).forEach(([name, salary]) => {
 
@@ -264,20 +315,35 @@ const monthLabel = d.toLocaleString("id-ID", {
     doc.setFont("helvetica","normal");
 
     doc.text(
-      `${name} : ${formatRupiahDisplay(salary)}`,
-      14,
+      `${name}`,
+      margin,
       finalY
     );
 
+    doc.text(
+      `${formatRupiahDisplay(salary)}`,
+      190,
+      finalY,
+      { align:"right" }
+    );
+
     finalY += 6;
+
   });
 
   doc.setFont("helvetica","bold");
 
   doc.text(
-    `Total Gaji Tim : ${formatRupiahDisplay(totalGajiTim)}`,
-    14,
+    `Total Gaji Tim`,
+    margin,
     finalY
+  );
+
+  doc.text(
+    `${formatRupiahDisplay(totalGajiTim)}`,
+    190,
+    finalY,
+    { align:"right" }
   );
 
   finalY += 12;
@@ -285,18 +351,25 @@ const monthLabel = d.toLocaleString("id-ID", {
   /* ================= BONUS & POTONGAN ================= */
 
   doc.setFont("helvetica","bold");
-  doc.text("Catatan Bonus & Potongan",14,finalY);
+  doc.setFontSize(13);
 
-  finalY += 6;
+  doc.text("Catatan Bonus & Potongan",margin,finalY);
+
+  finalY += 8;
 
   const monthAdjustments = adjustments.filter(
     (a) => a.bulan === groupedData[selectedMonth].label
   );
 
+  doc.setFont("helvetica","normal");
+  doc.setFontSize(10);
+
   if (monthAdjustments.length === 0) {
-    doc.setFont("helvetica","normal");
-    doc.text("Tidak ada penyesuaian.",14,finalY);
+
+    doc.text("Tidak ada penyesuaian.",margin,finalY);
+
   } else {
+
     monthAdjustments.forEach((adj) => {
 
       let text = `${adj.team_name} : `;
@@ -310,16 +383,28 @@ const monthLabel = d.toLocaleString("id-ID", {
       if (adj.description)
         text += `- ${adj.description}`;
 
-      doc.setFont("helvetica","normal");
-      doc.text(text,14,finalY);
+      doc.text(text,margin,finalY);
 
       finalY += 6;
+
     });
+
   }
+
+  /* ================= FOOTER ================= */
+
+  doc.setFontSize(9);
+  doc.setTextColor(120);
+
+  doc.text(
+    "Generated by NextUp Booking System",
+    105,
+    285,
+    { align:"center" }
+  );
 
   doc.save(`Booking-${selectedMonth}.pdf`);
 };
-
   /* ================= SAVE EDIT ================= */
   const handleSave = async () => {
     if (!editingBooking) return;
