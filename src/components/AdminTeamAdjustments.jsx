@@ -5,6 +5,7 @@ export default function AdminTeamAdjustments() {
   const [teams, setTeams] = useState([]);
   const [adjustments, setAdjustments] = useState([]);
   const [selectedName, setSelectedName] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState("");
   const [bonus, setBonus] = useState("");
   const [potongan, setPotongan] = useState("");
   const [editingId, setEditingId] = useState(null);
@@ -74,12 +75,13 @@ export default function AdminTeamAdjustments() {
 
   /* ================= SAVE / UPDATE ================= */
   const handleSave = async () => {
-    if (!selectedName) return;
+    if (!selectedName || !selectedMonth) return;
 
     const payload = {
       team_name: selectedName,
       bonus: parseNumber(bonus),
       potongan: parseNumber(potongan),
+      bulan: selectedMonth
     };
 
     let error;
@@ -101,6 +103,7 @@ export default function AdminTeamAdjustments() {
 
     if (!error) {
       setSelectedName("");
+      setSelectedMonth("");
       setBonus("");
       setPotongan("");
       setEditingId(null);
@@ -110,7 +113,7 @@ export default function AdminTeamAdjustments() {
     }
   };
 
-  /* ================= DELETE (AMAN PWA) ================= */
+  /* ================= DELETE ================= */
   const handleDelete = async (id) => {
     const { error } = await supabase
       .from("team_adjustments")
@@ -128,6 +131,7 @@ export default function AdminTeamAdjustments() {
   const handleEdit = (item) => {
     setEditingId(item.id);
     setSelectedName(item.team_name);
+    setSelectedMonth(item.bulan || "");
     setBonus(formatRupiah(item.bonus));
     setPotongan(formatRupiah(item.potongan));
   };
@@ -140,12 +144,13 @@ export default function AdminTeamAdjustments() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1.5fr 1fr 1fr auto",
+          gridTemplateColumns: "1.5fr 1fr 1fr 1fr auto",
           gap: 12,
           alignItems: "center",
           marginBottom: 20,
         }}
       >
+
         <select
           value={selectedName}
           onChange={(e) => setSelectedName(e.target.value)}
@@ -156,6 +161,25 @@ export default function AdminTeamAdjustments() {
               {name}
             </option>
           ))}
+        </select>
+
+        <select
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(e.target.value)}
+        >
+          <option value="">Pilih Bulan</option>
+          <option value="Januari 2026">Januari 2026</option>
+          <option value="Februari 2026">Februari 2026</option>
+          <option value="Maret 2026">Maret 2026</option>
+          <option value="April 2026">April 2026</option>
+          <option value="Mei 2026">Mei 2026</option>
+          <option value="Juni 2026">Juni 2026</option>
+          <option value="Juli 2026">Juli 2026</option>
+          <option value="Agustus 2026">Agustus 2026</option>
+          <option value="September 2026">September 2026</option>
+          <option value="Oktober 2026">Oktober 2026</option>
+          <option value="November 2026">November 2026</option>
+          <option value="Desember 2026">Desember 2026</option>
         </select>
 
         <input
@@ -192,6 +216,7 @@ export default function AdminTeamAdjustments() {
           <thead>
             <tr>
               <th style={thStyle}>Nama</th>
+              <th style={thStyle}>Bulan</th>
               <th style={thStyle}>Bonus</th>
               <th style={thStyle}>Potongan</th>
               <th style={thStyle}>Tanggal</th>
@@ -202,6 +227,7 @@ export default function AdminTeamAdjustments() {
             {adjustments.map((item) => (
               <tr key={item.id}>
                 <td style={tdStyle}>{item.team_name}</td>
+                <td style={tdStyle}>{item.bulan || "-"}</td>
                 <td style={tdStyle}>
                   Rp {(Number(item.bonus) || 0).toLocaleString()}
                 </td>
