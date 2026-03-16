@@ -87,25 +87,41 @@ export default function MyJobs() {
     setAdjustments(data || []);
   };
 
-  /* ================= GROUP PER BULAN ================= */
+  /* ================= GROUP PER BULAN (AMAN ANTAR TAHUN) ================= */
   const grouped = jobs.reduce((acc, job) => {
     if (!job.date) return acc;
 
-    const monthKey = new Date(job.date).toLocaleString("id-ID", {
+    const d = new Date(job.date);
+
+    const sortKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}`;
+
+    const label = d.toLocaleString("id-ID", {
       month: "long",
       year: "numeric",
     });
 
-    if (!acc[monthKey]) acc[monthKey] = [];
-    acc[monthKey].push(job);
+    if (!acc[sortKey]) {
+      acc[sortKey] = {
+        label,
+        jobs: [],
+      };
+    }
+
+    acc[sortKey].jobs.push(job);
 
     return acc;
   }, {});
 
+  const sortedMonths = Object.keys(grouped).sort((a, b) =>
+    a.localeCompare(b)
+  );
+
   useEffect(() => {
-    const months = Object.keys(grouped);
-    if (months.length > 0 && !selectedMonth) {
-      setSelectedMonth(months[months.length - 1]);
+    if (sortedMonths.length > 0 && !selectedMonth) {
+      setSelectedMonth(sortedMonths[sortedMonths.length - 1]);
     }
   }, [jobs]);
 
@@ -113,11 +129,13 @@ export default function MyJobs() {
   const getMonthAdjustment = () => {
     if (!selectedMonth) return { bonus: 0, potongan: 0 };
 
+    const label = grouped[selectedMonth]?.label;
+
     let bonus = 0;
     let potongan = 0;
 
     adjustments.forEach((adj) => {
-      if (adj.bulan === selectedMonth) {
+      if (adj.bulan === label) {
         bonus += Number(adj.bonus) || 0;
         potongan += Number(adj.potongan) || 0;
       }
@@ -134,7 +152,7 @@ export default function MyJobs() {
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
 
-    const monthJobs = grouped[selectedMonth];
+    const monthJobs = grouped[selectedMonth].jobs;
 
     const incomeTotal = monthJobs.reduce(
       (sum, i) => sum + (Number(i.income) || 0),
@@ -155,7 +173,7 @@ export default function MyJobs() {
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
     doc.text("Monthly Job Report", 14, 27);
-    doc.text(selectedMonth, 14, 33);
+    doc.text(grouped[selectedMonth].label, 14, 33);
 
     doc.setDrawColor(203, 165, 138);
     doc.line(14, 38, pageWidth - 14, 38);
@@ -193,7 +211,7 @@ export default function MyJobs() {
     doc.text(`Potongan: ${formatRupiahDisplay(potongan)}`, 14, finalY + 12);
     doc.text(`Final Total: ${formatRupiahDisplay(finalTotal)}`, 14, finalY + 20);
 
-    doc.save(`NEXTUP-Report-${selectedMonth}.pdf`);
+    doc.save(`NEXTUP-Report-${grouped[selectedMonth].label}.pdf`);
   };
 
   const { bonus, potongan } = getMonthAdjustment();
@@ -202,21 +220,28 @@ export default function MyJobs() {
     <div className="card">
       <h3>My Jobs</h3>
 
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
-        {Object.keys(grouped).map((month) => (
+      <div
+        style={{
+          display: "flex",
+          gap: 10,
+          flexWrap: "wrap",
+          marginBottom: 20,
+        }}
+      >
+        {sortedMonths.map((key) => (
           <button
-            key={month}
-            onClick={() => setSelectedMonth(month)}
+            key={key}
+            onClick={() => setSelectedMonth(key)}
             style={{
               padding: "6px 14px",
               borderRadius: 20,
               border: "1px solid #333",
-              background: selectedMonth === month ? "#cba58a" : "#111",
-              color: selectedMonth === month ? "#000" : "#cba58a",
+              background: selectedMonth === key ? "#cba58a" : "#111",
+              color: selectedMonth === key ? "#000" : "#cba58a",
               cursor: "pointer",
             }}
           >
-            {month}
+            {grouped[key].label}
           </button>
         ))}
 
@@ -240,7 +265,7 @@ export default function MyJobs() {
 
       {selectedMonth && grouped[selectedMonth] && (
         <>
-          {grouped[selectedMonth].map((job) => (
+          {grouped[selectedMonth].jobs.map((job) => (
             <div
               key={job.id}
               style={{
@@ -261,7 +286,13 @@ export default function MyJobs() {
                 </div>
               </div>
 
-              <div style={{ alignSelf: "center", color: "#cba58a", fontWeight: 600 }}>
+              <div
+                style={{
+                  alignSelf: "center",
+                  color: "#cba58a",
+                  fontWeight: 600,
+                }}
+              >
                 {formatRupiahDisplay(job.income)}
               </div>
             </div>
@@ -270,7 +301,7 @@ export default function MyJobs() {
           <div style={{ textAlign: "right", marginTop: 12, color: "#cba58a" }}>
             Income:{" "}
             {formatRupiahDisplay(
-              grouped[selectedMonth].reduce(
+              grouped[selectedMonth].jobs.reduce(
                 (sum, i) => sum + (Number(i.income) || 0),
                 0
               )
@@ -283,7 +314,7 @@ export default function MyJobs() {
             <strong>
               Final Total:{" "}
               {formatRupiahDisplay(
-                grouped[selectedMonth].reduce(
+                grouped[selectedMonth].jobs.reduce(
                   (sum, i) => sum + (Number(i.income) || 0),
                   0
                 ) +
