@@ -6,9 +6,10 @@ export default function AdminTeamAdjustments() {
   const [adjustments, setAdjustments] = useState([]);
   const [selectedName, setSelectedName] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
-  const [bonus, setBonus] = useState("");
-  const [potongan, setPotongan] = useState("");
-  const [editingId, setEditingId] = useState(null);
+ const [bonus, setBonus] = useState("");
+const [potongan, setPotongan] = useState("");
+const [description, setDescription] = useState("");
+const [editingId, setEditingId] = useState(null);
 
   /* ================= FORMAT RUPIAH (AMAN) ================= */
   const formatRupiah = (value = "") => {
@@ -78,11 +79,12 @@ export default function AdminTeamAdjustments() {
     if (!selectedName || !selectedMonth) return;
 
     const payload = {
-      team_name: selectedName,
-      bonus: parseNumber(bonus),
-      potongan: parseNumber(potongan),
-      bulan: selectedMonth
-    };
+  team_name: selectedName,
+  bonus: parseNumber(bonus),
+  potongan: parseNumber(potongan),
+  bulan: selectedMonth,
+  description: description
+};
 
     let error;
 
@@ -104,9 +106,10 @@ export default function AdminTeamAdjustments() {
     if (!error) {
       setSelectedName("");
       setSelectedMonth("");
-      setBonus("");
-      setPotongan("");
-      setEditingId(null);
+    setBonus("");
+setPotongan("");
+setDescription("");
+setEditingId(null);
       fetchAdjustments();
     } else {
       console.error("Gagal menyimpan:", error);
@@ -133,7 +136,8 @@ export default function AdminTeamAdjustments() {
     setSelectedName(item.team_name);
     setSelectedMonth(item.bulan || "");
     setBonus(formatRupiah(item.bonus));
-    setPotongan(formatRupiah(item.potongan));
+setPotongan(formatRupiah(item.potongan));
+setDescription(item.description || "");
   };
 
   return (
@@ -144,7 +148,7 @@ export default function AdminTeamAdjustments() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1.5fr 1fr 1fr 1fr auto",
+          gridTemplateColumns: "1.5fr 1fr 1fr 1fr 2fr auto",
           gap: 12,
           alignItems: "center",
           marginBottom: 20,
@@ -199,7 +203,11 @@ export default function AdminTeamAdjustments() {
             setPotongan(formatRupiah(e.target.value))
           }
         />
-
+<textarea
+  placeholder="Deskripsi (alasan bonus / potongan)"
+  value={description}
+  onChange={(e) => setDescription(e.target.value)}
+/>
         <button onClick={handleSave}>
           {editingId ? "Update" : "Simpan"}
         </button>
@@ -219,6 +227,7 @@ export default function AdminTeamAdjustments() {
               <th style={thStyle}>Bulan</th>
               <th style={thStyle}>Bonus</th>
               <th style={thStyle}>Potongan</th>
+              <th style={thStyle}>Deskripsi</th>
               <th style={thStyle}>Tanggal</th>
               <th style={thStyle}>Aksi</th>
             </tr>
@@ -232,9 +241,14 @@ export default function AdminTeamAdjustments() {
                   Rp {(Number(item.bonus) || 0).toLocaleString()}
                 </td>
                 <td style={tdStyle}>
-                  Rp {(Number(item.potongan) || 0).toLocaleString()}
-                </td>
-                <td style={tdStyle}>
+  Rp {(Number(item.potongan) || 0).toLocaleString()}
+</td>
+
+<td style={tdStyle}>
+  {item.description || "-"}
+</td>
+
+<td style={tdStyle}>
                   {item.created_at
                     ? new Date(item.created_at).toLocaleDateString()
                     : "-"}
