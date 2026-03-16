@@ -33,13 +33,19 @@ export default function BookingTable() {
     data.forEach((b) => {
       if (!b.date) return;
 
-      const monthKey = new Date(b.date).toLocaleString("id-ID", {
-        month: "long",
-        year: "numeric",
-      });
+      const d = new Date(b.date);
+
+const monthKey = `${d.getFullYear()}-${String(
+  d.getMonth() + 1
+).padStart(2, "0")}`;
+
+const monthLabel = d.toLocaleString("id-ID", {
+  month: "long",
+  year: "numeric",
+});
 
       if (!grouped[monthKey])
-        grouped[monthKey] = { rows: [], total: 0 };
+  grouped[monthKey] = { label: monthLabel, rows: [], total: 0 };
 
       grouped[monthKey].rows.push(b);
 
@@ -239,7 +245,9 @@ const parseRupiahToNumber = (value) => {
         <h3>Data Booking</h3>
 
         <div style={{ display:"flex", gap:10, flexWrap:"wrap", marginBottom:20 }}>
-          {Object.keys(groupedData).map((month) => (
+          {Object.keys(groupedData)
+  .sort()
+  .map((month) => (
             <button
               key={month}
               onClick={() => setSelectedMonth(month)}
@@ -251,7 +259,7 @@ const parseRupiahToNumber = (value) => {
                 color:selectedMonth===month?"#000":"#cba58a",
               }}
             >
-              {month}
+              {groupedData[month].label}
             </button>
           ))}
 
