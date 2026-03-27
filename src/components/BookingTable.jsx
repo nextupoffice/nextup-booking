@@ -16,20 +16,22 @@ export default function BookingTable() {
 
   /* ================= FETCH TEAM ================= */
   const fetchTeam = async () => {
-    const fetchAdjustments = async () => {
-  const { data, error } = await supabase
-    .from("team_adjustments")
-    .select("*");
-
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  setAdjustments(data || []);
-};
     const { data } = await supabase.from("team").select("*");
     setTeamList(data || []);
+  };
+
+  /* ================= FETCH ADJUSTMENTS ================= */
+  const fetchAdjustments = async () => {
+    const { data, error } = await supabase
+      .from("team_adjustments")
+      .select("*");
+
+    if (error) {
+      console.error("Adjustment error:", error);
+      return;
+    }
+
+    setAdjustments(data || []);
   };
 
   /* ================= FETCH BOOKING ================= */
@@ -49,17 +51,17 @@ export default function BookingTable() {
 
       const d = new Date(b.date);
 
-const monthKey = `${d.getFullYear()}-${String(
-  d.getMonth() + 1
-).padStart(2, "0")}`;
+      const monthKey = `${d.getFullYear()}-${String(
+        d.getMonth() + 1
+      ).padStart(2, "0")}`;
 
-const monthLabel = d.toLocaleString("id-ID", {
-  month: "long",
-  year: "numeric",
-});
+      const monthLabel = d.toLocaleString("id-ID", {
+        month: "long",
+        year: "numeric",
+      });
 
       if (!grouped[monthKey])
-  grouped[monthKey] = { label: monthLabel, rows: [], total: 0 };
+        grouped[monthKey] = { label: monthLabel, rows: [], total: 0 };
 
       grouped[monthKey].rows.push(b);
 
@@ -72,24 +74,11 @@ const monthLabel = d.toLocaleString("id-ID", {
     setGroupedData(grouped);
   };
 
-  const fetchAdjustments = async () => {
-  const { data, error } = await supabase
-    .from("team_adjustments")
-    .select("*");
-
-  if (error) {
-    console.error("Adjustment error:", error);
-    return;
-  }
-
-  setAdjustments(data || []);
-};
-
   useEffect(() => {
-  fetchData();
-  fetchTeam();
-  fetchAdjustments();
-}, []);
+    fetchData();
+    fetchTeam();
+    fetchAdjustments();
+  }, []);
 
   useEffect(() => {
     const months = Object.keys(groupedData);
@@ -97,479 +86,159 @@ const monthLabel = d.toLocaleString("id-ID", {
       setSelectedMonth(months[months.length - 1]);
   }, [groupedData]);
 
-  /* ================= EXTRACT TEAM OPTIONS FROM BOOKING ================= */
-  const teamNameOptions = useMemo(() => {
-    const names = new Set();
-
-    Object.values(groupedData).forEach((month) => {
-      month.rows.forEach((b) => {
-        let parsed = [];
-
-        if (Array.isArray(b.team_jobs)) parsed = b.team_jobs;
-        else if (typeof b.team_jobs === "string") {
-          try { parsed = JSON.parse(b.team_jobs); } catch {}
-        }
-
-        parsed.forEach((t) => {
-          if (t?.name) names.add(t.name);
-        });
-      });
-    });
-
-    return Array.from(names);
-  }, [groupedData]);
-
-  const roleOptions = useMemo(() => {
-    const roles = new Set();
-
-    Object.values(groupedData).forEach((month) => {
-      month.rows.forEach((b) => {
-        let parsed = [];
-
-        if (Array.isArray(b.team_jobs)) parsed = b.team_jobs;
-        else if (typeof b.team_jobs === "string") {
-          try { parsed = JSON.parse(b.team_jobs); } catch {}
-        }
-
-        parsed.forEach((t) => {
-          if (t?.role) roles.add(t.role);
-        });
-      });
-    });
-
-    return Array.from(roles);
-  }, [groupedData]);
-
   /* ================= PDF ================= */
-const downloadPDF = () => {
+  const downloadPDF = () => {
+    if (!selectedMonth) return;
 
-  if (!selectedMonth) return;
-
-  const doc = new jsPDF({
-    orientation: "portrait",
-    unit: "mm",
-    format: "a4"
-  });
-
-  const margin = 14;
-  const pageWidth = 210;
-
-  let y = 20;
-
-  const rows = groupedData[selectedMonth].rows;
-
-  /* ================= COLOR ================= */
-
-  const gold = [203,165,138];
-  const dark = [15,15,15];
-  const light = [230,230,230];
-
-  /* ================= HEADER ================= */
-
-  doc.setFillColor(...dark);
-  doc.rect(0,0,210,35,"F");
-
-  // logo kiri
-  doc.addImage(logo,"PNG",margin,10,28,14);
-
-  // judul kanan
-  doc.setFont("helvetica","bold");
-  doc.setFontSize(18);
-  doc.setTextColor(...gold);
-
-  doc.text(
-    "INVOICE",
-    pageWidth - margin,
-    18,
-    {align:"right"}
-  );
-
-  doc.setFontSize(10);
-  doc.setTextColor(...light);
-
-  doc.text(
-    groupedData[selectedMonth].label,
-    pageWidth - margin,
-    25,
-    {align:"right"}
-  );
-
-  y = 45;
-
-  /* ================= HITUNG TOTAL ================= */
-
-  let totalDP = 0;
-  let totalPelunasan = 0;
-
-  rows.forEach((b)=>{
-    totalDP += Number(b.dp) || 0;
-    totalPelunasan += Number(b.pelunasan) || 0;
-  });
-
-  const totalOmzet = totalDP + totalPelunasan;
-
-  /* ================= TABLE ================= */
-
-  autoTable(doc,{
-    startY: y,
-
-    head:[[
-      "Nama","Acara","Tanggal","Waktu","Alamat","DP","Pelunasan","Total"
-    ]],
-
-    body: rows.map((b)=>[
-      b.client_name,
-      b.acara,
-      b.date,
-      b.time,
-      b.location,
-      formatRupiahDisplay(b.dp),
-      formatRupiahDisplay(b.pelunasan),
-      formatRupiahDisplay(
-        (Number(b.dp)||0)+(Number(b.pelunasan)||0)
-      )
-    ]),
-
-    theme:"grid",
-
-    styles:{
-      fontSize:9,
-      cellPadding:3,
-      textColor:20
-    },
-
-    headStyles:{
-      fillColor:gold,
-      textColor:0,
-      halign:"center"
-    },
-
-    alternateRowStyles:{
-      fillColor:[245,245,245]
-    },
-
-    columnStyles:{
-      5:{halign:"right"},
-      6:{halign:"right"},
-      7:{halign:"right"}
-    },
-
-    didDrawPage:(data)=>{
-      // header ulang tiap halaman
-      doc.setFillColor(...dark);
-      doc.rect(0,0,210,35,"F");
-
-      doc.addImage(logo,"PNG",margin,10,28,14);
-
-      doc.setFont("helvetica","bold");
-      doc.setFontSize(18);
-      doc.setTextColor(...gold);
-
-      doc.text(
-        "INVOICE",
-        pageWidth - margin,
-        18,
-        {align:"right"}
-      );
-
-      doc.setFontSize(10);
-      doc.setTextColor(...light);
-
-      doc.text(
-        groupedData[selectedMonth].label,
-        pageWidth - margin,
-        25,
-        {align:"right"}
-      );
-    }
-
-  });
-
-  let finalY = doc.lastAutoTable.finalY + 10;
-
-  /* ================= TOTAL BOOKING ================= */
-
-  doc.setFont("helvetica","bold");
-  doc.setFontSize(11);
-
-  doc.text("Ringkasan Booking",margin,finalY);
-
-  finalY += 6;
-
-  doc.setFont("helvetica","normal");
-
-  doc.text(`Total DP : ${formatRupiahDisplay(totalDP)}`,margin,finalY);
-  finalY += 5;
-
-  doc.text(`Total Pelunasan : ${formatRupiahDisplay(totalPelunasan)}`,margin,finalY);
-  finalY += 5;
-
-  doc.setFont("helvetica","bold");
-
-  doc.text(`Total Omzet : ${formatRupiahDisplay(totalOmzet)}`,margin,finalY);
-
-  finalY += 12;
-
-  /* ================= GAJI TIM ================= */
-
-  const teamPayroll = {};
-
-  rows.forEach((b)=>{
-
-    let team=[];
-
-    if(Array.isArray(b.team_jobs)) team=b.team_jobs;
-    else if(typeof b.team_jobs==="string"){
-      try{team=JSON.parse(b.team_jobs)}catch{}
-    }
-
-    team.forEach((t)=>{
-  const name = t?.name || "Tanpa Nama";
-  const income = Number(t?.income) || 0;
-
-  if(!teamPayroll[name]) teamPayroll[name]=0;
-  teamPayroll[name]+=income;
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
     });
 
-  });
+    const margin = 14;
+    const pageWidth = 210;
+    let y = 20;
 
-doc.setFont("helvetica","bold");
-doc.text("Gaji Tim",margin,finalY);
+    const rows = groupedData[selectedMonth].rows;
 
-  finalY += 6;
+    const gold = [203, 165, 138];
+    const dark = [15, 15, 15];
+    const light = [230, 230, 230];
 
-  let totalGajiTim = 0;
+    doc.setFillColor(...dark);
+    doc.rect(0, 0, 210, 35, "F");
 
-  doc.setFont("helvetica","normal");
+    doc.addImage(logo, "PNG", margin, 10, 28, 14);
 
-  Object.entries(teamPayroll).forEach(([name,salary])=>{
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.setTextColor(...gold);
+    doc.text("INVOICE", pageWidth - margin, 18, { align: "right" });
 
-  totalGajiTim += salary;
+    doc.setFontSize(10);
+    doc.setTextColor(...light);
+    doc.text(
+      groupedData[selectedMonth].label,
+      pageWidth - margin,
+      25,
+      { align: "right" }
+    );
 
-    doc.text(name,margin,finalY);
+    y = 45;
+
+    let totalDP = 0;
+    let totalPelunasan = 0;
+
+    rows.forEach((b) => {
+      totalDP += Number(b.dp) || 0;
+      totalPelunasan += Number(b.pelunasan) || 0;
+    });
+
+    const totalOmzet = totalDP + totalPelunasan;
+
+    autoTable(doc, {
+      startY: y,
+      head: [[
+        "Nama","Acara","Tanggal","Waktu","Alamat","DP","Pelunasan","Total"
+      ]],
+      body: rows.map((b) => [
+        b.client_name,
+        b.acara,
+        b.date,
+        b.time,
+        b.location,
+        formatRupiahDisplay(b.dp),
+        formatRupiahDisplay(b.pelunasan),
+        formatRupiahDisplay(
+          (Number(b.dp)||0)+(Number(b.pelunasan)||0)
+        ),
+      ]),
+    });
+
+    let finalY = doc.lastAutoTable.finalY + 10;
+
+    doc.text(`Total Omzet : ${formatRupiahDisplay(totalOmzet)}`, margin, finalY);
+
+    finalY += 10;
+
+    const teamPayroll = {};
+
+    rows.forEach((b) => {
+      let team = [];
+      if (Array.isArray(b.team_jobs)) team = b.team_jobs;
+      else if (typeof b.team_jobs === "string") {
+        try { team = JSON.parse(b.team_jobs); } catch {}
+      }
+
+      team.forEach((t) => {
+        const name = t?.name || "Tanpa Nama";
+        const income = Number(t?.income) || 0;
+
+        if (!teamPayroll[name]) teamPayroll[name] = 0;
+        teamPayroll[name] += income;
+      });
+    });
+
+    let totalGajiTim = 0;
+
+    Object.entries(teamPayroll).forEach(([name, salary]) => {
+      totalGajiTim += salary;
+      doc.text(`${name} : ${formatRupiahDisplay(salary)}`, margin, finalY);
+      finalY += 5;
+    });
+
+    doc.text(`Total Gaji Tim : ${formatRupiahDisplay(totalGajiTim)}`, margin, finalY);
+
+    finalY += 10;
+
+    const monthAdjustments = adjustments.filter(
+      (a) => a.bulan === groupedData[selectedMonth].label
+    );
+
+    if (monthAdjustments.length === 0) {
+      doc.text("Tidak ada penyesuaian", margin, finalY);
+    } else {
+      monthAdjustments.forEach((adj) => {
+        doc.text(
+          `${adj.team_name} (${adj.description || "-"})`,
+          margin,
+          finalY
+        );
+        finalY += 5;
+      });
+    }
+
+    finalY += 10;
+
+    const totalKeseluruhan = totalOmzet - totalGajiTim;
 
     doc.text(
-      formatRupiahDisplay(salary),
-      pageWidth - margin,
-      finalY,
-      {align:"right"}
+      `TOTAL : ${formatRupiahDisplay(totalKeseluruhan)}`,
+      margin,
+      finalY
     );
 
-    finalY += 5;
-
-  });
-
-  doc.setFont("helvetica","bold");
-
-  doc.text("Total Gaji Tim",margin,finalY);
-
-  doc.text(
-    formatRupiahDisplay(totalGajiTim),
-    pageWidth - margin,
-    finalY,
-    {align:"right"}
-  );
-
-  finalY += 12;
-
-  /* ================= BONUS & POTONGAN ================= */
-
-  doc.setFont("helvetica","bold");
-  doc.text("Bonus & Potongan",margin,finalY);
-
-  finalY += 6;
-
-  const monthAdjustments = adjustments.filter(
-    (a)=>a.bulan===groupedData[selectedMonth].label
-  );
-
-doc.setFont("helvetica","normal");
-
-  if(monthAdjustments.length===0){
-
-    doc.text("Tidak ada penyesuaian.",margin,finalY);
-
-    finalY += 6;
-
-  }else{
-
-    monthAdjustments.forEach((adj)=>{
-
-      let text = `${adj.team_name} : `;
-
-      if(adj.bonus>0)
-        text+=`+${formatRupiahDisplay(adj.bonus)} `;
-
-      if(adj.potongan>0)
-        text+=`-${formatRupiahDisplay(adj.potongan)} `;
-
-      if(adj.description)
-        text+=`(${adj.description})`;
-
-      doc.text(text,margin,finalY);
-
-      finalY += 5;
-
-    });
-
-  }
-
-  finalY += 8;
-
-  /* ================= TOTAL KESELURUHAN ================= */
-
-  const totalKeseluruhan =
-    totalOmzet - totalGajiTim;
-
-  doc.setFont("helvetica","bold");
-  doc.setFontSize(13);
-
-  doc.text(
-    "TOTAL KESELURUHAN",
-    margin,
-    finalY
-  );
-
-  doc.text(
-    formatRupiahDisplay(totalKeseluruhan),
-    pageWidth - margin,
-    finalY,
-    {align:"right"}
-  );
-
-  /* ================= SAVE ================= */
-
-  doc.save(`Invoice-${selectedMonth}.pdf`);
-};
-  /* ================= SAVE EDIT ================= */
-  const handleSave = async () => {
-    if (!editingBooking) return;
-
-    const cleanedTeam =
-      editingBooking.team_jobs?.map((t) => ({
-        name: t?.name?.trim() || "",
-        role: t?.role?.trim() || "",
-        income: Number(t?.income) || 0,
-      })) || [];
-
-    const { error } = await supabase
-      .from("bookings")
-      .update({
-        client_name: editingBooking.client_name,
-        acara: editingBooking.acara,
-        date: editingBooking.date,
-        time: editingBooking.time,
-        location: editingBooking.location,
-        dp: Number(editingBooking.dp) || 0,
-        pelunasan: Number(editingBooking.pelunasan) || 0,
-        team_jobs: cleanedTeam,
-      })
-      .eq("id", editingBooking.id);
-
-    if (error) return alert("Gagal menyimpan booking");
-
-    alert("Booking berhasil disimpan");
-    setEditingBooking(null);
-    fetchData();
+    doc.save(`Invoice-${selectedMonth}.pdf`);
   };
-
-  /* ================= TEAM CONTROL ================= */
-  const updateTeamMember = (index, field, value) => {
-    const updated = [...(editingBooking.team_jobs || [])];
-    updated[index] = {
-      ...updated[index],
-      [field]: field === "income" ? Number(value) : value,
-    };
-    setEditingBooking({ ...editingBooking, team_jobs: updated });
-  };
-
-  const addTeam = () => {
-    setEditingBooking({
-      ...editingBooking,
-      team_jobs: [
-        ...(editingBooking.team_jobs || []),
-        { name: "", role: "", income: 0 },
-      ],
-    });
-  };
-
-  const removeTeam = (index) => {
-    setEditingBooking({
-      ...editingBooking,
-      team_jobs: editingBooking.team_jobs.filter((_, i) => i !== index),
-    });
-  };
-
-  /* ================= NORMALIZE TEAM ================= */
-  const openEdit = (b) => {
-    let parsedTeam = [];
-
-    if (b.team_jobs) {
-      if (Array.isArray(b.team_jobs)) parsedTeam = b.team_jobs;
-      else if (typeof b.team_jobs === "string") {
-        try { parsedTeam = JSON.parse(b.team_jobs); } catch {}
-      }
-    }
-
-    const normalized = parsedTeam.map((t) => ({
-      name: t?.name || "",
-      role: t?.role || "",
-      income: Number(t?.income ?? t?.nominal) || 0,
-    }));
-
-    setEditingBooking({ ...b, team_jobs: normalized });
-  };
-
-  const totalTeamIncome = useMemo(() => {
-    if (!editingBooking?.team_jobs) return 0;
-    return editingBooking.team_jobs.reduce(
-      (total, t) => total + (Number(t.income) || 0),
-      0
-    );
-  }, [editingBooking]);
-
-/* ================= RUPIAH INPUT FORMAT ================= */
-const formatRupiahInput = (value) => {
-  if (!value) return "";
-  const number = value.toString().replace(/\D/g, "");
-  return new Intl.NumberFormat("id-ID").format(number);
-};
-
-const parseRupiahToNumber = (value) => {
-  if (!value) return 0;
-  return Number(value.toString().replace(/\D/g, ""));
-};
 
   return (
-    <>
-      <div className="card">
-        <h3>Data Booking</h3>
+    <div className="card">
+      <h3>Data Booking</h3>
 
-        <div style={{ display:"flex", gap:10, flexWrap:"wrap", marginBottom:20 }}>
-          {Object.keys(groupedData)
-  .sort()
-  .map((month) => (
-            <button
-              key={month}
-              onClick={() => setSelectedMonth(month)}
-              style={{
-                padding:"6px 14px",
-                borderRadius:20,
-                border:"1px solid #333",
-                background:selectedMonth===month?"#cba58a":"#111",
-                color:selectedMonth===month?"#000":"#cba58a",
-              }}
-            >
-              {groupedData[month].label}
-            </button>
-          ))}
+      <div style={{ marginBottom: 20 }}>
+        {Object.keys(groupedData).map((month) => (
+          <button key={month} onClick={() => setSelectedMonth(month)}>
+            {groupedData[month].label}
+          </button>
+        ))}
 
-          {user?.role==="admin" && selectedMonth && (
-            <button onClick={downloadPDF} style={saveBtn}>
-              Download PDF
-            </button>
-          )}
-        </div>
+        {user?.role === "admin" && (
+          <button onClick={downloadPDF}>
+            Download PDF
+          </button>
+        )}
+      </div>
 
         {selectedMonth && groupedData[selectedMonth] && (
           <>
@@ -620,7 +289,6 @@ const parseRupiahToNumber = (value) => {
           </>
         )}
       </div>
-
       {editingBooking && (
   <div style={overlay}>
     <div style={modal}>
