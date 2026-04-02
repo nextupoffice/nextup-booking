@@ -362,7 +362,7 @@ willDrawPage: () => {
   doc.setFillColor(15, 15, 15);
   doc.rect(0, 0, 210, 297, "F");
 
-  doc.addImage(logoBase64, "PNG", margin, 10, 30, 15);
+  doc.addImage(logoBase64, "PNG", margin, 10, 30, 30);
   
   // HEADER ULANG
   doc.setFont("helvetica", "bold");
