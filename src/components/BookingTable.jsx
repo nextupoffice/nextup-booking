@@ -362,7 +362,7 @@ willDrawPage: () => {
   doc.setFillColor(15, 15, 15);
   doc.rect(0, 0, 210, 297, "F");
 
-  doc.addImage(logoBase64, "PNG", margin, 10, 30, 30);
+  doc.addImage(logoBase64, "PNG", margin, 8, 40, 40);
   
   // HEADER ULANG
   doc.setFont("helvetica", "bold");
@@ -372,7 +372,7 @@ willDrawPage: () => {
 
   doc.setFontSize(10);
   doc.setTextColor(200,200,200);
-  doc.text(groupedData[selectedMonth].label, margin, 26);
+  doc.text(groupedData[selectedMonth].label, margin, 45);
 },
 });
 
