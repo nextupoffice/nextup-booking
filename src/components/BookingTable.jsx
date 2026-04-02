@@ -5,6 +5,15 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import logo from "../assets/logo.png";
 
+const formatRupiahInput = (value) => {
+  const number = value.replace(/[^0-9]/g, "");
+  return number.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+};
+
+const parseRupiah = (value) => {
+  return Number(value.replace(/\./g, "")) || 0;
+};
+
 export default function BookingTable() {
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -13,6 +22,8 @@ export default function BookingTable() {
   const [editingBooking, setEditingBooking] = useState(null);
   const [teamList, setTeamList] = useState([]);
   const [adjustments, setAdjustments] = useState([]);
+  const [dpInput, setDpInput] = useState("");
+  const [pelunasanInput, setPelunasanInput] = useState("");
 
   /* ================= FETCH TEAM ================= */
   const fetchTeam = async () => {
@@ -102,10 +113,13 @@ const openEdit = (booking) => {
     }
   }
 
-  setEditingBooking({
-    ...booking,
-    team_jobs: parsedTeam,
-  });
+setDpInput(formatRupiahInput(String(booking.dp || "")));
+setPelunasanInput(formatRupiahInput(String(booking.pelunasan || "")));
+
+setEditingBooking({
+  ...JSON.parse(JSON.stringify(booking)), // 🔥 deep clone
+  team_jobs: parsedTeam,
+});
 };
 
 // update isi tim
@@ -440,19 +454,35 @@ return (
     placeholder="Alamat"
   />
 
-  <input
-    style={input}
-    value={editingBooking.dp || ""}
-    onChange={(e)=>setEditingBooking({...editingBooking, dp:Number(e.target.value)})}
-    placeholder="DP"
-  />
+<input
+  style={input}
+  value={dpInput}
+  onChange={(e) => {
+    const formatted = formatRupiahInput(e.target.value);
+    setDpInput(formatted);
 
-  <input
-    style={input}
-    value={editingBooking.pelunasan || ""}
-    onChange={(e)=>setEditingBooking({...editingBooking, pelunasan:Number(e.target.value)})}
-    placeholder="Pelunasan"
-  />
+    setEditingBooking({
+      ...editingBooking,
+      dp: parseRupiah(formatted),
+    });
+  }}
+  placeholder="DP"
+/>
+
+<input
+  style={input}
+  value={pelunasanInput}
+  onChange={(e) => {
+    const formatted = formatRupiahInput(e.target.value);
+    setPelunasanInput(formatted);
+
+    setEditingBooking({
+      ...editingBooking,
+      pelunasan: parseRupiah(formatted),
+    });
+  }}
+  placeholder="Pelunasan"
+/>
 
   {/* ================= TEAM ================= */}
   <h4 style={{ marginTop:30 }}>Tim yang Turun</h4>
