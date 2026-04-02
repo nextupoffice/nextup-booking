@@ -220,22 +220,14 @@ const handleSave = async () => {
   return y;
 };
 
-const loadImageBase64 = (url) => {
+const loadImageBase64 = async (url) => {
+  const res = await fetch(url);
+  const blob = await res.blob();
+
   return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = "Anonymous";
-    img.src = url;
-
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
-
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0);
-
-      resolve(canvas.toDataURL("image/png"));
-    };
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.readAsDataURL(blob);
   });
 };
 
