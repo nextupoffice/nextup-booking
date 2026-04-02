@@ -155,7 +155,14 @@ const totalTeamIncome = useMemo(() => {
 
 // opsi dropdown
 const teamNameOptions = ["Azky", "Resty", "Daffa", "Tio"];
-const roleOptions = ["Fotografer", "Videografer", "Editor", "Crew"];
+const roleOptions = [
+  "Owner",
+  "Fotografer",
+  "Videografer",
+  "Editor",
+  "Asisten",
+  "Drone Pilot"
+];
 
 // save ke database
 const handleSave = async () => {
