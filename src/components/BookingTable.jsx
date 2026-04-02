@@ -266,16 +266,11 @@ doc.rect(0, 0, 210, 297, "F"); // FULL DARK BACKGROUND
 const logoBase64 = await loadImageBase64(logo);
 
 const imgWidth = 30;
-const imgHeight = 15; // FIX RATIO BIAR GA GEpeng
+const imgHeight = 15;
 
-const img = new Image();
-img.src = logo;
+doc.addImage(logoBase64, "PNG", margin, 12, imgWidth, imgHeight);
 
-img.onload = () => {
-  const imgWidth = 30;
-  const imgHeight = (img.height * imgWidth) / img.width;
-
-  doc.addImage(img, "PNG", margin, 12, imgWidth, imgHeight);
+doc.addImage(img, "PNG", margin, 12, imgWidth, imgHeight);
 
   // LANJUTKAN SEMUA PROSES PDF DI SINI
 
