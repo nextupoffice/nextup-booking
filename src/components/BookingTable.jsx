@@ -231,6 +231,7 @@ const loadImageBase64 = async (url) => {
   });
 };
 
+
   const downloadPDF = async () => {
   try {
     if (!selectedMonth) return;
@@ -256,8 +257,6 @@ doc.rect(0, 0, 210, 297, "F"); // FULL DARK BACKGROUND
 
 // LOGO
 const logoBase64 = await loadImageBase64("/logo.png");
-
-doc.addImage(logoBase64, "PNG", margin, 12, 30, 15);
 
   // LANJUTKAN SEMUA PROSES PDF DI SINI
 
@@ -363,6 +362,8 @@ willDrawPage: () => {
   doc.setFillColor(15, 15, 15);
   doc.rect(0, 0, 210, 297, "F");
 
+  doc.addImage(logoBase64, "PNG", margin, 12, 30, 15);
+  
   // HEADER ULANG
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
