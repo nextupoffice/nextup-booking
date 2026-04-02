@@ -428,8 +428,8 @@ doc.text(
   finalY
 );
 
-  doc.save(`Invoice-${selectedMonth}.pdf`);
-};
+    doc.save(`Invoice-${selectedMonth}.pdf`);
+  };
 };
 
 return (
