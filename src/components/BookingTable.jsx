@@ -154,7 +154,7 @@ const totalTeamIncome = useMemo(() => {
 }, [editingBooking]);
 
 // opsi dropdown
-const teamNameOptions = teamList.map((t) => t.name);
+const teamNameOptions = ["Azky", "Resty", "Daffa", "Tio"];
 const roleOptions = ["Fotografer", "Videografer", "Editor", "Crew"];
 
 // save ke database
