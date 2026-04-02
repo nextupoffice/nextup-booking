@@ -395,29 +395,20 @@ return (
           <h3 style={{ marginBottom: 10 }}>Edit Booking</h3>
 
 <div style={modalBody}>
+  {/* ================= BOOKING ================= */}
   <h4>Informasi Booking</h4>
 
   <input
     style={input}
     value={editingBooking.client_name || ""}
-    onChange={(e)=>
-      setEditingBooking({
-        ...editingBooking,
-        client_name: e.target.value
-      })
-    }
+    onChange={(e)=>setEditingBooking({...editingBooking, client_name:e.target.value})}
     placeholder="Nama Client"
   />
 
   <input
     style={input}
     value={editingBooking.acara || ""}
-    onChange={(e)=>
-      setEditingBooking({
-        ...editingBooking,
-        acara: e.target.value
-      })
-    }
+    onChange={(e)=>setEditingBooking({...editingBooking, acara:e.target.value})}
     placeholder="Acara"
   />
 
@@ -425,61 +416,89 @@ return (
     style={input}
     type="date"
     value={editingBooking.date || ""}
-    onChange={(e)=>
-      setEditingBooking({
-        ...editingBooking,
-        date: e.target.value
-      })
-    }
+    onChange={(e)=>setEditingBooking({...editingBooking, date:e.target.value})}
   />
 
   <input
     style={input}
     type="time"
     value={editingBooking.time || ""}
-    onChange={(e)=>
-      setEditingBooking({
-        ...editingBooking,
-        time: e.target.value
-      })
-    }
+    onChange={(e)=>setEditingBooking({...editingBooking, time:e.target.value})}
   />
 
   <textarea
     style={{ ...input, minHeight:80 }}
     value={editingBooking.location || ""}
-    onChange={(e)=>
-      setEditingBooking({
-        ...editingBooking,
-        location: e.target.value
-      })
-    }
+    onChange={(e)=>setEditingBooking({...editingBooking, location:e.target.value})}
     placeholder="Alamat"
   />
 
   <input
     style={input}
     value={editingBooking.dp || ""}
-    onChange={(e)=>
-      setEditingBooking({
-        ...editingBooking,
-        dp: Number(e.target.value)
-      })
-    }
+    onChange={(e)=>setEditingBooking({...editingBooking, dp:Number(e.target.value)})}
     placeholder="DP"
   />
 
   <input
     style={input}
     value={editingBooking.pelunasan || ""}
-    onChange={(e)=>
-      setEditingBooking({
-        ...editingBooking,
-        pelunasan: Number(e.target.value)
-      })
-    }
+    onChange={(e)=>setEditingBooking({...editingBooking, pelunasan:Number(e.target.value)})}
     placeholder="Pelunasan"
   />
+
+  {/* ================= TEAM ================= */}
+  <h4 style={{ marginTop:30 }}>Tim yang Turun</h4>
+
+  {editingBooking.team_jobs?.map((t, i) => (
+    <div key={i} style={teamBox}>
+      
+      {/* NAMA */}
+      <input
+        style={input}
+        list="team-name-options"
+        value={t.name || ""}
+        onChange={(e)=>updateTeamMember(i,"name",e.target.value)}
+        placeholder="Nama Tim"
+      />
+
+      {/* ROLE */}
+      <select
+        style={input}
+        value={t.role || ""}
+        onChange={(e)=>updateTeamMember(i,"role",e.target.value)}
+      >
+        <option value="">Pilih Role</option>
+        {roleOptions.map((r, idx)=>(
+          <option key={idx} value={r}>{r}</option>
+        ))}
+      </select>
+
+      {/* INCOME */}
+      <input
+        style={input}
+        type="number"
+        value={t.income || 0}
+        onChange={(e)=>updateTeamMember(i,"income",Number(e.target.value))}
+        placeholder="Income"
+      />
+
+      {/* DELETE */}
+      <button style={cancelBtn} onClick={()=>removeTeam(i)}>
+        Hapus
+      </button>
+    </div>
+  ))}
+
+  {/* ADD TEAM */}
+  <button style={editBtn} onClick={addTeam}>
+    + Tambah Tim
+  </button>
+
+  {/* TOTAL */}
+  <div style={{ marginTop:10, fontWeight:600 }}>
+    Total Gaji Tim: {formatRupiahDisplay(totalTeamIncome)}
+  </div>
 </div>
 
           <div style={modalFooter}>
