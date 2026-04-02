@@ -221,7 +221,26 @@ const handleSave = async () => {
   return y;
 };
 
-  const downloadPDF = () => {
+const loadImageBase64 = (url) => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+    img.src = url;
+
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+
+      resolve(canvas.toDataURL("image/png"));
+    };
+  });
+};
+
+  const downloadPDF = async () => {
     if (!selectedMonth) return;
 
     const doc = new jsPDF({
@@ -244,11 +263,12 @@ doc.setFillColor(15, 15, 15);
 doc.rect(0, 0, 210, 297, "F"); // FULL DARK BACKGROUND
 
 // LOGO
-const imgProps = doc.getImageProperties(logo);
-const imgWidth = 30;
-const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+const logoBase64 = await loadImageBase64(logo);
 
-doc.addImage(logo, "PNG", margin, 12, imgWidth, imgHeight);
+const imgWidth = 30;
+const imgHeight = 15; // FIX RATIO BIAR GA GEpeng
+
+doc.addImage(logoBase64, "PNG", margin, 12, imgWidth, imgHeight);
 
 // TITLE
 doc.setFont("helvetica", "bold");
