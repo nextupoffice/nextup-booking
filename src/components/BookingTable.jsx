@@ -255,7 +255,7 @@ doc.setFillColor(15, 15, 15);
 doc.rect(0, 0, 210, 297, "F"); // FULL DARK BACKGROUND
 
 // LOGO
-const logoBase64 = await loadImageBase64(logo);
+const logoBase64 = await loadImageBase64("/logo.png");
 
 doc.addImage(logoBase64, "PNG", margin, 12, 30, 15);
 
