@@ -42,9 +42,19 @@ export default function MyJobs() {
     const myJobs = [];
 
     data.forEach((b) => {
-      if (!Array.isArray(b.team_jobs)) return;
+      let team = [];
 
-      const myTeamJobs = b.team_jobs.filter((t) => {
+if (Array.isArray(b.team_jobs)) {
+  team = b.team_jobs;
+} else if (typeof b.team_jobs === "string") {
+  try {
+    team = JSON.parse(b.team_jobs);
+  } catch {
+    team = [];
+  }
+}
+
+      const myTeamJobs = team.filter((t) => {
         if (t.user_id && user?.id) {
           return t.user_id === user.id;
         }
