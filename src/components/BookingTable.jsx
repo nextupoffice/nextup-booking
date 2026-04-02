@@ -362,9 +362,19 @@ autoTable(doc, {
 
   theme: "grid",
   
-  didDrawPage: (data) => {
+willDrawPage: () => {
   doc.setFillColor(15, 15, 15);
   doc.rect(0, 0, 210, 297, "F");
+
+  // HEADER ULANG
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.setTextColor(203,165,138);
+  doc.text("INVOICE REPORT", margin, 20);
+
+  doc.setFontSize(10);
+  doc.setTextColor(200,200,200);
+  doc.text(groupedData[selectedMonth].label, margin, 26);
 },
 });
 
