@@ -257,6 +257,52 @@ doc.line(margin, 46, pageWidth - margin, 46);
 
     const totalOmzet = totalDP + totalPelunasan;
 
+// ================= TEAM PAYROLL =================
+const teamPayroll = {};
+
+rows.forEach((b) => {
+  let team = [];
+
+  if (Array.isArray(b.team_jobs)) {
+    team = b.team_jobs;
+  } else if (typeof b.team_jobs === "string") {
+    try {
+      team = JSON.parse(b.team_jobs);
+    } catch {}
+  }
+
+  team.forEach((t) => {
+    const name = t?.name || "Tanpa Nama";
+    const income = Number(t?.income) || 0;
+
+    if (!teamPayroll[name]) teamPayroll[name] = 0;
+    teamPayroll[name] += income;
+  });
+});
+
+// total gaji tim
+const totalGajiTim = Object.values(teamPayroll).reduce(
+  (sum, val) => sum + val,
+  0
+);
+
+// ================= ADJUSTMENTS =================
+const monthAdjustments = adjustments.filter(
+  (a) => a.bulan === groupedData[selectedMonth].label
+);
+
+// ================= TOTAL FINAL =================
+const totalKeseluruhan =
+  totalOmzet -
+  totalGajiTim +
+  monthAdjustments.reduce(
+    (sum, adj) =>
+      sum +
+      (Number(adj.bonus) || 0) -
+      (Number(adj.potongan) || 0),
+    0
+  );
+  
 autoTable(doc, {
   startY: 55,
   margin: { left: margin, right: margin },
