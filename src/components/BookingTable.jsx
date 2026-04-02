@@ -265,14 +265,62 @@ doc.rect(0, 0, 210, 297, "F"); // FULL DARK BACKGROUND
 // LOGO
 const logoBase64 = await loadImageBase64(logo);
 
-const imgWidth = 30;
-const imgHeight = 15;
-
-doc.addImage(logoBase64, "PNG", margin, 12, imgWidth, imgHeight);
-
-doc.addImage(img, "PNG", margin, 12, imgWidth, imgHeight);
+doc.addImage(logoBase64, "PNG", margin, 12, 30, 15);
 
   // LANJUTKAN SEMUA PROSES PDF DI SINI
+// ================= TOTAL =================
+let totalDP = 0;
+let totalPelunasan = 0;
+
+rows.forEach((b) => {
+  totalDP += Number(b.dp) || 0;
+  totalPelunasan += Number(b.pelunasan) || 0;
+});
+
+const totalOmzet = totalDP + totalPelunasan;
+
+// ================= TEAM PAYROLL =================
+const teamPayroll = {};
+
+rows.forEach((b) => {
+  let team = [];
+
+  if (Array.isArray(b.team_jobs)) {
+    team = b.team_jobs;
+  } else if (typeof b.team_jobs === "string") {
+    try {
+      team = JSON.parse(b.team_jobs);
+    } catch {}
+  }
+
+  team.forEach((t) => {
+    const name = t?.name || "Tanpa Nama";
+    const income = Number(t?.income) || 0;
+
+    if (!teamPayroll[name]) teamPayroll[name] = 0;
+    teamPayroll[name] += income;
+  });
+});
+
+const totalGajiTim = Object.values(teamPayroll).reduce(
+  (sum, val) => sum + val,
+  0
+);
+
+// ================= ADJUSTMENT =================
+const monthAdjustments = adjustments.filter(
+  (a) => a.bulan === groupedData[selectedMonth].label
+);
+
+const totalAdjustment = monthAdjustments.reduce(
+  (sum, adj) =>
+    sum +
+    (Number(adj.bonus) || 0) -
+    (Number(adj.potongan) || 0),
+  0
+);
+
+const totalKeseluruhan = totalOmzet + totalAdjustment;
 
 autoTable(doc, {
   startY: 55,
