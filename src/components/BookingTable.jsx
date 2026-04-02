@@ -224,24 +224,26 @@ const handleSave = async () => {
     const dark = [15, 15, 15];
     const light = [230, 230, 230];
 
-    doc.setFillColor(...dark);
-    doc.rect(0, 0, 210, 35, "F");
+doc.setFillColor(15, 15, 15);
+doc.rect(0, 0, 210, 297, "F"); // FULL DARK BACKGROUND
 
-    doc.addImage(logo, "PNG", margin, 10, 28, 14);
+// LOGO
+doc.addImage(logo, "PNG", margin, 12, 30, 15);
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(18);
-    doc.setTextColor(...gold);
-    doc.text("INVOICE", pageWidth - margin, 18, { align: "right" });
+// TITLE
+doc.setFont("helvetica", "bold");
+doc.setFontSize(20);
+doc.setTextColor(203,165,138);
+doc.text("INVOICE REPORT", margin, 35);
 
-    doc.setFontSize(10);
-    doc.setTextColor(...light);
-    doc.text(
-      groupedData[selectedMonth].label,
-      pageWidth - margin,
-      25,
-      { align: "right" }
-    );
+// SUBTITLE
+doc.setFontSize(11);
+doc.setTextColor(200,200,200);
+doc.text(groupedData[selectedMonth].label, margin, 42);
+
+// LINE
+doc.setDrawColor(203,165,138);
+doc.line(margin, 46, pageWidth - margin, 46);
 
     y = 45;
 
@@ -255,87 +257,133 @@ const handleSave = async () => {
 
     const totalOmzet = totalDP + totalPelunasan;
 
-    autoTable(doc, {
-      startY: y,
-      head: [[
-        "Nama","Acara","Tanggal","Waktu","Alamat","DP","Pelunasan","Total"
-      ]],
-      body: rows.map((b) => [
-        b.client_name,
-        b.acara,
-        b.date,
-        b.time,
-        b.location,
-        formatRupiahDisplay(b.dp),
-        formatRupiahDisplay(b.pelunasan),
-        formatRupiahDisplay(
-          (Number(b.dp)||0)+(Number(b.pelunasan)||0)
-        ),
-      ]),
-    });
+autoTable(doc, {
+  startY: 55,
+  margin: { left: margin, right: margin },
+
+  head: [[
+    "Client","Acara","Tanggal","Waktu","Alamat","DP","Pelunasan","Total"
+  ]],
+
+  body: rows.map((b) => [
+    b.client_name,
+    b.acara,
+    b.date,
+    b.time,
+    b.location,
+    formatRupiahDisplay(b.dp),
+    formatRupiahDisplay(b.pelunasan),
+    formatRupiahDisplay(
+      (Number(b.dp)||0)+(Number(b.pelunasan)||0)
+    ),
+  ]),
+
+  styles: {
+    fontSize: 8,
+    textColor: [255,255,255],
+    fillColor: [25,25,25],
+    cellPadding: 2,
+  },
+
+  headStyles: {
+    fillColor: [203,165,138],
+    textColor: [0,0,0],
+    fontStyle: "bold",
+  },
+
+  alternateRowStyles: {
+    fillColor: [20,20,20],
+  },
+
+  theme: "grid",
+});
 
     let finalY = doc.lastAutoTable.finalY + 10;
 
-    doc.text(`Total Omzet : ${formatRupiahDisplay(totalOmzet)}`, margin, finalY);
+doc.setFont("helvetica","bold");
+doc.setTextColor(203,165,138);
+doc.setFontSize(11);
 
-    finalY += 10;
+doc.text(
+  `Total Booking: ${rows.length}`,
+  margin,
+  finalY
+);
 
-    const teamPayroll = {};
+finalY += 6;
 
-    rows.forEach((b) => {
-      let team = [];
-      if (Array.isArray(b.team_jobs)) team = b.team_jobs;
-      else if (typeof b.team_jobs === "string") {
-        try { team = JSON.parse(b.team_jobs); } catch {}
-      }
+doc.text(
+  `Total Omzet: ${formatRupiahDisplay(totalOmzet)}`,
+  margin,
+  finalY
+);
 
-      team.forEach((t) => {
-        const name = t?.name || "Tanpa Nama";
-        const income = Number(t?.income) || 0;
+finalY += 10;
 
-        if (!teamPayroll[name]) teamPayroll[name] = 0;
-        teamPayroll[name] += income;
-      });
-    });
+doc.setFontSize(10);
+doc.setTextColor(220,220,220);
 
-    let totalGajiTim = 0;
+doc.text("Rincian Gaji Tim:", margin, finalY);
+finalY += 6;
 
-    Object.entries(teamPayroll).forEach(([name, salary]) => {
-      totalGajiTim += salary;
-      doc.text(`${name} : ${formatRupiahDisplay(salary)}`, margin, finalY);
-      finalY += 5;
-    });
+Object.entries(teamPayroll).forEach(([name, salary]) => {
+  doc.text(`${name}`, margin, finalY);
+  doc.text(
+    formatRupiahDisplay(salary),
+    pageWidth - margin,
+    finalY,
+    { align: "right" }
+  );
+  finalY += 5;
+});
 
-    doc.text(`Total Gaji Tim : ${formatRupiahDisplay(totalGajiTim)}`, margin, finalY);
+finalY += 5;
 
-    finalY += 10;
+doc.setTextColor(203,165,138);
+doc.text(
+  `Total Gaji Tim: ${formatRupiahDisplay(totalGajiTim)}`,
+  margin,
+  finalY
+);
 
-    const monthAdjustments = adjustments.filter(
-      (a) => a.bulan === groupedData[selectedMonth].label
-    );
+finalY += 10;
 
-    if (monthAdjustments.length === 0) {
-      doc.text("Tidak ada penyesuaian", margin, finalY);
-    } else {
-      monthAdjustments.forEach((adj) => {
-        doc.text(
-          `${adj.team_name} (${adj.description || "-"})`,
-          margin,
-          finalY
-        );
-        finalY += 5;
-      });
-    }
+doc.setTextColor(220,220,220);
+doc.text("Penyesuaian:", margin, finalY);
+finalY += 6;
 
-    finalY += 10;
+monthAdjustments.forEach((adj) => {
+  doc.text(
+    `${adj.team_name} - ${adj.description || "-"}`,
+    margin,
+    finalY
+  );
 
-    const totalKeseluruhan = totalOmzet - totalGajiTim;
+  const nilai =
+    (Number(adj.bonus) || 0) -
+    (Number(adj.potongan) || 0);
 
-    doc.text(
-      `TOTAL : ${formatRupiahDisplay(totalKeseluruhan)}`,
-      margin,
-      finalY
-    );
+  doc.text(
+    formatRupiahDisplay(nilai),
+    pageWidth - margin,
+    finalY,
+    { align: "right" }
+  );
+
+  finalY += 5;
+});
+
+finalY += 10;
+
+doc.setFont("helvetica","bold");
+doc.setFontSize(14);
+doc.setTextColor(203,165,138);
+
+doc.text(
+  `TOTAL KESELURUHAN: ${formatRupiahDisplay(totalKeseluruhan)}`,
+  margin,
+  finalY
+);
 
     doc.save(`Invoice-${selectedMonth}.pdf`);
   };
