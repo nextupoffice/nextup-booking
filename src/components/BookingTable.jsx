@@ -14,9 +14,8 @@ const parseRupiah = (value) => {
   return Number(value.replace(/\./g, "")) || 0;
 };
 
-export default function BookingTable() {
+export default function BookingTable() {}
   const user = JSON.parse(localStorage.getItem("user"));
-
   const [groupedData, setGroupedData] = useState({});
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [editingBooking, setEditingBooking] = useState(null);
@@ -241,6 +240,7 @@ const loadImageBase64 = (url) => {
 };
 
   const downloadPDF = async () => {
+  try {
     if (!selectedMonth) return;
 
     const doc = new jsPDF({
@@ -268,6 +268,7 @@ const logoBase64 = await loadImageBase64(logo);
 doc.addImage(logoBase64, "PNG", margin, 12, 30, 15);
 
   // LANJUTKAN SEMUA PROSES PDF DI SINI
+
 // ================= TOTAL =================
 let totalDP = 0;
 let totalPelunasan = 0;
@@ -293,6 +294,7 @@ rows.forEach((b) => {
     } catch {}
   }
 
+if (Array.isArray(team)) {
   team.forEach((t) => {
     const name = t?.name || "Tanpa Nama";
     const income = Number(t?.income) || 0;
@@ -300,6 +302,8 @@ rows.forEach((b) => {
     if (!teamPayroll[name]) teamPayroll[name] = 0;
     teamPayroll[name] += income;
   });
+}
+
 });
 
 const totalGajiTim = Object.values(teamPayroll).reduce(
@@ -321,6 +325,7 @@ const totalAdjustment = monthAdjustments.reduce(
 );
 
 const totalKeseluruhan = totalOmzet + totalAdjustment;
+
 
 autoTable(doc, {
   startY: 55,
@@ -472,7 +477,10 @@ doc.text(
 );
 
     doc.save(`Invoice-${selectedMonth}.pdf`);
-  };
+  } catch (err) {
+    console.error("PDF ERROR:", err);
+    alert("Gagal generate PDF, cek console!");
+  }
 };
 
 return (
