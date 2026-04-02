@@ -430,10 +430,7 @@ doc.text(
 
   doc.save(`Invoice-${selectedMonth}.pdf`);
 };
-
-
-    doc.save(`Invoice-${selectedMonth}.pdf`);
-  };
+};
 
 return (
   <>
