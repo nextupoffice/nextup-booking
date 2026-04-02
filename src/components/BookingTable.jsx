@@ -86,6 +86,103 @@ export default function BookingTable() {
       setSelectedMonth(months[months.length - 1]);
   }, [groupedData]);
 
+  /* ================= EDIT FUNCTION ================= */
+
+// buka modal edit
+const openEdit = (booking) => {
+  let parsedTeam = [];
+
+  if (Array.isArray(booking.team_jobs)) {
+    parsedTeam = booking.team_jobs;
+  } else if (typeof booking.team_jobs === "string") {
+    try {
+      parsedTeam = JSON.parse(booking.team_jobs || "[]");
+    } catch {
+      parsedTeam = [];
+    }
+  }
+
+  setEditingBooking({
+    ...booking,
+    team_jobs: parsedTeam,
+  });
+};
+
+// update isi tim
+const updateTeamMember = (index, field, value) => {
+  const updated = [...editingBooking.team_jobs];
+  updated[index][field] = value;
+
+  setEditingBooking({
+    ...editingBooking,
+    team_jobs: updated,
+  });
+};
+
+// hapus tim
+const removeTeam = (index) => {
+  const updated = editingBooking.team_jobs.filter((_, i) => i !== index);
+
+  setEditingBooking({
+    ...editingBooking,
+    team_jobs: updated,
+  });
+};
+
+// tambah tim
+const addTeam = () => {
+  const newTeam = {
+    name: "",
+    role: "",
+    income: 0,
+  };
+
+  setEditingBooking({
+    ...editingBooking,
+    team_jobs: [...(editingBooking.team_jobs || []), newTeam],
+  });
+};
+
+// hitung total income tim
+const totalTeamIncome = useMemo(() => {
+  if (!editingBooking?.team_jobs) return 0;
+
+  return editingBooking.team_jobs.reduce(
+    (acc, t) => acc + (Number(t.income) || 0),
+    0
+  );
+}, [editingBooking]);
+
+// opsi dropdown
+const teamNameOptions = teamList.map((t) => t.name);
+const roleOptions = ["Fotografer", "Videografer", "Editor", "Crew"];
+
+// save ke database
+const handleSave = async () => {
+  if (!editingBooking) return;
+
+  const { id, team_jobs, ...rest } = editingBooking;
+
+  const { error } = await supabase
+    .from("bookings")
+    .update({
+      ...rest,
+      team_jobs: JSON.stringify(team_jobs || []),
+    })
+    .eq("id", id);
+
+  if (error) {
+    console.error("Update error:", error);
+    alert("Gagal update");
+    return;
+  }
+
+  alert("Berhasil update");
+
+  setEditingBooking(null);
+  fetchData();
+};
+
   /* ================= PDF ================= */
   const downloadPDF = () => {
     if (!selectedMonth) return;
