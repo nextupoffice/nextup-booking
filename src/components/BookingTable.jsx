@@ -14,7 +14,7 @@ const parseRupiah = (value) => {
   return Number(value.replace(/\./g, "")) || 0;
 };
 
-export default function BookingTable() {}
+export default function BookingTable() {
   const user = JSON.parse(localStorage.getItem("user"));
   const [groupedData, setGroupedData] = useState({});
   const [selectedMonth, setSelectedMonth] = useState(null);
@@ -703,7 +703,7 @@ return (
     )}
   </>
 );
-
+}
 /* ================= STYLE ================= */
 
 const th = { padding:10, color:"#cba58a", textAlign:"left" };
