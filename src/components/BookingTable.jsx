@@ -205,6 +205,22 @@ const handleSave = async () => {
 };
 
   /* ================= PDF ================= */
+  const checkPageBreak = (doc, y, margin = 14) => {
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  if (y > pageHeight - margin) {
+    doc.addPage();
+
+    // background dark lagi
+    doc.setFillColor(15, 15, 15);
+    doc.rect(0, 0, 210, 297, "F");
+
+    return 20; // reset Y
+  }
+
+  return y;
+};
+
   const downloadPDF = () => {
     if (!selectedMonth) return;
 
@@ -228,7 +244,11 @@ doc.setFillColor(15, 15, 15);
 doc.rect(0, 0, 210, 297, "F"); // FULL DARK BACKGROUND
 
 // LOGO
-doc.addImage(logo, "PNG", margin, 12, 30, 15);
+const imgProps = doc.getImageProperties(logo);
+const imgWidth = 30;
+const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+
+doc.addImage(logo, "PNG", margin, 12, imgWidth, imgHeight);
 
 // TITLE
 doc.setFont("helvetica", "bold");
@@ -292,17 +312,16 @@ const monthAdjustments = adjustments.filter(
 );
 
 // ================= TOTAL FINAL =================
-const totalKeseluruhan =
-  totalOmzet -
-  totalGajiTim +
-  monthAdjustments.reduce(
-    (sum, adj) =>
-      sum +
-      (Number(adj.bonus) || 0) -
-      (Number(adj.potongan) || 0),
-    0
-  );
-  
+const totalAdjustment = monthAdjustments.reduce(
+  (sum, adj) =>
+    sum +
+    (Number(adj.bonus) || 0) -
+    (Number(adj.potongan) || 0),
+  0
+);
+
+const totalKeseluruhan = totalOmzet + totalAdjustment;
+
 autoTable(doc, {
   startY: 55,
   margin: { left: margin, right: margin },
@@ -342,6 +361,11 @@ autoTable(doc, {
   },
 
   theme: "grid",
+  
+  didDrawPage: (data) => {
+  doc.setFillColor(15, 15, 15);
+  doc.rect(0, 0, 210, 297, "F");
+},
 });
 
     let finalY = doc.lastAutoTable.finalY + 10;
@@ -365,6 +389,7 @@ doc.text(
 );
 
 finalY += 10;
+finalY = checkPageBreak(doc, finalY);
 
 doc.setFontSize(10);
 doc.setTextColor(220,220,220);
@@ -373,6 +398,8 @@ doc.text("Rincian Gaji Tim:", margin, finalY);
 finalY += 6;
 
 Object.entries(teamPayroll).forEach(([name, salary]) => {
+  finalY = checkPageBreak(doc, finalY);
+
   doc.text(`${name}`, margin, finalY);
   doc.text(
     formatRupiahDisplay(salary),
@@ -380,6 +407,7 @@ Object.entries(teamPayroll).forEach(([name, salary]) => {
     finalY,
     { align: "right" }
   );
+
   finalY += 5;
 });
 
@@ -393,6 +421,7 @@ doc.text(
 );
 
 finalY += 10;
+finalY = checkPageBreak(doc, finalY);
 
 doc.setTextColor(220,220,220);
 doc.text("Penyesuaian:", margin, finalY);
@@ -420,6 +449,7 @@ monthAdjustments.forEach((adj) => {
 });
 
 finalY += 10;
+finalY = checkPageBreak(doc, finalY);
 
 doc.setFont("helvetica","bold");
 doc.setFontSize(14);
