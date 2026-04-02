@@ -454,16 +454,19 @@ return (
     <div key={i} style={teamBox}>
       
       {/* NAMA */}
-<select
+<input
   style={input}
+  list="team-options"
   value={t.name || ""}
   onChange={(e)=>updateTeamMember(i,"name",e.target.value)}
->
-  <option value="">Pilih Nama Tim</option>
+  placeholder="Pilih atau ketik nama (freelance)"
+/>
+
+<datalist id="team-options">
   {teamNameOptions.map((name, idx)=>(
-    <option key={idx} value={name}>{name}</option>
+    <option key={idx} value={name} />
   ))}
-</select>
+</datalist>
 
       {/* ROLE */}
       <select
