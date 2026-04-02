@@ -268,79 +268,16 @@ const logoBase64 = await loadImageBase64(logo);
 const imgWidth = 30;
 const imgHeight = 15; // FIX RATIO BIAR GA GEpeng
 
-doc.addImage(logoBase64, "PNG", margin, 12, imgWidth, imgHeight);
+const img = new Image();
+img.src = logo;
 
-// TITLE
-doc.setFont("helvetica", "bold");
-doc.setFontSize(20);
-doc.setTextColor(203,165,138);
-doc.text("INVOICE REPORT", margin, 35);
+img.onload = () => {
+  const imgWidth = 30;
+  const imgHeight = (img.height * imgWidth) / img.width;
 
-// SUBTITLE
-doc.setFontSize(11);
-doc.setTextColor(200,200,200);
-doc.text(groupedData[selectedMonth].label, margin, 42);
+  doc.addImage(img, "PNG", margin, 12, imgWidth, imgHeight);
 
-// LINE
-doc.setDrawColor(203,165,138);
-doc.line(margin, 46, pageWidth - margin, 46);
-
-    y = 45;
-
-    let totalDP = 0;
-    let totalPelunasan = 0;
-
-    rows.forEach((b) => {
-      totalDP += Number(b.dp) || 0;
-      totalPelunasan += Number(b.pelunasan) || 0;
-    });
-
-    const totalOmzet = totalDP + totalPelunasan;
-
-// ================= TEAM PAYROLL =================
-const teamPayroll = {};
-
-rows.forEach((b) => {
-  let team = [];
-
-  if (Array.isArray(b.team_jobs)) {
-    team = b.team_jobs;
-  } else if (typeof b.team_jobs === "string") {
-    try {
-      team = JSON.parse(b.team_jobs);
-    } catch {}
-  }
-
-  team.forEach((t) => {
-    const name = t?.name || "Tanpa Nama";
-    const income = Number(t?.income) || 0;
-
-    if (!teamPayroll[name]) teamPayroll[name] = 0;
-    teamPayroll[name] += income;
-  });
-});
-
-// total gaji tim
-const totalGajiTim = Object.values(teamPayroll).reduce(
-  (sum, val) => sum + val,
-  0
-);
-
-// ================= ADJUSTMENTS =================
-const monthAdjustments = adjustments.filter(
-  (a) => a.bulan === groupedData[selectedMonth].label
-);
-
-// ================= TOTAL FINAL =================
-const totalAdjustment = monthAdjustments.reduce(
-  (sum, adj) =>
-    sum +
-    (Number(adj.bonus) || 0) -
-    (Number(adj.potongan) || 0),
-  0
-);
-
-const totalKeseluruhan = totalOmzet + totalAdjustment;
+  // LANJUTKAN SEMUA PROSES PDF DI SINI
 
 autoTable(doc, {
   startY: 55,
@@ -490,6 +427,10 @@ doc.text(
   margin,
   finalY
 );
+
+  doc.save(`Invoice-${selectedMonth}.pdf`);
+};
+
 
     doc.save(`Invoice-${selectedMonth}.pdf`);
   };
