@@ -394,9 +394,93 @@ return (
         <div style={modal}>
           <h3 style={{ marginBottom: 10 }}>Edit Booking</h3>
 
-          <div style={modalBody}>
-            {/* isi form kamu tetap sama, TIDAK DIUBAH */}
-          </div>
+<div style={modalBody}>
+  <h4>Informasi Booking</h4>
+
+  <input
+    style={input}
+    value={editingBooking.client_name || ""}
+    onChange={(e)=>
+      setEditingBooking({
+        ...editingBooking,
+        client_name: e.target.value
+      })
+    }
+    placeholder="Nama Client"
+  />
+
+  <input
+    style={input}
+    value={editingBooking.acara || ""}
+    onChange={(e)=>
+      setEditingBooking({
+        ...editingBooking,
+        acara: e.target.value
+      })
+    }
+    placeholder="Acara"
+  />
+
+  <input
+    style={input}
+    type="date"
+    value={editingBooking.date || ""}
+    onChange={(e)=>
+      setEditingBooking({
+        ...editingBooking,
+        date: e.target.value
+      })
+    }
+  />
+
+  <input
+    style={input}
+    type="time"
+    value={editingBooking.time || ""}
+    onChange={(e)=>
+      setEditingBooking({
+        ...editingBooking,
+        time: e.target.value
+      })
+    }
+  />
+
+  <textarea
+    style={{ ...input, minHeight:80 }}
+    value={editingBooking.location || ""}
+    onChange={(e)=>
+      setEditingBooking({
+        ...editingBooking,
+        location: e.target.value
+      })
+    }
+    placeholder="Alamat"
+  />
+
+  <input
+    style={input}
+    value={editingBooking.dp || ""}
+    onChange={(e)=>
+      setEditingBooking({
+        ...editingBooking,
+        dp: Number(e.target.value)
+      })
+    }
+    placeholder="DP"
+  />
+
+  <input
+    style={input}
+    value={editingBooking.pelunasan || ""}
+    onChange={(e)=>
+      setEditingBooking({
+        ...editingBooking,
+        pelunasan: Number(e.target.value)
+      })
+    }
+    placeholder="Pelunasan"
+  />
+</div>
 
           <div style={modalFooter}>
             <button style={saveBtn} onClick={handleSave}>
