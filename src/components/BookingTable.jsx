@@ -362,13 +362,13 @@ willDrawPage: () => {
   doc.setFillColor(15, 15, 15);
   doc.rect(0, 0, 210, 297, "F");
 
-  doc.addImage(logoBase64, "PNG", margin - 4, 8, 40, 40);
+  doc.addImage(logoBase64, "PNG", margin - 8, 8, 40, 40);
   
   // HEADER ULANG
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
   doc.setTextColor(203,165,138);
-  doc.text("INVOICE REPORT", margin + 35, 30);
+  doc.text("INVOICE REPORT", margin + 30, 30);
 
   doc.setFontSize(10);
   doc.setTextColor(200,200,200);
