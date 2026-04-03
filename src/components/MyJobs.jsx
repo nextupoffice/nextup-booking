@@ -155,15 +155,56 @@ if (Array.isArray(b.team_jobs)) {
   };
 
   /* ================= DOWNLOAD PDF ================= */
-  const downloadPDF = () => {
+const checkPageBreak = (doc, y, margin = 14) => {
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  if (y > pageHeight - margin) {
+    doc.addPage();
+
+    doc.setFillColor(15, 15, 15);
+    doc.rect(0, 0, 210, 297, "F");
+
+    return 20;
+  }
+
+  return y;
+};
+
+const loadImageBase64 = async (url) => {
+  const res = await fetch(url);
+  const blob = await res.blob();
+
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.readAsDataURL(blob);
+  });
+};
+
+const downloadPDF = async () => {
+  try {
     if (!selectedMonth || !grouped[selectedMonth]) return;
 
-    const doc = new jsPDF("p", "mm", "a4");
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
+
+    const margin = 14;
+    const pageWidth = 210;
+    let y = 20;
 
     const monthJobs = grouped[selectedMonth].jobs;
 
+    // ================= DARK BG =================
+    doc.setFillColor(15, 15, 15);
+    doc.rect(0, 0, 210, 297, "F");
+
+    // ================= LOGO =================
+    const logoBase64 = await loadImageBase64("/logo.png");
+
+    // ================= TOTAL =================
     const incomeTotal = monthJobs.reduce(
       (sum, i) => sum + (Number(i.income) || 0),
       0
@@ -172,57 +213,137 @@ if (Array.isArray(b.team_jobs)) {
     const { bonus, potongan } = getMonthAdjustment();
     const finalTotal = incomeTotal + bonus - potongan;
 
-    doc.setFillColor(15, 15, 15);
-    doc.rect(0, 0, pageWidth, pageHeight, "F");
-
-    doc.setTextColor(203, 165, 138);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(20);
-    doc.text("NEXTUP STUDIO", 14, 20);
-
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.text("Monthly Job Report", 14, 27);
-    doc.text(grouped[selectedMonth].label, 14, 33);
-
-    doc.setDrawColor(203, 165, 138);
-    doc.line(14, 38, pageWidth - 14, 38);
-
+    // ================= TABLE =================
     autoTable(doc, {
-      startY: 45,
-      margin: { left: 14, right: 14 },
-      head: [["Acara", "Client", "Tanggal", "Jobdesk", "Income"]],
+      startY: 55,
+      margin: { left: margin, right: margin },
+
+      head: [[
+        "Acara",
+        "Client",
+        "Tanggal",
+        "Waktu",
+        "Lokasi",
+        "Jobdesk",
+        "Income"
+      ]],
+
       body: monthJobs.map((job) => [
         job.acara,
         job.client_name || "-",
         job.date,
+        job.time,
+        job.location,
         job.role,
         formatRupiahDisplay(job.income),
       ]),
+
       styles: {
         fontSize: 8,
-        textColor: [255, 255, 255],
-        fillColor: [25, 25, 25],
+        textColor: [255,255,255],
+        fillColor: [25,25,25],
+        cellPadding: 2,
       },
+
       headStyles: {
-        fillColor: [203, 165, 138],
-        textColor: [0, 0, 0],
+        fillColor: [203,165,138],
+        textColor: [0,0,0],
+        fontStyle: "bold",
+      },
+
+      alternateRowStyles: {
+        fillColor: [20,20,20],
+      },
+
+      theme: "grid",
+
+      willDrawPage: () => {
+        doc.setFillColor(15, 15, 15);
+        doc.rect(0, 0, 210, 297, "F");
+
+        doc.addImage(logoBase64, "PNG", margin - 8, 8, 40, 40);
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.setTextColor(203,165,138);
+        doc.text("MY JOB REPORT", margin + 30, 30);
+
+        doc.setFontSize(10);
+        doc.setTextColor(200,200,200);
+        doc.text(grouped[selectedMonth].label, margin, 45);
       },
     });
 
-    const finalY = doc.lastAutoTable.finalY + 10;
+    let finalY = doc.lastAutoTable.finalY + 10;
 
-    doc.setTextColor(203, 165, 138);
-    doc.setFont("helvetica", "bold");
+    // ================= SUMMARY =================
+    doc.setFont("helvetica","bold");
+    doc.setTextColor(203,165,138);
     doc.setFontSize(11);
 
-    doc.text(`Income: ${formatRupiahDisplay(incomeTotal)}`, 14, finalY);
-    doc.text(`Bonus: ${formatRupiahDisplay(bonus)}`, 14, finalY + 6);
-    doc.text(`Potongan: ${formatRupiahDisplay(potongan)}`, 14, finalY + 12);
-    doc.text(`Final Total: ${formatRupiahDisplay(finalTotal)}`, 14, finalY + 20);
+    doc.text(`Total Job: ${monthJobs.length}`, margin, finalY);
 
-    doc.save(`NEXTUP-Report-${grouped[selectedMonth].label}.pdf`);
-  };
+    finalY += 6;
+
+    doc.text(
+      `Total Income: ${formatRupiahDisplay(incomeTotal)}`,
+      margin,
+      finalY
+    );
+
+    finalY += 10;
+    finalY = checkPageBreak(doc, finalY);
+
+    // ================= ADJUSTMENT =================
+    doc.setFontSize(10);
+    doc.setTextColor(220,220,220);
+
+    doc.text("Penyesuaian:", margin, finalY);
+    finalY += 6;
+
+    adjustments
+      .filter((a) => a.bulan === grouped[selectedMonth].label)
+      .forEach((adj) => {
+        doc.text(
+          `${adj.description || "-"} `,
+          margin,
+          finalY
+        );
+
+        const nilai =
+          (Number(adj.bonus) || 0) -
+          (Number(adj.potongan) || 0);
+
+        doc.text(
+          formatRupiahDisplay(nilai),
+          pageWidth - margin,
+          finalY,
+          { align: "right" }
+        );
+
+        finalY += 5;
+      });
+
+    finalY += 10;
+    finalY = checkPageBreak(doc, finalY);
+
+    // ================= FINAL TOTAL =================
+    doc.setFont("helvetica","bold");
+    doc.setFontSize(14);
+    doc.setTextColor(203,165,138);
+
+    doc.text(
+      `TOTAL PENDAPATAN: ${formatRupiahDisplay(finalTotal)}`,
+      margin,
+      finalY
+    );
+
+    doc.save(`MyJobs-${selectedMonth}.pdf`);
+  } catch (err) {
+    console.error("PDF ERROR:", err);
+    alert("Gagal generate PDF");
+  }
+};
 
   const { bonus, potongan } = getMonthAdjustment();
 
