@@ -152,22 +152,43 @@ setPotongan(formatRupiah(item.potongan));
 setDescription(item.description || "");
   };
 
-  return (
-    <div style={{ marginTop: 40 }}>
-      <h3>Bonus & Potongan Global Tim</h3>
-
+return (
+  <div
+    style={{
+      marginTop: 40,
+      padding: 24,
+      background: "#0f0f0f",
+      borderRadius: 16,
+      border: "1px solid #1f1f1f",
+    }}
+  >
+<h3
+  style={{
+    marginBottom: 20,
+    color: "#cba58a",
+    fontWeight: 600,
+    letterSpacing: 0.5,
+  }}
+>
+  Bonus & Potongan Tim
+</h3>
       {/* ================= FORM ================= */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1.5fr 1fr 1fr 1fr 2fr auto",
-          gap: 12,
-          alignItems: "center",
-          marginBottom: 20,
-        }}
-      >
+<div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "1.5fr 1fr 1fr 1fr 2fr auto",
+    gap: 12,
+    alignItems: "center",
+    marginBottom: 20,
+    padding: 16,
+    background: "#151515",
+    borderRadius: 12,
+    border: "1px solid #222",
+  }}
+>
 
 <input
+  style={inputStyle}
   type="text"
   list="team-options"
   value={selectedName}
@@ -181,7 +202,7 @@ setDescription(item.description || "");
   ))}
 </datalist>
 
-        <select
+        <select style={inputStyle}
           value={selectedMonth}
           onChange={(e) => setSelectedMonth(e.target.value)}
         >
@@ -218,18 +239,39 @@ setDescription(item.description || "");
           }
         />
 <textarea
+  style={{ ...inputStyle, minHeight: 40 }}
   placeholder="Deskripsi (alasan bonus / potongan)"
   value={description}
   onChange={(e) => setDescription(e.target.value)}
 />
-        <button onClick={handleSave}>
+        <button
+  onClick={handleSave}
+  style={{
+    padding: "10px 16px",
+    borderRadius: 8,
+    border: "none",
+    background: "#cba58a",
+    color: "#000",
+    fontWeight: 600,
+    cursor: "pointer",
+  }}
+>
           {editingId ? "Update" : "Simpan"}
         </button>
       </div>
 
       {/* ================= TABLE ================= */}
       {adjustments.length > 0 && (
-        <table
+  <div
+    style={{
+      marginTop: 20,
+      background: "#111",
+      borderRadius: 12,
+      overflow: "hidden",
+      border: "1px solid #222",
+    }}
+  >
+    <table
           style={{
             width: "100%",
             borderCollapse: "collapse",
@@ -269,28 +311,38 @@ setDescription(item.description || "");
                 </td>
                 <td style={tdStyle}>
                   <button
-                    onClick={() => handleEdit(item)}
-                    style={{ marginRight: 8 }}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    style={{
-                      background: "#b00020",
-                      color: "#fff",
-                      border: "none",
-                      padding: "4px 8px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Hapus
-                  </button>
+  onClick={() => handleEdit(item)}
+  style={{
+    padding: "6px 10px",
+    borderRadius: 6,
+    border: "1px solid #cba58a",
+    background: "transparent",
+    color: "#cba58a",
+    cursor: "pointer",
+    marginRight: 6,
+  }}
+>
+  Edit
+</button>
+                 <button
+  onClick={() => handleDelete(item.id)}
+  style={{
+    padding: "6px 10px",
+    borderRadius: 6,
+    background: "#7a1c1c",
+    color: "#fff",
+    border: "none",
+    cursor: "pointer",
+  }}
+>
+  Hapus
+</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+</div>
       )}
     </div>
   );
@@ -299,13 +351,27 @@ setDescription(item.description || "");
 /* ================= STYLE ================= */
 
 const thStyle = {
-  borderBottom: "1px solid #31281c",
-  padding: 8,
+  padding: 12,
   textAlign: "left",
-  background: "#000000",
+  background: "#151515",
+  color: "#cba58a",
+  fontWeight: 600,
+  fontSize: 13,
+  borderBottom: "1px solid #222",
 };
 
 const tdStyle = {
-  borderBottom: "1px solid #eee",
-  padding: 8,
+  padding: 12,
+  borderBottom: "1px solid #1f1f1f",
+  fontSize: 13,
+};
+
+const inputStyle = {
+  padding: "10px 12px",
+  borderRadius: 8,
+  border: "1px solid #2a2a2a",
+  background: "#1a1a1a",
+  color: "#fff",
+  outline: "none",
+  fontSize: 13,
 };
