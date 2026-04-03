@@ -155,17 +155,19 @@ setDescription(item.description || "");
         }}
       >
 
-        <select
-          value={selectedName}
-          onChange={(e) => setSelectedName(e.target.value)}
-        >
-          <option value="">Pilih Nama Tim</option>
-          {teams.map((name, index) => (
-            <option key={index} value={name}>
-              {name}
-            </option>
-          ))}
-        </select>
+<input
+  type="text"
+  list="team-options"
+  value={selectedName}
+  onChange={(e) => setSelectedName(e.target.value)}
+  placeholder="Pilih atau ketik nama tim"
+/>
+
+<datalist id="team-options">
+  {teams.map((name, index) => (
+    <option key={index} value={name} />
+  ))}
+</datalist>
 
         <select
           value={selectedMonth}
