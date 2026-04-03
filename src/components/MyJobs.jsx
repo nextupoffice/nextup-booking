@@ -271,6 +271,18 @@ const downloadPDF = async () => {
         doc.setFontSize(10);
         doc.setTextColor(200,200,200);
         doc.text(grouped[selectedMonth].label, margin, 45);
+
+          // ================= NAMA USER (KANAN ATAS) =================
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(203,165,138);
+
+  doc.text(
+    user?.username || "User",
+    pageWidth - margin,
+    20,
+    { align: "right" }
+  );
       },
     });
 
