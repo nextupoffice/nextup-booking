@@ -274,13 +274,13 @@ const downloadPDF = async () => {
 
           // ================= NAMA USER (KANAN ATAS) =================
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
+  doc.setFontSize(15);
   doc.setTextColor(203,165,138);
 
   doc.text(
     user?.username || "User",
     pageWidth - margin,
-    20,
+    30,
     { align: "right" }
   );
       },
