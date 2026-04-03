@@ -36,28 +36,40 @@ const [editingId, setEditingId] = useState(null);
   }, []);
 
   /* ================= FETCH TEAM ================= */
-  const fetchTeams = async () => {
-    const { data, error } = await supabase
-      .from("bookings")
-      .select("team_jobs");
+const fetchTeams = async () => {
+  const { data, error } = await supabase
+    .from("bookings")
+    .select("team_jobs");
 
-    if (error) {
-      console.error(error);
-      return;
-    }
+  if (error) {
+    console.error(error);
+    return;
+  }
 
-    if (data) {
-      let names = [];
+  if (data) {
+    let names = [];
 
-      data.forEach((booking) => {
-        booking.team_jobs?.forEach((member) => {
-          if (member?.name) names.push(member.name);
-        });
+    data.forEach((booking) => {
+      let team = [];
+
+      if (Array.isArray(booking.team_jobs)) {
+        team = booking.team_jobs;
+      } else if (typeof booking.team_jobs === "string") {
+        try {
+          team = JSON.parse(booking.team_jobs);
+        } catch {
+          team = [];
+        }
+      }
+
+      team.forEach((member) => {
+        if (member?.name) names.push(member.name);
       });
+    });
 
-      setTeams([...new Set(names)]);
-    }
-  };
+    setTeams([...new Set(names)]);
+  }
+};
 
   /* ================= FETCH ADJUSTMENTS ================= */
   const fetchAdjustments = async () => {
