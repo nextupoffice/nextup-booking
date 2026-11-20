@@ -197,8 +197,8 @@ return (
 />
 
 <datalist id="team-options">
-  {teamNameOptions.map((name, idx)=>(
-    <option key={idx} value={name} />
+  {teams.map((name, index) => (
+    <option key={index} value={name} />
   ))}
 </datalist>
 
