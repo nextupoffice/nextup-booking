@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png"; // ✅ WAJIB IMPORT
 
 const users = [
-  { username: "Nextup", password: "Nextup123", role: "admin" },
+  { username: "Nextup", password: "Nextup89", role: "admin" },
   { username: "Azky", password: "89", role: "tim" },
   { username: "Fanisa", password: "89", role: "tim" },
   { username: "Daffa", password: "1234", role: "tim" },
