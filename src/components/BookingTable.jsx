@@ -167,7 +167,7 @@ const totalTeamIncome = useMemo(() => {
 }, [editingBooking]);
 
 // opsi dropdown
-const teamNameOptions = ["Azky", "Resty", "Daffa", "Tio"];
+const teamNameOptions = ["Azky", "Fanisa", "Daffa", "Tio"];
 const roleOptions = [
   "Owner",
   "Fotografer",
@@ -509,6 +509,7 @@ return (
                 <th style={th}>Pelunasan</th>
                 <th style={th}>Total</th>
                 <th style={th}>Aksi</th>
+                <th style={th}>Edit</th>
               </tr>
             </thead>
             <tbody>
