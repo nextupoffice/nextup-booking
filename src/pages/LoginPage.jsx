@@ -4,8 +4,8 @@ import logo from "../assets/logo.png"; // ✅ WAJIB IMPORT
 
 const users = [
   { username: "Nextup", password: "Nextup123", role: "admin" },
-  { username: "Azky", password: "1234", role: "tim" },
-  { username: "Resty", password: "1234", role: "tim" },
+  { username: "Azky", password: "89", role: "tim" },
+  { username: "Fanisa", password: "89", role: "tim" },
   { username: "Daffa", password: "1234", role: "tim" },
   { username: "Tio", password: "1234", role: "tim" },
 ];

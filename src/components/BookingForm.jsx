@@ -5,7 +5,7 @@ import {
   formatRupiahDisplay,
 } from "../utils/format";
 
-const TEAM_INTERNAL = ["Azky", "Resty", "Daffa", "Tio"];
+const TEAM_INTERNAL = ["Azky", "Fanisa", "Daffa", "Tio"];
 
 const JOBDESK = [
   "Owner",
@@ -29,7 +29,7 @@ export default function BookingForm() {
   // TEAM INTERNAL
   const [teamData, setTeamData] = useState({
     Azky: { income: 0, role: "" },
-    Resty: { income: 0, role: "" },
+    Fanisa: { income: 0, role: "" },
     Daffa: { income: 0, role: "" },
     Tio: { income: 0, role: "" },
   });
